@@ -138,18 +138,18 @@ export default function CourseSearchBar() {
 
         const chunk = chunks[chunkIndex];
         if (chunk) {
-          chunk.forEach(skill => {
-            const s = skill.toLowerCase();
-            let score = 0;
+        chunk.forEach(skill => {
+          const s = skill.toLowerCase();
+          let score = 0;
 
-            if (s.startsWith(q)) score += 100;
-            if (s.includes(q)) score += 60;
+          if (s.startsWith(q)) score += 100;
+          if (s.includes(q)) score += 60;
 
-            const dist = levenshtein(q, s);
-            score += Math.max(0, 40 - dist);
+          const dist = levenshtein(q, s);
+          score += Math.max(0, 40 - dist);
 
-            scored.push({ skill, score });
-          });
+          scored.push({ skill, score });
+        });
         }
 
         chunkIndex++;

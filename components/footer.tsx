@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Send, MessageCircle, Instagram, Twitter, Youtube, Facebook } from 'lucide-react';
@@ -9,39 +9,59 @@ import { logger } from '@/lib/logger';
 import { EMAIL_VALIDATION, DEFER_TIMEOUTS, CACHE_REVALIDATION } from '@/lib/constants';
 import type { FooterSettings } from '@/types/api';
 
-export default function Footer() {
+// Performance: Regular function for social icons (not a component, so no memo needed)
+function getSocialIcon(platform: string) {
+  switch (platform.toLowerCase()) {
+    case 'whatsapp':
+      return <MessageCircle size={22} aria-hidden="true" />;
+    case 'instagram':
+      return <Instagram size={22} aria-hidden="true" />;
+    case 'twitter':
+      return <Twitter size={22} aria-hidden="true" />;
+    case 'youtube':
+      return <Youtube size={22} aria-hidden="true" />;
+    case 'facebook':
+      return <Facebook size={22} aria-hidden="true" />;
+    default:
+      return null;
+  }
+}
+
+// Performance: Memoize footer component to prevent unnecessary re-renders
+function Footer() {
   const [footerSettings, setFooterSettings] = useState<FooterSettings | null>(null);
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchFooterSettings() {
-      try {
-        const apiUrl = getApiUrl('/footer-settings');
-        // Use cache for better performance - footer settings don't change often
-        const res = await fetch(apiUrl, {
-          cache: 'force-cache',
-          next: { revalidate: CACHE_REVALIDATION.FOOTER },
-        });
-        const data = await res.json();
-        setFooterSettings(data as FooterSettings);
-      } catch (err) {
-        logger.error('Failed to fetch footer settings:', err);
-      }
+  // Performance: useCallback to memoize fetch function
+  const fetchFooterSettings = useCallback(async () => {
+    try {
+      const apiUrl = getApiUrl('/footer-settings');
+      // Performance: Use cache for better performance - footer settings don't change often
+      const res = await fetch(apiUrl, {
+        cache: 'force-cache',
+        next: { revalidate: CACHE_REVALIDATION.FOOTER },
+      });
+      const data = await res.json();
+      setFooterSettings(data as FooterSettings);
+    } catch (err) {
+      logger.error('Failed to fetch footer settings:', err);
     }
-    // Defer footer settings fetch - not critical for initial render
+  }, []);
+
+  // Performance: Defer footer settings fetch - not critical for initial render
+  useEffect(() => {
     if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
       requestIdleCallback(fetchFooterSettings, { timeout: DEFER_TIMEOUTS.FOOTER_SETTINGS });
     } else {
       setTimeout(fetchFooterSettings, DEFER_TIMEOUTS.DEFAULT);
     }
-  }, []);
+  }, [fetchFooterSettings]);
 
-
-  // Default values
-  const settings: FooterSettings = {
+  // Performance: Memoize settings object to prevent recalculation
+  const settings: FooterSettings = useMemo(() => ({
     get_in_touch: footerSettings?.get_in_touch || 'Get in touch with us:',
     email_placeholder: footerSettings?.email_placeholder || 'Enter your email',
     logo: footerSettings?.logo || '/home/Frame 236.png',
@@ -88,221 +108,260 @@ export default function Footer() {
       facebook: '#',
     },
     copyright: footerSettings?.copyright || 'SkillVedika © 2025 - All Rights Reserved',
-  };
+  }), [footerSettings]);
 
-  const getSocialIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'whatsapp':
-        return <MessageCircle size={22} />;
-      case 'instagram':
-        return <Instagram size={22} />;
-      case 'twitter':
-        return <Twitter size={22} />;
-      case 'youtube':
-        return <Youtube size={22} />;
-      case 'facebook':
-        return <Facebook size={22} />;
-      default:
-        return null;
+  // Performance: useCallback for form submission
+  // Accessibility: Proper form handling with error announcements
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSuccessMessage(null);
+    setErrorMessage(null);
+    const apiUrl = getApiUrl('/enroll');
+    
+    // Validate email format and length
+    if (
+      !email ||
+      !EMAIL_VALIDATION.REGEX.test(email) ||
+      email.length > EMAIL_VALIDATION.MAX_LENGTH
+    ) {
+      setErrorMessage('Please enter a valid email address');
+      return;
     }
-  };
+    
+    setSubmitting(true);
+    try {
+      const payload: Record<string, unknown> = {
+        name: 'From Footer',
+        email: email,
+        phone: '+91 9999999999',
+        page: 'footer',
+      };
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `Request failed: ${res.status}`);
+      }
+
+      const json = await res.json();
+      if (json?.success) {
+        setSuccessMessage('Thank you! You will be contacted soon.');
+        setEmail('');
+      } else {
+        setErrorMessage(json?.message || 'Failed to save email');
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setErrorMessage(errorMessage || 'Submission failed');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [email]);
 
   return (
-    <footer className="bg-[#1A3F66] text-white">
-      <div className="max-w-7xl mx-auto px-6 py-12">
+    <footer 
+      className="bg-[#1A3F66] text-white"
+      role="contentinfo"
+      aria-label="Site footer"
+      suppressHydrationWarning
+    >
+      <div className="max-w-7xl mx-auto px-6 py-12" suppressHydrationWarning>
         {/* Newsletter Section */}
-        <div className="flex flex-col md:flex-row items-center justify-between border-b border-white/20 pb-10 mb-10">
-          <h3 className="text-2xl font-semibold mb-6 md:mb-0">{settings.get_in_touch}</h3>
+        <section 
+          className="flex flex-col md:flex-row items-center justify-between border-b border-white/20 pb-10 mb-10"
+          aria-labelledby="newsletter-heading"
+          suppressHydrationWarning
+        >
+          <h3 id="newsletter-heading" className="text-2xl font-semibold mb-6 md:mb-0">
+            {settings.get_in_touch}
+          </h3>
 
           {/* Email Input */}
-          <div className="flex items-center space-x-4 w-full md:w-auto">
+          <div className="flex items-center space-x-4 w-full md:w-auto" suppressHydrationWarning>
+            {/* Accessibility: Live region for form feedback */}
             <div
               className={`min-w-[160px] max-w-[220px] px-4 py-2 flex items-center text-sm truncate ${
                 successMessage ? 'text-green-300' : errorMessage ? 'text-red-300' : 'text-gray-500'
               }`}
+              role="status"
               aria-live="polite"
+              aria-atomic="true"
+              suppressHydrationWarning
             >
-              {successMessage || errorMessage || ' '}
+              {successMessage || errorMessage || null}
             </div>
 
+            {/* Accessibility: Proper form with labels and error handling */}
             <form
               className="flex w-full md:w-[500px] bg-white rounded-full overflow-hidden items-left"
-              onSubmit={async e => {
-                e.preventDefault();
-                setSuccessMessage(null);
-                setErrorMessage(null);
-                const apiUrl = getApiUrl('/enroll');
-                // Validate email format and length
-                if (
-                  !email ||
-                  !EMAIL_VALIDATION.REGEX.test(email) ||
-                  email.length > EMAIL_VALIDATION.MAX_LENGTH
-                ) {
-                  setErrorMessage('Please enter a valid email address');
-                  return;
-                }
-                setSubmitting(true);
-                try {
-                  // Build payload: always include email provided by user.
-                  // Include defaults requested by user; enrollment controller stores extra fields in `meta`.
-                  const payload: any = {
-                    // required/basic fields for enrollment
-                    name: 'From Footer',
-                    email: email,
-                    phone: '+91 9999999999',
-                  };
-
-                  // if we have a first course id, include it (controller casts courses to array)
-                  // if (firstCourseId) payload.courses = [firstCourseId]
-
-                  // put page information in extra so it ends up in meta
-                  payload.page = 'footer';
-
-                  const res = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                  });
-
-                  if (!res.ok) {
-                    const txt = await res.text();
-                    throw new Error(txt || `Request failed: ${res.status}`);
-                  }
-
-                  const json = await res.json();
-                  if (json?.success) {
-                    setSuccessMessage('Thank you! You will be contacted soon.');
-                    setEmail('');
-                  } else {
-                    setErrorMessage(json?.message || 'Failed to save email');
-                  }
-                } catch (err: unknown) {
-                  const errorMessage = err instanceof Error ? err.message : String(err);
-                  setErrorMessage(errorMessage || 'Submission failed');
-                } finally {
-                  setSubmitting(false);
-                }
-              }}
+              onSubmit={handleSubmit}
+              noValidate
+              aria-label="Newsletter subscription"
             >
+              <label htmlFor="footer-email" className="sr-only">
+                Email address
+              </label>
               <input
+                id="footer-email"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder={settings.email_placeholder}
-                className="flex-1 px-5 py-3 text-gray-800 focus:outline-none"
+                className="flex-1 px-5 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-l-full"
+                aria-required="true"
+                aria-invalid={errorMessage ? 'true' : 'false'}
+                aria-describedby={errorMessage ? 'footer-email-error' : undefined}
               />
+              {errorMessage && (
+                <span id="footer-email-error" className="sr-only">
+                  {errorMessage}
+                </span>
+              )}
               <button
                 type="submit"
                 disabled={submitting}
                 aria-label="Subscribe to newsletter"
-                className="bg-[#4A90E2] px-5 flex items-center justify-center hover:bg-[#2C5AA0] transition-colors disabled:opacity-60 min-w-[44px] min-h-[44px]"
+                className="bg-[#4A90E2] px-5 flex items-center justify-center hover:bg-[#2C5AA0] transition-colors disabled:opacity-60 min-w-[44px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <Send size={22} className="text-white" aria-hidden="true" />
+                {submitting && <span className="sr-only">Submitting...</span>}
               </button>
             </form>
           </div>
-        </div>
+        </section>
 
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-blue-100">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-blue-100" suppressHydrationWarning>
           {/* SkillVedika Info */}
-          <div>
+          <section aria-labelledby="company-info-heading">
+            <h2 id="company-info-heading" className="sr-only">Company Information</h2>
+            {/* Performance: Lazy load footer logo - below the fold */}
             <Image
               src={settings.logo || '/home/Frame 236.png'}
               alt="SkillVedika Logo"
               width={180}
               height={60}
               className="mb-5"
+              style={{ width: 'auto', height: 'auto' }}
+              loading="lazy"
+              sizes="(max-width: 768px) 160px, 180px"
             />
             <p className="text-sm leading-relaxed mb-6 text-blue-100">{settings.about}</p>
             <p className="text-sm mb-3 text-blue-100">{settings.follow_us}</p>
 
             {/* Social Icons */}
-            <div className="flex space-x-4 text-white">
-              {settings.social_media_icons?.map(platform => (
-                <Link
-                  key={platform}
-                  href={settings.social_links?.[platform] || '#'}
-                  aria-label={`Follow us on ${platform}`}
-                  className="hover:text-[#4A90E2] transition-colors"
-                >
-                  {getSocialIcon(platform)}
-                </Link>
-              ))}
-            </div>
-          </div>
+            <nav aria-label="Social media links">
+              <ul className="flex space-x-4 text-white list-none">
+                {settings.social_media_icons?.map(platform => (
+                  <li key={platform}>
+                    <Link
+                      href={settings.social_links?.[platform] || '#'}
+                      aria-label={`Follow us on ${platform}`}
+                      className="hover:text-[#4A90E2] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                    >
+                      {getSocialIcon(platform)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </section>
 
           {/* Explore */}
-          <div className="md:ml-10">
-            <h3 className="font-semibold text-base mb-4 text-white">{settings.explore}</h3>
-            <ul className="space-y-2 text-sm">
+          <nav aria-labelledby="explore-heading">
+            <h3 id="explore-heading" className="font-semibold text-base mb-4 text-white">
+              {settings.explore}
+            </h3>
+            <ul className="space-y-2 text-sm list-none">
               {settings.explore_links?.map((link, idx) => (
-                <li key={idx}>
+                <li key={`${link.slug}-${idx}`}>
                   <Link
                     href={link.slug}
                     target={link.new_tab ? '_blank' : undefined}
                     rel={link.new_tab ? 'noopener noreferrer' : undefined}
-                    className="hover:text-white"
+                    className="hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                   >
                     {link.text}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Support */}
-          <div>
-            <h3 className="font-semibold text-base mb-4 text-white">{settings.support}</h3>
-            <ul className="space-y-2 text-sm">
+          <nav aria-labelledby="support-heading">
+            <h3 id="support-heading" className="font-semibold text-base mb-4 text-white">
+              {settings.support}
+            </h3>
+            <ul className="space-y-2 text-sm list-none">
               {settings.support_links?.map((link, idx) => (
-                <li key={idx}>
+                <li key={`${link.slug}-${idx}`}>
                   <Link
                     href={link.slug}
                     target={link.new_tab ? '_blank' : undefined}
                     rel={link.new_tab ? 'noopener noreferrer' : undefined}
-                    className="hover:text-white"
+                    className="hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                   >
                     {link.text}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Contact */}
-          <div>
-            <h3 className="font-semibold text-base mb-4 text-white">{settings.contact}</h3>
-            <ul className="space-y-3 text-sm">
+          <section aria-labelledby="contact-heading">
+            <h3 id="contact-heading" className="font-semibold text-base mb-4 text-white">
+              {settings.contact}
+            </h3>
+            <address className="space-y-3 text-sm not-italic">
               {settings.contact_details?.phone && (
-                <li>
+                <div suppressHydrationWarning>
                   <span className="font-medium text-white">Mobile:</span>{' '}
-                  {settings.contact_details.phone}
-                </li>
+                  <a 
+                    href={`tel:${settings.contact_details.phone.replaceAll(/\s+/g, '')}`}
+                    className="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                  >
+                    {settings.contact_details.phone}
+                  </a>
+                </div>
               )}
               {settings.contact_details?.email && (
-                <li>
+                <div suppressHydrationWarning>
                   <span className="font-medium text-white">Email:</span>{' '}
-                  {settings.contact_details.email}
-                </li>
+                  <a 
+                    href={`mailto:${settings.contact_details.email}`}
+                    className="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                  >
+                    {settings.contact_details.email}
+                  </a>
+                </div>
               )}
               {settings.contact_details?.locations?.map((location, idx) => (
-                <li key={idx}>
+                <div key={`location-${location}-${idx}`} suppressHydrationWarning>
                   <span className="font-medium text-white">Location:</span> {location}
-                </li>
+                </div>
               ))}
-            </ul>
-          </div>
+            </address>
+          </section>
         </div>
 
         {/* Divider */}
-        <div className="border-t border-white/20 mt-10"></div>
+        <div className="border-t border-white/20 mt-10" role="separator" aria-hidden="true" suppressHydrationWarning></div>
 
         {/* Copyright */}
-        <div className="text-center text-sm text-blue-200 pt-6">
+        <div className="text-center text-sm text-blue-200 pt-6" suppressHydrationWarning>
           <p>{settings.copyright}</p>
         </div>
       </div>
     </footer>
   );
 }
+
+// Performance: Export memoized component
+export default memo(Footer);

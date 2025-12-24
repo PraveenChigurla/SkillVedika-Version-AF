@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -16,44 +16,48 @@ interface HeaderSettings {
   menu_items?: MenuItem[];
 }
 
-export default function Header() {
+// Performance: Memoize header component to prevent unnecessary re-renders
+function Header() {
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings | null>(null);
   const pathname = usePathname();
 
-  useEffect(() => {
-    async function fetchHeaderSettings() {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        if (!apiUrl) {
-          console.warn('NEXT_PUBLIC_API_URL not set');
-          return;
-        }
-        // Use cache for better performance - header settings don't change often
-        const res = await fetch(`${apiUrl}/header-settings`, {
-          cache: 'force-cache',
-          next: { revalidate: 3600 }, // Revalidate every hour
-        });
-        const data = await res.json();
-        setHeaderSettings(data);
-      } catch (err) {
-        console.error('Failed to fetch header settings:', err);
+  // Performance: useCallback to memoize fetch function
+  const fetchHeaderSettings = useCallback(async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      if (!apiUrl) {
+        console.warn('NEXT_PUBLIC_API_URL not set');
+        return;
       }
-    }
-    // Defer header settings fetch if possible
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      requestIdleCallback(fetchHeaderSettings, { timeout: 1000 });
-    } else {
-      fetchHeaderSettings();
+      // Performance: Use cache for better performance - header settings don't change often
+      const res = await fetch(`${apiUrl}/header-settings`, {
+        cache: 'force-cache',
+        next: { revalidate: 3600 }, // Revalidate every hour
+      });
+      const data = await res.json();
+      setHeaderSettings(data);
+    } catch (err) {
+      console.error('Failed to fetch header settings:', err);
     }
   }, []);
 
-  // Function to check if current path matches menu item
-  const isActive = (slug: string): boolean => {
+  useEffect(() => {
+    // Performance: Defer header settings fetch if possible - not critical for initial render
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      requestIdleCallback(fetchHeaderSettings, { timeout: 1000 });
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(fetchHeaderSettings, 100);
+    }
+  }, [fetchHeaderSettings]);
+
+  // Performance: Memoize active check function
+  const isActive = useCallback((slug: string): boolean => {
     if (slug === '/') {
       return pathname === '/';
     }
     return pathname.startsWith(slug);
-  };
+  }, [pathname]);
 
   // Fallback menu items
   const defaultMenuItems: MenuItem[] = [
@@ -70,10 +74,20 @@ export default function Header() {
   const logo = headerSettings?.logo || '/home/skill-vedika-logo.png';
 
   return (
-    <header className="bg-white border-b border-[#E0E8F0] sticky top-0 z-50">
+    <header 
+      className="bg-white border-b border-[#E0E8F0] sticky top-0 z-50"
+      role="banner"
+      aria-label="Main navigation"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-0">
         <div className="flex items-center justify-between py-4">
-          <Link href="/" className="flex items-center">
+          {/* Accessibility: Logo link with proper aria-label */}
+          <Link 
+            href="/" 
+            className="flex items-center"
+            aria-label="SkillVedika Home"
+          >
+            {/* Performance: Priority image for LCP - logo is above the fold */}
             <Image
               src={logo}
               alt="SkillVedika Logo"
@@ -81,29 +95,64 @@ export default function Header() {
               height={35}
               priority
               className="object-contain image-auto-aspect"
+              style={{ width: 'auto', height: 'auto' }}
+              sizes="(max-width: 768px) 120px, 140px"
             />
           </Link>
-          <nav className="hidden md:flex items-center space-x-8">
+          
+          {/* Accessibility: Semantic navigation with proper ARIA */}
+          <nav 
+            className="hidden md:flex items-center space-x-8"
+            role="navigation"
+            aria-label="Main menu"
+          >
             {menuItems.map((item, idx) => {
               const active = isActive(item.slug);
               return (
                 <Link
-                  key={idx}
+                  key={`${item.slug}-${idx}`}
                   href={item.slug}
                   target={item.new_tab ? '_blank' : undefined}
                   rel={item.new_tab ? 'noopener noreferrer' : undefined}
-                  prefetch={true} // Enable prefetching for faster navigation
-                  className={`text-sm font-medium transition-colors duration-200 ${
+                  prefetch={true} // Performance: Enable prefetching for faster navigation
+                  className={`text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded ${
                     active ? 'text-[#2563EB] font-semibold' : 'text-gray-600 hover:text-[#2563EB]'
                   }`}
+                  aria-current={active ? 'page' : undefined}
                 >
                   {item.text}
                 </Link>
               );
             })}
           </nav>
+          
+          {/* Accessibility: Mobile menu button (if needed) */}
+          <button
+            className="md:hidden p-2 text-gray-600 hover:text-[#2563EB] focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            aria-label="Toggle mobile menu"
+            aria-expanded="false"
+            type="button"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </header>
   );
 }
+
+// Performance: Export memoized component
+export default memo(Header);

@@ -12,39 +12,27 @@ import { Suspense } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { getCanonicalUrl } from '@/lib/seo';
-import StickyFooter from '@/components/StickyFooter';
-import QueryPopup from '@/components/QueryPopup';
-import WhatsAppButton from '@/components/WhatsAppButton';
+import ClientComponents from '@/components/ClientComponents';
 
-// Lazy load Footer for better performance
+// Performance: Lazy load non-critical components below the fold
+// Footer is below the fold, so lazy load it to reduce initial bundle
 const Footer = dynamic(() => import('@/components/footer'), {
   ssr: true, // Keep SSR for SEO
+  loading: () => <footer aria-label="Loading footer" className="min-h-[200px]" />,
 });
 
-// Lazy load CookieConsent - not critical for initial render
-// The component itself is a client component, so it will hydrate on the client
-// Wrap in try-catch to handle chunk load errors gracefully
-const CookieConsentWrapper = dynamic(
-  () =>
-    import('@/components/CookieConsentWrapper').catch(err => {
-      console.warn('Failed to load CookieConsentWrapper:', err);
-      // Return a no-op component if loading fails
-      return { default: () => null };
-    }),
-  {
-    loading: () => null, // Don't show loading state
-  }
-);
-
-// Optimize font loading with display swap for better performance
+// Performance: Optimize font loading with display swap for better LCP
+// Preload only primary font, defer secondary font
 const geist = Geist({
   subsets: ['latin'],
-  display: 'swap',
-  preload: true,
+  display: 'swap', // Prevents invisible text during font load
+  preload: true, // Preload primary font
   variable: '--font-geist',
-  fallback: ['system-ui', 'arial'],
-  adjustFontFallback: true,
+  fallback: ['system-ui', 'arial'], // Immediate fallback
+  adjustFontFallback: true, // Reduces layout shift
 });
+
+// Performance: Don't preload secondary font - load on demand
 const geistMono = Geist_Mono({
   subsets: ['latin'],
   display: 'swap',
@@ -58,7 +46,6 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://skillvedika.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  // Charset is automatically added by Next.js in the first 1024 bytes
   title: {
     default: 'SkillVedika - Online Courses & Professional Training',
     template: '%s | SkillVedika',
@@ -88,7 +75,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: getCanonicalUrl('/'), // Default canonical for homepage
+    canonical: getCanonicalUrl('/'),
   },
   openGraph: {
     type: 'website',
@@ -118,11 +105,12 @@ export const metadata: Metadata = {
   },
 };
 
-// Viewport must be exported separately in Next.js 13+
-// Removed maximumScale as it's not recommended and causes compatibility warnings
+// Viewport configuration for better mobile performance
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 5, // Allow zoom for accessibility
+  userScalable: true,
 };
 
 export default function RootLayout({
@@ -133,30 +121,38 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
       <head>
-        {/* Character encoding - Next.js adds this automatically, removing duplicate */}
-        {/* Preconnect to API for faster requests */}
+        {/* Performance: Preconnect to API for faster requests */}
         <link
           rel="preconnect"
           href={process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}
           crossOrigin="anonymous"
         />
-        {/* DNS prefetch for external resources */}
+        {/* Performance: DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        {/* Note: Next.js automatically optimizes CSS loading, no manual preload needed */}
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://wa.me" />
       </head>
       <body className={`font-sans antialiased`} suppressHydrationWarning>
         <ErrorBoundary>
+          {/* Performance: Load analytics with afterInteractive strategy - non-blocking */}
           <Suspense fallback={null}>
             <GoogleAnalytics />
           </Suspense>
+          
+          {/* Accessibility: Semantic header */}
           <Header />
-          <main>{children}</main>
+          
+          {/* Accessibility: Semantic main content */}
+          <main id="main-content" role="main">
+            {children}
+          </main>
+          
+          {/* Performance: Footer loaded lazily - below the fold */}
           <Footer />
-          <StickyFooter />
-          <WhatsAppButton />
-          <QueryPopup></QueryPopup>
-          <CookieConsentWrapper />
+          
+          {/* Performance: Client-only components wrapped in client component */}
+          <ClientComponents />
         </ErrorBoundary>
       </body>
     </html>

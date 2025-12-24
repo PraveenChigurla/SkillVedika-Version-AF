@@ -60,6 +60,7 @@ export default function RealTime({
                   width={260}
                   height={260}
                   className="w-full h-full object-contain"
+                  style={{ width: 'auto', height: 'auto' }}
                   quality={85}
                   loading="lazy"
                   sizes="(max-width: 768px) 260px, 260px"
