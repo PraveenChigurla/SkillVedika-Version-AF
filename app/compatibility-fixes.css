@@ -1,0 +1,142 @@
+/* Browser Compatibility Fixes */
+
+/* Text Size Adjust - Ensure standard is present for Chrome/Edge/Firefox */
+/* Tailwind preflight has -webkit-text-size-adjust for Safari, we add the standard for others */
+html {
+  /* Standard property for Chrome 54+, Edge 79+, Firefox */
+  text-size-adjust: 100%;
+  /* Webkit prefix for Safari (Tailwind already adds this, but ensuring it's here) */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Backdrop Filter - Add webkit prefix for Safari compatibility */
+/* Tailwind CSS 4 should handle this via autoprefixer, but adding explicit rules to ensure compatibility */
+/* These rules ensure webkit prefix is always present for Safari 9+ */
+.backdrop-blur-sm,
+[class*='backdrop-blur-sm'] {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.backdrop-blur-md,
+[class*='backdrop-blur-md'] {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.backdrop-blur-lg,
+[class*='backdrop-blur-lg'] {
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.backdrop-blur-xl,
+[class*='backdrop-blur-xl'] {
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
+
+.backdrop-blur,
+[class*='backdrop-blur']:not([class*='backdrop-blur-sm']):not([class*='backdrop-blur-md']):not(
+    [class*='backdrop-blur-lg']
+  ):not([class*='backdrop-blur-xl']) {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Width Stretch - Add webkit prefix for Edge compatibility */
+/* Use -webkit-fill-available as fallback for width: stretch */
+.w-stretch,
+[class*='w-stretch'],
+[style*='width: stretch'],
+[style*='width:stretch'] {
+  width: -webkit-fill-available; /* Fallback for Edge */
+  width: stretch; /* Modern browsers */
+}
+
+/* Scrollbar Properties - Add fallbacks for Safari */
+/* These are used in some components, add webkit fallbacks where needed */
+.scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+  /* Safari doesn't support scrollbar-gutter, but it's a progressive enhancement */
+}
+
+.scrollbar-width-thin {
+  scrollbar-width: thin;
+  /* Safari doesn't support scrollbar-width, use webkit scrollbar styling instead */
+}
+
+.scrollbar-width-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-width-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-width-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+/* Hide scrollbar utility - moved from inline styles */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* Text Wrap - Add fallbacks for older Safari */
+/* text-wrap: balance is not supported in Safari < 17.5, use normal as fallback */
+.text-wrap-balance {
+  text-wrap: normal; /* Fallback for older Safari */
+  text-wrap: balance; /* Modern browsers */
+}
+
+.text-wrap-pretty {
+  text-wrap: normal; /* Fallback for older Safari */
+  text-wrap: pretty; /* Modern browsers */
+}
+
+/* Mask Image - Add webkit prefix for Edge compatibility */
+/* Used in some components for masking effects */
+[style*='mask-image'],
+[class*='mask'] {
+  -webkit-mask-image: var(--mask-image, none);
+  mask-image: var(--mask-image, none);
+}
+
+/* Ensure mask-image has webkit prefix when used */
+.mask-image-gradient {
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+  mask-image: linear-gradient(to bottom, black, transparent);
+}
+
+/* Field Sizing - Add fallback for Firefox and Safari */
+/* field-sizing is not supported in Firefox and Safari, use width instead */
+input[field-sizing='content'],
+.field-sizing-content,
+[class*='field-sizing-content'],
+.field-utilities {
+  /* Fallback: use auto width for browsers that don't support field-sizing */
+  width: auto;
+  min-width: fit-content;
+  /* Modern browsers that support field-sizing */
+  field-sizing: content;
+}
+
+/* Ensure field-sizing fallback works for all input types */
+@supports not (field-sizing: content) {
+  input[field-sizing='content'],
+  .field-sizing-content,
+  [class*='field-sizing-content'],
+  .field-utilities {
+    width: auto;
+    min-width: fit-content;
+  }
+}

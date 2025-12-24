@@ -1,0 +1,134 @@
+/* Optimized Animations - Moved from inline styles to external CSS */
+
+/* Performance optimizations for animations */
+* {
+  /* Enable GPU acceleration for transforms */
+  will-change: auto;
+}
+
+/* Marquee Animation - Uses transform (GPU accelerated) instead of left */
+@keyframes marquee {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Shake Animation - Uses transform (GPU accelerated) instead of left/height */
+@keyframes shake {
+  0% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(-12deg);
+  }
+  30% {
+    transform: rotate(10deg);
+  }
+  45% {
+    transform: rotate(-8deg);
+  }
+  60% {
+    transform: rotate(6deg);
+  }
+  75% {
+    transform: rotate(-4deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.shake {
+  display: inline-block;
+  transform-origin: center;
+  animation: shake 0.9s ease-in-out infinite;
+}
+
+/* Float Animation - Uses transform (GPU accelerated) instead of top/height */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Image aspect ratio styles - moved from inline to CSS */
+.image-auto-aspect {
+  width: auto;
+  height: auto;
+}
+
+/* Transform utility - moved from inline to CSS */
+.transform-translate-x {
+  transform: translateX(-6px);
+}
+
+/* Fade In Animation - Use opacity instead of visibility for better performance */
+/* This replaces any visibility-based fadein animations */
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in,
+[class*='animate-fade-in'] {
+  animation: fadein 0.3s ease-in-out;
+}
+
+/* Ensure no visibility animations trigger layout */
+/* Replace visibility with opacity in any keyframes */
+@keyframes fadein-safe {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide In Animations - GPU accelerated */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.4s ease-out 0.6s both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out 0.4s both;
+}

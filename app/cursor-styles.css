@@ -1,0 +1,187 @@
+/* ===== Professional Cursor Styles for Skill Vedika ===== */
+
+/* Interactive Elements - Pointer Cursor */
+button,
+a,
+[role='button'],
+label[for],
+select,
+input[type='checkbox'],
+input[type='radio'],
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Text Input Fields - Text Cursor */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='search'],
+input[type='tel'],
+input[type='url'],
+input[type='number'],
+textarea {
+  cursor: text;
+}
+
+/* Disabled Elements - Not Allowed Cursor */
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled,
+[disabled],
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+/* Images - Default Cursor (No Text Selection) */
+/* Property order: -ms-user-select must come before user-select */
+img {
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Cursor Utility Classes */
+.cursor-default {
+  cursor: default;
+}
+
+.cursor-auto {
+  cursor: auto;
+}
+
+.cursor-zoom-in {
+  cursor: zoom-in;
+}
+
+.cursor-zoom-out {
+  cursor: zoom-out;
+}
+
+/* Draggable Elements - webkit prefix must come first for Safari compatibility */
+.cursor-grab {
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
+
+/* Elements with Tooltips or Help */
+[title],
+.cursor-help {
+  cursor: help;
+}
+
+/* Loading/Wait States */
+.cursor-wait {
+  cursor: wait;
+}
+
+/* Progress States */
+.cursor-progress {
+  cursor: progress;
+}
+
+/* Movable Elements */
+.cursor-move {
+  cursor: move;
+}
+
+/* Drop Prevention */
+.cursor-no-drop {
+  cursor: no-drop;
+}
+
+/* Crosshair for precise selection */
+.cursor-crosshair {
+  cursor: crosshair;
+}
+
+/* All scrolls */
+.cursor-all-scroll {
+  cursor: all-scroll;
+}
+
+/* Resize directions */
+.cursor-resize-ns {
+  cursor: ns-resize;
+}
+
+.cursor-resize-ew {
+  cursor: ew-resize;
+}
+
+.cursor-resize-nwse {
+  cursor: nwse-resize;
+}
+
+.cursor-resize-nesw {
+  cursor: nesw-resize;
+}
+
+/* Cell selection */
+.cursor-cell {
+  cursor: cell;
+}
+
+/* Prevent text cursor on dropdowns */
+select {
+  cursor: pointer;
+}
+
+/* Smooth transitions for interactive elements */
+button,
+a,
+input,
+select,
+textarea,
+label {
+  transition: all 150ms ease-in-out;
+}
+
+/* Additional refinements for common UI patterns */
+
+/* Disable pointer events on images to prevent text selection cursor */
+img[draggable='false'] {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Links should always be clickable */
+a[href] {
+  cursor: pointer;
+}
+
+/* Focus visible states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+label:focus-visible {
+  outline: 2px solid var(--ring, currentColor);
+  outline-offset: 2px;
+}
+
+/* Hover states with smooth cursor feedback */
+button:hover:not(:disabled),
+a:hover,
+[role='button']:hover,
+label:hover {
+  cursor: pointer;
+  transition: all 150ms ease-in-out;
+}
+
+/* Text input cursor positioning */
+input:not([type='checkbox']):not([type='radio']):not([type='button']):not([type='submit']):not(
+    [type='reset']
+  ):not([type='hidden']),
+textarea {
+  cursor: text;
+}
