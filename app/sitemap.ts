@@ -10,11 +10,7 @@
 import { MetadataRoute } from 'next';
 import { getApiUrl } from '@/lib/apiConfig';
 import {
-  getSiteUrl,
   getCanonicalUrl,
-  formatSitemapDate,
-  getRoutePriority,
-  getChangeFrequency,
 } from '@/lib/seo';
 
 interface Course {
@@ -30,12 +26,6 @@ interface Blog {
   blog_id?: number;
   id?: number;
   slug?: string;
-  updated_at?: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
   updated_at?: string;
 }
 
@@ -97,7 +87,6 @@ async function getBlogs(): Promise<Blog[]> {
  * Generate sitemap entries
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = getSiteUrl();
   const now = new Date();
   const sitemapEntries: MetadataRoute.Sitemap = [];
 

@@ -6,7 +6,11 @@ import { useState, useEffect, useRef, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import parse from 'html-react-parser';
 
-export default function Hero({ hero }) {
+interface HeroProps {
+  hero?: any;
+}
+
+export default function Hero({ hero }: Readonly<HeroProps>) {
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState<any>({
     popular: [],
@@ -245,19 +249,30 @@ export default function Hero({ hero }) {
     if (al === 0) return bl;
     if (bl === 0) return al;
 
-    const dp = Array.from({ length: al + 1 }, () => new Array(bl + 1).fill(0));
+    const dp: number[][] = [];
+    for (let i = 0; i <= al; i++) {
+      dp[i] = new Array(bl + 1).fill(0);
+    }
 
-    for (let i = 0; i <= al; i++) dp[i][0] = i;
-    for (let j = 0; j <= bl; j++) dp[0][j] = j;
+    for (let i = 0; i <= al; i++) {
+      dp[i]![0] = i;
+    }
+    for (let j = 0; j <= bl; j++) {
+      dp[0]![j] = j;
+    }
 
     for (let i = 1; i <= al; i++) {
       for (let j = 1; j <= bl; j++) {
         const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+        dp[i]![j] = Math.min(
+          dp[i - 1]![j]! + 1,
+          dp[i]![j - 1]! + 1,
+          dp[i - 1]![j - 1]! + cost
+        );
       }
     }
 
-    return dp[al][bl];
+    return dp[al]![bl]!;
   };
 
   // Skill ranking algorithm - optimized to break up work and reduce TBT
@@ -269,7 +284,10 @@ export default function Hero({ hero }) {
         return;
       }
 
-      if (SKILL_ALIASES[q]) q = SKILL_ALIASES[q].toLowerCase();
+      if (SKILL_ALIASES[q]) {
+        const alias = SKILL_ALIASES[q];
+        if (alias) q = alias.toLowerCase();
+      }
 
       // Break up scoring into chunks to avoid blocking main thread
       // Smaller chunks = less blocking per chunk
@@ -291,9 +309,10 @@ export default function Hero({ hero }) {
         }
 
         const chunk = chunks[chunkIndex];
-        chunk.forEach(skill => {
-          const s = skill.toLowerCase();
-          let score = 0;
+        if (chunk) {
+          chunk.forEach(skill => {
+            const s = skill.toLowerCase();
+            let score = 0;
 
           if (s.includes('aws') || s.includes('sap') || s.includes('data') || s.includes('cloud'))
             score += 25;
@@ -308,7 +327,8 @@ export default function Hero({ hero }) {
           score += Math.max(0, 20 - s.length);
 
           scored.push({ skill, score });
-        });
+          });
+        }
 
         chunkIndex++;
 
@@ -457,7 +477,7 @@ export default function Hero({ hero }) {
 
             {/* ⭐ BULLET FEATURES FROM CMS ARRAY */}
             <div className="flex flex-wrap gap-4 text-sm text-gray-700">
-              {(hero?.hero_content || []).map((item, index) => (
+              {(hero?.hero_content || []).map((item: any, index: number) => (
                 <div key={index} className="flex items-center gap-2">
                   <CheckCircle2 size={16} className="text-[#2C5AA0]" />
                   <span>{item}</span>
@@ -530,7 +550,7 @@ export default function Hero({ hero }) {
 
                 <div className="relative w-full overflow-hidden h-6">
                   <div className="marquee-track">
-                    {(hero?.hero_popular || []).concat(hero?.hero_popular || []).map((tag, idx) => (
+                    {(hero?.hero_popular || []).concat(hero?.hero_popular || []).map((tag: any, idx: number) => (
                       <button
                         key={`${tag}-${idx}`}
                         className="marquee-tag inline-flex items-center px-3 py-1 bg-white border border-[#E0E8F0] text-xs text-gray-600 rounded-full"

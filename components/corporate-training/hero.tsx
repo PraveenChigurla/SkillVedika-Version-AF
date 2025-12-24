@@ -43,12 +43,22 @@ export default function Hero({
           <p className="text-lg text-gray-600 mb-8 max-w-lg">{subheading}</p>
 
           <div className="flex flex-wrap gap-4">
-            <button
-              onClick={() => setShowEnrollModal(true)}
-              className="px-8 py-3 bg-blue-800 text-white rounded-lg font-semibold shadow hover:bg-[#0066d3] transition-transform hover:scale-105 active:scale-95"
-            >
-              {buttonText}
-            </button>
+            {buttonLink ? (
+              <a href={buttonLink}>
+                <button
+                  className="px-8 py-3 bg-blue-800 text-white rounded-lg font-semibold shadow hover:bg-[#0066d3] transition-transform hover:scale-105 active:scale-95"
+                >
+                  {buttonText}
+                </button>
+              </a>
+            ) : (
+              <button
+                onClick={() => setShowEnrollModal(true)}
+                className="px-8 py-3 bg-blue-800 text-white rounded-lg font-semibold shadow hover:bg-[#0066d3] transition-transform hover:scale-105 active:scale-95"
+              >
+                {buttonText}
+              </button>
+            )}
           </div>
 
           {showEnrollModal && (

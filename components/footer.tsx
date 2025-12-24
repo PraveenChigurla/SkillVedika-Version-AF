@@ -15,7 +15,6 @@ export default function Footer() {
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [firstCourseId, setFirstCourseId] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchFooterSettings() {
@@ -40,35 +39,6 @@ export default function Footer() {
     }
   }, []);
 
-  // Fetch first course id to attach as default course (if available) - defer this
-  useEffect(() => {
-    async function fetchFirstCourse() {
-      try {
-        const apiUrl = getApiUrl('/courses');
-        const res = await fetch(apiUrl, {
-          cache: 'force-cache',
-          next: { revalidate: CACHE_REVALIDATION.COURSES },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          // data likely array of courses; pick first one's id if available
-          const first = data[0];
-          if (first && (first.id || first.ID)) {
-            setFirstCourseId(first.id ?? first.ID);
-          }
-        }
-      } catch (err) {
-        // ignore silently; courses optional
-      }
-    }
-    // Defer this fetch - not critical
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      requestIdleCallback(fetchFirstCourse, { timeout: DEFER_TIMEOUTS.FIRST_COURSE });
-    } else {
-      setTimeout(fetchFirstCourse, DEFER_TIMEOUTS.DEFAULT);
-    }
-  }, []);
 
   // Default values
   const settings: FooterSettings = {

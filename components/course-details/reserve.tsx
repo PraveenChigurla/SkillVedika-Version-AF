@@ -14,7 +14,6 @@ export default function Reserve({ agenda = [] }: ReserveProps) {
   const [content, setContent] = useState<PlacementsReserveContent | null>(null);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [courses, setCourses] = useState<Array<{ id: number; title: string }>>([]);
-  const [coursesLoading, setCoursesLoading] = useState(true);
 
   const agendaList = Array.isArray(agenda) ? agenda : [];
 
@@ -77,7 +76,6 @@ export default function Reserve({ agenda = [] }: ReserveProps) {
 
         if (!res.ok) {
           logger.error('Failed to fetch courses:', res.status);
-          setCoursesLoading(false);
           return;
         }
 
@@ -101,8 +99,6 @@ export default function Reserve({ agenda = [] }: ReserveProps) {
       } catch (err) {
         logger.error('Error fetching courses:', err);
         setCourses([]); // Set empty array on error
-      } finally {
-        setCoursesLoading(false);
       }
     }
 

@@ -5,12 +5,12 @@ import { useEffect, useState } from 'react';
 
 // Lazy load CookieConsent - only load after page is interactive to reduce TBT
 // Add error handling for chunk load failures
-const CookieConsent = dynamic(() => import('@/components/CookieConsent'), {
+const CookieConsent = dynamic(() => import('@/components/CookieConsent').catch(() => {
+  console.warn('Failed to load CookieConsent component');
+  return { default: () => null };
+}), {
   ssr: false,
   loading: () => null, // Don't show loading state
-  onError: error => {
-    console.warn('Failed to load CookieConsent component:', error);
-  },
 });
 
 export default function CookieConsentWrapper() {

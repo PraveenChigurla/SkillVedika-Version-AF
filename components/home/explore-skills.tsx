@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import parse from 'html-react-parser';
 
-export default function ExploreSkills({ explore, setStatusFilter }) {
+interface ExploreSkillsProps {
+  explore?: any;
+  setStatusFilter: (filter: string) => void;
+}
+
+export default function ExploreSkills({ explore, setStatusFilter }: Readonly<ExploreSkillsProps>) {
   const [activeTab, setActiveTab] = useState(
     explore?.explore_tabs?.[0]?.toLowerCase() || 'trending'
   );

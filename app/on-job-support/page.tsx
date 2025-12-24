@@ -1,15 +1,20 @@
 import dynamicImport from 'next/dynamic';
 import path from 'node:path';
 import fs from 'node:fs';
+import type { HeroSectionProps } from '@/components/on-job-support/hero-section';
+import type { ReadyToEmpowerProps } from '@/components/on-job-support/ready-to-empower';
 
 // Lazy load components for better performance
-const HeroSection = dynamicImport(() => import('@/components/on-job-support/hero-section'));
+const HeroSection = dynamicImport<HeroSectionProps>(
+  () => import('@/components/on-job-support/hero-section'),
+  { ssr: true }
+);
 const RealTimeHelp = dynamicImport(() => import('@/components/on-job-support/real-time-help'));
 const WhoIsThisFor = dynamicImport(() => import('@/components/on-job-support/who-is-this-for'));
 const HowWeHelp = dynamicImport(() => import('@/components/on-job-support/how-we-help'));
 const OurProcess = dynamicImport(() => import('@/components/on-job-support/our-process'));
 const WhyChoose = dynamicImport(() => import('@/components/on-job-support/why-choose'));
-const ReadyToEmpower = dynamicImport(() => import('@/components/on-job-support/ready-to-empower'));
+const ReadyToEmpower = dynamicImport<ReadyToEmpowerProps>(() => import('@/components/on-job-support/ready-to-empower'));
 const GetLiveDemo = dynamicImport(() => import('@/components/on-job-support/get-live-demo'));
 
 export const dynamic = 'force-dynamic';

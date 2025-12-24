@@ -3,8 +3,6 @@
  * Helps improve search engine understanding and rich snippets
  */
 
-import React from 'react';
-
 export interface OrganizationSchema {
   '@context': 'https://schema.org';
   '@type': 'Organization';

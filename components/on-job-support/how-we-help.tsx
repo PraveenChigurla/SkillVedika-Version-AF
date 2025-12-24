@@ -1,5 +1,6 @@
 'use client';
 
+import type { ComponentType } from 'react';
 import { useEffect, useState, useRef } from 'react';
 import { Wrench, Users, Bug } from 'lucide-react';
 
@@ -117,7 +118,7 @@ export default function HowWeHelp({
             }}
           >
             {cards.map((service, i) => {
-              const Icon = service.icon;
+              const Icon = service.icon as ComponentType<{ className?: string; strokeWidth?: number }>;
               return (
                 <div key={i} className="flex-shrink-0 w-[350px]">
                   <div className="bg-white/70 backdrop-blur-xl border border-gray-200/60 rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow duration-300 hover:-translate-y-1">
@@ -125,7 +126,7 @@ export default function HowWeHelp({
                     <div
                       className={`w-14 h-14 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center text-white shadow-md mb-5`}
                     >
-                      <Icon className="w-7 h-7" strokeWidth={1.8} />
+                      {Icon && <Icon className="w-7 h-7" strokeWidth={1.8} />}
                     </div>
 
                     {/* TITLE */}

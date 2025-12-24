@@ -5,10 +5,15 @@ import { useState, useEffect, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import type { Course } from '@/types/api';
 
-export default function CourseCards({ statusFilter }) {
-  const [courses, setCourses] = useState([]);
-  const [filteredCourses, setFilteredCourses] = useState([]);
+interface CourseCardsProps {
+  statusFilter: string;
+}
+
+export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>) {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [viewAll, setViewAll] = useState(false);
@@ -93,19 +98,16 @@ export default function CourseCards({ statusFilter }) {
         currentIndex * itemsPerPage + itemsPerPage
       );
 
-  const startRange = currentIndex * itemsPerPage + 1;
-  const endRange = Math.min(startRange + itemsPerPage - 1, filteredCourses.length);
-
   // ============================
   // SLIDE ANIMATION VARIANTS
   // ============================
   const slideVariants = {
-    enter: direction => ({
+    enter: (direction: number) => ({
       x: direction > 0 ? 120 : -120,
       opacity: 0,
     }),
     center: { x: 0, opacity: 1 },
-    exit: direction => ({
+    exit: (direction: number) => ({
       x: direction > 0 ? -120 : 120,
       opacity: 0,
     }),
@@ -122,6 +124,7 @@ export default function CourseCards({ statusFilter }) {
   };
 
   const handleViewAllClick = () => {
+    setViewAll(true);
     router.push('/courses');
   };
 
@@ -186,7 +189,7 @@ export default function CourseCards({ statusFilter }) {
                 >
                   <div className="relative">
                     <Image
-                      src={course.image}
+                      src={course.image || '/placeholder-course.png'}
                       alt={course.title}
                       width={400}
                       height={192}
@@ -202,9 +205,11 @@ export default function CourseCards({ statusFilter }) {
                     <h3 className="font-semibold text-gray-900 mb-2 text-lg leading-snug line-clamp-2">
                       {course.title}
                     </h3>
-                    <p className="text-xs text-gray-600 mb-2">
-                      {course.students} Students enrolled
-                    </p>
+                    {course.students && (
+                      <p className="text-xs text-gray-600 mb-2">
+                        {course.students} Students enrolled
+                      </p>
+                    )}
 
                     {/* 
                     <p className="text-sm font-semibold text-[#2C5AA0] mb-4">
@@ -233,24 +238,26 @@ export default function CourseCards({ statusFilter }) {
                         View more
                       </button>
 
-                      <div className="flex items-center gap-2">
-                        <div className="flex gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              size={14}
-                              className={
-                                i < course.rating
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-gray-300'
-                              }
-                            />
-                          ))}
+                      {course.rating && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                size={14}
+                                className={
+                                  i < course.rating!
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300'
+                                }
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">
+                            ({Number(course.rating).toFixed(1)})
+                          </span>
                         </div>
-                        <span className="text-sm font-medium text-gray-700">
-                          ({Number(course.rating).toFixed(1)})
-                        </span>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>

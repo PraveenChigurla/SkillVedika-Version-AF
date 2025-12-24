@@ -3,15 +3,21 @@
 import { useEffect, useState, startTransition, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import CourseRow from './CourseRow';
+import type { Course } from '@/types/api';
 
 // Lazy load CategorySidebar - it's not critical for initial render
 const CategorySidebar = dynamic(() => import('./CategorySidebar'), {
   loading: () => <div className="w-64 h-96 bg-gray-50 rounded-lg animate-pulse"></div>,
 });
 
+interface Category {
+  id: string | number;
+  name: string;
+}
+
 export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
-  const [categories, setCategories] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedCats, setSelectedCats] = useState(['all']);
@@ -38,19 +44,19 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
         // Defer categories fetch - sidebar is lazy loaded, not critical for initial render
         // Use requestIdleCallback to defer if available
         const fetchCategories = async () => {
-          const catRes = await Promise.race([
+          const catRes = (await Promise.race([
             fetch(`${apiBase}/categories`, {
               signal: controller.signal,
               headers: { Accept: 'application/json' },
               cache: 'default', // Browser cache
             }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500)), // Reduced timeout
-          ]).catch(() => ({ ok: false }));
+            new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500)), // Reduced timeout
+          ]).catch(() => ({ ok: false } as Response))) as Response | { ok: false };
 
           // Set categories with startTransition for non-blocking update
-          if (catRes.ok) {
+          if (catRes.ok && 'json' in catRes) {
             try {
-              const data = await catRes.json();
+              const data = await (catRes as Response).json();
               const categoriesData = data?.data || data || [];
               startTransition(() => {
                 setCategories(Array.isArray(categoriesData) ? categoriesData : []);
@@ -76,23 +82,23 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
         }
 
         // Fetch courses immediately (needed for LCP) - optimized with shorter timeout
-        const courseRes = await Promise.race([
+        const courseRes = (await Promise.race([
           fetch(`${apiBase}/courses`, {
             signal: controller.signal,
             headers: { Accept: 'application/json' },
             // Use browser cache - client components can't use Next.js cache options
             cache: 'default', // Browser will use cache if available
           }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000)), // Reduced to 2s
-        ]).catch(() => ({ ok: false }));
+          new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000)), // Reduced to 2s
+        ]).catch(() => ({ ok: false } as Response))) as Response | { ok: false };
 
         clearTimeout(timeoutId);
 
         // Handle courses with startTransition for non-blocking update
         let coursesData = [];
-        if (courseRes.ok) {
+        if (courseRes.ok && 'json' in courseRes) {
           try {
-            const data = await courseRes.json();
+            const data = await (courseRes as Response).json();
             coursesData = data?.data || data || [];
           } catch (e) {
             console.warn('Failed to parse courses:', e);
@@ -105,7 +111,9 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
           setLoading(false);
         });
       } catch (err) {
-        if (err.name !== 'AbortError') {
+        const isAbortError = err instanceof Error && err.name === 'AbortError';
+        const isDOMAbortError = err instanceof DOMException && err.name === 'AbortError';
+        if (!isAbortError && !isDOMAbortError) {
           console.error('Error loading data:', err);
         }
         // Ensure arrays are set even on error
@@ -124,7 +132,7 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
   const isSearchMode = !forceExitSearch && q.length > 0 && !catQuery;
 
   // ⭐ CATEGORY SELECT HANDLER - optimized with startTransition
-  const handleCategorySelect = clickedId => {
+  const handleCategorySelect = (clickedId: string) => {
     // Use startTransition for non-urgent UI updates
     startTransition(() => {
       // -------- EXIT SEARCH MODE --------
@@ -185,10 +193,12 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
     const coursesByCategory = new Map();
     coursesArray.forEach(course => {
       const catId = course.category_id;
-      if (!coursesByCategory.has(catId)) {
-        coursesByCategory.set(catId, []);
+      if (catId !== undefined && catId !== null) {
+        if (!coursesByCategory.has(catId)) {
+          coursesByCategory.set(catId, []);
+        }
+        coursesByCategory.get(catId)?.push(course);
       }
-      coursesByCategory.get(catId).push(course);
     });
 
     let grouped = categoriesArray
@@ -220,10 +230,12 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
       const matchedByCategory = new Map();
       matched.forEach(course => {
         const catId = course.category_id;
-        if (!matchedByCategory.has(catId)) {
-          matchedByCategory.set(catId, []);
+        if (catId !== undefined && catId !== null) {
+          if (!matchedByCategory.has(catId)) {
+            matchedByCategory.set(catId, []);
+          }
+          matchedByCategory.get(catId)?.push(course);
         }
-        matchedByCategory.get(catId).push(course);
       });
 
       grouped = grouped

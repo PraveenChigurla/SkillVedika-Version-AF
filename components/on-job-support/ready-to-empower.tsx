@@ -9,25 +9,27 @@ import { getApiUrl } from '@/lib/apiConfig';
 import { logger } from '@/lib/logger';
 import SafeHTML from '@/components/SafeHTML';
 import type { Course } from '@/types/api';
+import React from 'react';
 
-export default function ReadyToEmpower({
+export interface ReadyToEmpowerProps {
+  title: any;
+  description: string;
+  buttonText: string;
+  buttonLink?: string | null;
+  image: string;
+}
+
+function ReadyToEmpower({
   title,
   description,
   buttonText,
   buttonLink,
   image,
-}: {
-  title: any;
-  description: string;
-  buttonText: string;
-  buttonLink: string;
-  image: string;
-}) {
+}: Readonly<ReadyToEmpowerProps>) {
   const imageOffset = { x: -10, y: 10 };
 
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [courses, setCourses] = useState<{ id: number; title: string }[]>([]);
-  const [coursesLoading, setCoursesLoading] = useState(true);
 
   useEffect(() => {
     async function fetchCourses() {
@@ -42,7 +44,6 @@ export default function ReadyToEmpower({
 
         if (!res.ok) {
           logger.error('Failed to fetch courses:', res.status);
-          setCoursesLoading(false);
           return;
         }
 
@@ -67,8 +68,6 @@ export default function ReadyToEmpower({
       } catch (err) {
         logger.error('Error fetching courses:', err);
         setCourses([]); // Set empty array on error
-      } finally {
-        setCoursesLoading(false);
       }
     }
 
@@ -133,14 +132,10 @@ export default function ReadyToEmpower({
             whileTap={{ scale: 0.97 }}
             className="inline-block"
           >
-            <Button
-              asChild
-              className="relative overflow-hidden bg-blue-900 hover:bg-blue-900 text-white px-8 py-6 rounded-xl font-semibold text-base shadow-md transition-all duration-300 group"
-            >
-              <button
-                type="button"
-                onClick={() => setShowEnrollModal(true)}
-                className="w-full text-left"
+            {buttonLink ? (
+              <a
+                href={buttonLink}
+                className="relative overflow-hidden bg-blue-900 hover:bg-blue-900 text-white px-8 py-6 rounded-xl font-semibold text-base shadow-md transition-all duration-300 group inline-block"
                 aria-label={buttonText || 'Contact Us Today'}
               >
                 <span className="relative z-10">{buttonText || 'Contact Us Today'}</span>
@@ -148,8 +143,26 @@ export default function ReadyToEmpower({
                   className="absolute inset-0 bg-gradient-to-r from-blue-400/40 via-indigo-400/40 to-blue-600/40 opacity-0 group-hover:opacity-30 blur-xl transition-all duration-500"
                   aria-hidden="true"
                 />
-              </button>
-            </Button>
+              </a>
+            ) : (
+              <Button
+                asChild
+                className="relative overflow-hidden bg-blue-900 hover:bg-blue-900 text-white px-8 py-6 rounded-xl font-semibold text-base shadow-md transition-all duration-300 group"
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowEnrollModal(true)}
+                  className="w-full text-left"
+                  aria-label={buttonText || 'Contact Us Today'}
+                >
+                  <span className="relative z-10">{buttonText || 'Contact Us Today'}</span>
+                  <div
+                    className="absolute inset-0 bg-gradient-to-r from-blue-400/40 via-indigo-400/40 to-blue-600/40 opacity-0 group-hover:opacity-30 blur-xl transition-all duration-500"
+                    aria-hidden="true"
+                  />
+                </button>
+              </Button>
+            )}
           </motion.div>
 
           {showEnrollModal && (
@@ -175,3 +188,6 @@ export default function ReadyToEmpower({
     </section>
   );
 }
+
+const ReadyToEmpowerComponent: React.FC<ReadyToEmpowerProps> = ReadyToEmpower;
+export default ReadyToEmpowerComponent;

@@ -1,5 +1,6 @@
 'use client';
 
+import type { ComponentType } from 'react';
 import { Briefcase, Target, ClipboardList, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -11,21 +12,25 @@ const accents = [
   'from-indigo-200 to-indigo-400',
 ];
 
-export default function WhyChoose({ list }) {
+interface WhyChooseProps {
+  list?: Array<{ title?: string; description?: string }> | null;
+}
+
+export default function WhyChoose({ list }: Readonly<WhyChooseProps>) {
   // -----------------------------------------
   // 🛡 Ensure dynamic content is safe
   // -----------------------------------------
   const items =
     Array.isArray(list) && list.length > 0
       ? list.map((item: any, index: number) => {
-          const Icon = icons[index % icons.length];
+          const Icon = icons[index % icons.length] as ComponentType<{ className?: string }>;
 
           return {
             icon: <Icon className="w-6 h-6" />,
             title: typeof item.title === 'string' ? item.title : 'Untitled',
             description: typeof item.description === 'string' ? item.description : '',
             accent: accents[index % accents.length],
-            // badge: index === 0 ? "Lead" : index + 1,
+            badge: index === 0 ? "Lead" : String(index + 1),
           };
         })
       : []; // If backend sends empty array → hide section

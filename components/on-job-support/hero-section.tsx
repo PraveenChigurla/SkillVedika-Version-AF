@@ -3,30 +3,31 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { getTitleParts } from '@/utils/getTitle';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EnrollModal } from '../EmptyLoginForm';
 import SafeHTML from '@/components/SafeHTML';
 import { getApiUrl } from '@/lib/apiConfig';
 import { logger } from '@/lib/logger';
 import type { Course } from '@/types/api';
 
-export default function HeroSection({
+export interface HeroSectionProps {
+  title: any;
+  description: string | null;
+  buttonText: string | null;
+  buttonLink?: string | null;
+  imagePath: string | null;
+}
+
+function HeroSection({
   title,
   description,
   buttonText,
   buttonLink,
   imagePath,
-}: {
-  title: any;
-  description: string | null;
-  buttonText: string | null;
-  buttonLink: string | null;
-  imagePath: string | null;
-}) {
+}: Readonly<HeroSectionProps>) {
   const IMAGE_SCALE = 0.72;
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [courses, setCourses] = useState<{ id: number; title: string }[]>([]);
-  const [coursesLoading, setCoursesLoading] = useState(true);
 
   useEffect(() => {
     async function fetchCourses() {
@@ -41,7 +42,6 @@ export default function HeroSection({
 
         if (!res.ok) {
           logger.error('Failed to fetch courses:', res.status);
-          setCoursesLoading(false);
           return;
         }
 
@@ -65,8 +65,6 @@ export default function HeroSection({
       } catch (err) {
         logger.error('Error fetching courses:', err);
         setCourses([]); // Set empty array on error
-      } finally {
-        setCoursesLoading(false);
       }
     }
 
@@ -98,12 +96,21 @@ export default function HeroSection({
 
             {/* Button */}
             <div className="flex gap-4 pt-2">
-              <Button
-                onClick={() => setShowEnrollModal(true)}
-                className="bg-[#1E4C8F] hover:bg-[#163C72] text-white px-8 py-5 text-base rounded-lg shadow-md"
-              >
-                {buttonText || 'Get Support'}
-              </Button>
+              {buttonLink ? (
+                <a
+                  href={buttonLink}
+                  className="bg-[#1E4C8F] hover:bg-[#163C72] text-white px-8 py-5 text-base rounded-lg shadow-md inline-block text-center"
+                >
+                  {buttonText || 'Get Support'}
+                </a>
+              ) : (
+                <Button
+                  onClick={() => setShowEnrollModal(true)}
+                  className="bg-[#1E4C8F] hover:bg-[#163C72] text-white px-8 py-5 text-base rounded-lg shadow-md"
+                >
+                  {buttonText || 'Get Support'}
+                </Button>
+              )}
             </div>
 
             {showEnrollModal && (
@@ -148,3 +155,6 @@ export default function HeroSection({
     </section>
   );
 }
+
+const HeroSectionComponent: React.FC<HeroSectionProps> = HeroSection;
+export default HeroSectionComponent;

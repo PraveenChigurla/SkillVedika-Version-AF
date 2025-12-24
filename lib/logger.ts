@@ -5,10 +5,7 @@
  * while maintaining error visibility for debugging.
  */
 
-type LogLevel = 'log' | 'warn' | 'error' | 'info' | 'debug';
-
 const isDevelopment = process.env.NODE_ENV === 'development';
-const isProduction = process.env.NODE_ENV === 'production';
 
 /**
  * Logger utility that conditionally logs based on environment

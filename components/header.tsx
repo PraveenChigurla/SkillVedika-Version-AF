@@ -18,7 +18,6 @@ interface HeaderSettings {
 
 export default function Header() {
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings | null>(null);
-  const [loading, setLoading] = useState(true);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -27,7 +26,6 @@ export default function Header() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
         if (!apiUrl) {
           console.warn('NEXT_PUBLIC_API_URL not set');
-          setLoading(false);
           return;
         }
         // Use cache for better performance - header settings don't change often
@@ -39,8 +37,6 @@ export default function Header() {
         setHeaderSettings(data);
       } catch (err) {
         console.error('Failed to fetch header settings:', err);
-      } finally {
-        setLoading(false);
       }
     }
     // Defer header settings fetch if possible
@@ -84,8 +80,7 @@ export default function Header() {
               width={140}
               height={35}
               priority
-              className="object-contain"
-              className="image-auto-aspect"
+              className="object-contain image-auto-aspect"
             />
           </Link>
           <nav className="hidden md:flex items-center space-x-8">

@@ -11,10 +11,9 @@ import type { NextRequest } from 'next/server';
  * - Protocol downgrade attacks
  * - Content injection
  */
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   const response = NextResponse.next();
   const isProduction = process.env.NODE_ENV === 'production';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://skillvedika.com';
 
   // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');

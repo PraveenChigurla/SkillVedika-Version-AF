@@ -157,6 +157,7 @@ export default function DemoSection({
         fullPhone: '',
         countryCode: '+91',
         selectedCourses: [],
+        terms: true,
       });
     } catch (err) {
       console.error(err);

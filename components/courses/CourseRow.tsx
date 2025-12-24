@@ -4,6 +4,16 @@ import { useState, startTransition } from 'react';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 
+interface CourseRowProps {
+  title: string;
+  courses: any[];
+  disableArrows?: boolean;
+  gapTop?: string;
+  gapBottom?: string;
+  onViewAll?: (title: string) => void;
+  onBack?: () => void;
+}
+
 export default function CourseRow({
   title,
   courses,
@@ -12,7 +22,7 @@ export default function CourseRow({
   gapBottom = 'mb-20',
   onViewAll = () => {},
   onBack = () => {},
-}) {
+}: CourseRowProps) {
   const itemsPerPage = 3;
   const [currentIndex, setCurrentIndex] = useState(0);
 

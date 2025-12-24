@@ -1,5 +1,6 @@
 'use client';
 
+import type { ComponentType } from 'react';
 import { Briefcase, CheckCircle, Award, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -11,7 +12,7 @@ const accents = [
   'from-teal-400 to-teal-600',
 ];
 
-export default function KeyOutcomes({ list }) {
+export default function KeyOutcomes({ list }: { list?: (string | { title?: string })[] | null }) {
   // ---------------------------------------------
   // 🔥 SAFETY: Normalize backend data
   // Backend may send:
@@ -24,7 +25,7 @@ export default function KeyOutcomes({ list }) {
     const title =
       typeof item === 'string' ? item : typeof item?.title === 'string' ? item.title : 'Untitled';
 
-    const Icon = icons[index % icons.length];
+    const Icon = icons[index % icons.length] as ComponentType<{ className?: string }>;
 
     return {
       icon: <Icon className="w-6 h-6 text-white" />,

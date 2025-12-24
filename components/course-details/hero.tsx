@@ -70,7 +70,7 @@ export default function Hero({
 
   const [searchTerm, setSearchTerm] = useState('');
   const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch form-details client-side if not passed in - defer with requestIdleCallback
   useEffect(() => {

@@ -6,7 +6,7 @@
  */
 
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { getApiUrl, getApiBaseUrl } from '@/lib/apiConfig';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 import { API_TIMEOUTS } from '@/lib/constants';
 import type { ApiResponse, Course, Blog, FooterSettings, FormDetails } from '@/types/api';
 
@@ -260,7 +260,6 @@ export const formService = {
       const response = await request<ApiResponse<FormDetails> | FormDetails | FormDetails[]>({
         url: '/form-details',
         method: 'GET',
-        cache: 'no-store',
       });
 
       // Handle array response (get latest)

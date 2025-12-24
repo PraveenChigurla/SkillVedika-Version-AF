@@ -8,6 +8,7 @@ import './error-handler';
 import './font-error-handler';
 import Header from '@/components/header';
 import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { getCanonicalUrl } from '@/lib/seo';
@@ -146,7 +147,9 @@ export default function RootLayout({
       </head>
       <body className={`font-sans antialiased`} suppressHydrationWarning>
         <ErrorBoundary>
-          <GoogleAnalytics />
+          <Suspense fallback={null}>
+            <GoogleAnalytics />
+          </Suspense>
           <Header />
           <main>{children}</main>
           <Footer />

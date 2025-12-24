@@ -6,7 +6,6 @@ import { EnrollModal } from './EmptyLoginForm';
 type Course = { id: number; title: string };
 
 interface QueryPopupProps {
-  children?: React.ReactNode;
   courses?: Course[];
   page?: string;
   formDetails?: any;
@@ -19,7 +18,6 @@ interface QueryPopupProps {
 }
 //popup
 export default function QueryPopup({
-  children,
   courses: propCourses,
   page = 'Popup',
   formDetails: propFormDetails,

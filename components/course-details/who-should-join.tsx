@@ -4,7 +4,11 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import whoImg from '@/public/course-details/image 39.png';
 
-export default function WhoShouldJoin({ list }) {
+interface WhoShouldJoinProps {
+  list?: (string | number | { title?: string })[] | null;
+}
+
+export default function WhoShouldJoin({ list }: Readonly<WhoShouldJoinProps>) {
   // ---------------------------------------------
   // 🌟 Dynamic + Fallback Items
   // ---------------------------------------------

@@ -58,7 +58,7 @@ function trackPageView(path: string): void {
  * Loads GA4 script and tracks page views on route changes.
  * Only tracks public routes (excludes admin).
  */
-export default function GoogleAnalytics(): JSX.Element | null {
+export default function GoogleAnalytics() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 

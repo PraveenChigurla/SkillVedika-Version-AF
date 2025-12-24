@@ -114,7 +114,9 @@ export async function generateMetadata() {
 
     if (res.ok) content = await res.json();
   } catch (err) {
-    if (err.name !== 'AbortError') {
+    const isAbortError = err instanceof Error && err.name === 'AbortError';
+    const isDOMAbortError = err instanceof DOMException && err.name === 'AbortError';
+    if (!isAbortError && !isDOMAbortError) {
       console.error('Failed to load course meta:', err);
     }
   }

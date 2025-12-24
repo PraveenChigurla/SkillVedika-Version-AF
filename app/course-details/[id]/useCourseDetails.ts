@@ -37,8 +37,9 @@ export function useCourseDetails(id: string) {
         }
 
         // Handle different API response formats
-        const courseData = (json.course || json.data || json) as Course;
-        const detailsData = (json.details || courseData?.details) as CourseDetails | null;
+        const jsonAny = json as any;
+        const courseData = (jsonAny.course || jsonAny.data || jsonAny) as Course;
+        const detailsData = (jsonAny.details || courseData?.details) as CourseDetails | null;
 
         // Ensure details is always an object with expected properties
         const normalizedDetails: CourseDetails = detailsData
@@ -74,7 +75,8 @@ export function useCourseDetails(id: string) {
           mode: 'cors',
         });
         if (allJson) {
-          const courses = Array.isArray(allJson) ? allJson : allJson.data || [];
+          const allJsonAny = allJson as any;
+          const courses = Array.isArray(allJsonAny) ? allJsonAny : allJsonAny.data || [];
           setAllCourses(courses as Course[]);
         }
       } catch (err: unknown) {

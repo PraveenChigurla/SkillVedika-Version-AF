@@ -30,6 +30,9 @@ export interface Course {
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string;
+  category_id?: number | string;
+  students?: number;
+  rating?: number;
   details?: CourseDetails;
 }
 
@@ -38,6 +41,7 @@ export interface CourseDetails {
   why_choose?: string[];
   who_should_join?: string[];
   key_outcomes?: string[];
+  slug?: string;
   meta_title?: string | null;
   meta_description?: string | null;
   meta_keywords?: string | null;

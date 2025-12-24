@@ -373,6 +373,16 @@ export function EnrollModal({
       setSubmitStatus('success');
       setSubmitMessage(json.message || 'Demo booked successfully!');
 
+      // Call onSubmit callback if provided
+      if (onSubmit) {
+        onSubmit({
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.fullPhone,
+          selectedCourses: formData.selectedCourses,
+        });
+      }
+
       // Reset form
       setFormData({
         fullName: '',

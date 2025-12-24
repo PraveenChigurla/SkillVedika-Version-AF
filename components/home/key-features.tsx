@@ -6,7 +6,11 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import parse from 'html-react-parser';
 
-export default function KeyFeatures({ keyFeatures }) {
+interface KeyFeaturesProps {
+  keyFeatures?: any;
+}
+
+export default function KeyFeatures({ keyFeatures }: Readonly<KeyFeaturesProps>) {
   // Map dynamic text points -> icons (looping safely)
   const icons = [
     <BookOpen size={20} />,
@@ -104,7 +108,7 @@ export default function KeyFeatures({ keyFeatures }) {
 
           {/* RIGHT SIDE — dynamic feature cards */}
           <div className="flex flex-col gap-5 w-full max-w-lg">
-            {features.map((feature, index) => {
+            {features.map((feature: any, index: number) => {
               const isActive = index === activeIndex;
               return (
                 <motion.div

@@ -2,13 +2,26 @@
 
 import { useEffect, useState, startTransition } from 'react';
 
+interface Category {
+  id: string | number;
+  name: string;
+}
+
+interface CategorySidebarProps {
+  categories: Category[];
+  selected: string[];
+  onChange: (value: string) => void;
+  totalResults: number;
+  isSearchMode?: boolean;
+}
+
 export default function CategorySidebar({
   categories,
   selected,
   onChange,
   totalResults,
   isSearchMode,
-}) {
+}: Readonly<CategorySidebarProps>) {
   const [heading, setHeading] = useState('Categories');
 
   // Defer non-critical API call to avoid blocking render

@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useAOS } from '@/hooks/useAOS';
 import { GraduationCap, Brain, MessageSquare, FileText, Star, UserRound } from 'lucide-react';
 import parse from 'html-react-parser';
 
-export default function JobAssistance({ jobAssist }) {
+interface JobAssistanceProps {
+  jobAssist?: any;
+}
+
+export default function JobAssistance({ jobAssist }: Readonly<JobAssistanceProps>) {
   useAOS();
 
   // ICON MAPPING (same icons as your static version)
@@ -44,7 +47,7 @@ export default function JobAssistance({ jobAssist }) {
 
         {/* ⭐ Dynamic Feature Grid */}
         <div className="flex flex-col md:flex-row md:flex-wrap justify-center gap-y-8 md:gap-y-10 md:gap-x-16 items-center">
-          {features.map((feature, index) => (
+          {features.map((feature: any, index: number) => (
             <div
               key={index}
               data-aos="fade-up"

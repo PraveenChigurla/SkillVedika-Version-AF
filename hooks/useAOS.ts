@@ -13,7 +13,11 @@ export function useAOS() {
     aosLoading = true;
 
     // Dynamically import AOS
-    Promise.all([import('aos'), import('aos/dist/aos.css')])
+    Promise.all([
+      import('aos'),
+      // @ts-expect-error - CSS files don't have type declarations
+      import('aos/dist/aos.css').catch(() => null),
+    ])
       .then(([AOSModule]) => {
         const AOS = AOSModule.default;
         AOS.init({ duration: 800, once: true });
