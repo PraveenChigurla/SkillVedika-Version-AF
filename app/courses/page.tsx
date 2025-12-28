@@ -20,15 +20,18 @@ const CourseSearchBar = dynamic(() => import('@/components/courses/CourseSearchB
   // The component itself is a client component, so it will hydrate on the client
 });
 
-const API = process.env.NEXT_PUBLIC_API_URL;
-
 // Fetch first course image for LCP preloading - optimized with shorter timeout
 async function getFirstCourseImage(): Promise<string | null> {
   try {
+    const { getApiUrl } = await import('@/lib/apiConfig');
+    const apiUrl = getApiUrl('/courses');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[getFirstCourseImage] Fetching from:', `${apiUrl}?limit=1`);
+    }
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1000); // Reduced to 1s
 
-    const res = await fetch(`${API}/courses?limit=1`, {
+    const res = await fetch(`${apiUrl}?limit=1`, {
       signal: controller.signal,
       cache: 'force-cache',
       next: { revalidate: 300 },
@@ -55,7 +58,8 @@ async function getPageContent() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1500); // Reduced to 1.5s for faster fallback
 
-    const res = await fetch(`${API}/course-page-content`, {
+    const { getApiUrl } = await import('@/lib/apiConfig');
+    const res = await fetch(getApiUrl('/course-page-content'), {
       signal: controller.signal,
       cache: 'force-cache', // Enable caching for better performance
       next: { revalidate: 300 }, // Revalidate every 5 minutes
@@ -103,7 +107,8 @@ export async function generateMetadata() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout
 
-    const res = await fetch(`${API}/seo/2`, {
+    const { getApiUrl } = await import('@/lib/apiConfig');
+    const res = await fetch(getApiUrl('/seo/2'), {
       signal: controller.signal,
       cache: 'force-cache', // Enable caching
       next: { revalidate: 3600 }, // Revalidate every hour

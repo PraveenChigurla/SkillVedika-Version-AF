@@ -26,13 +26,10 @@ function Header() {
   // Performance: useCallback to memoize fetch function
   const fetchHeaderSettings = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      if (!apiUrl) {
-        console.warn('NEXT_PUBLIC_API_URL not set');
-        return;
-      }
+      const { getApiUrl } = await import('@/lib/apiConfig');
+      const apiUrl = getApiUrl('/header-settings');
       // Performance: Use cache for better performance - header settings don't change often
-      const res = await fetch(`${apiUrl}/header-settings`, {
+      const res = await fetch(apiUrl, {
         cache: 'force-cache',
         next: { revalidate: 3600 }, // Revalidate every hour
       });
@@ -99,6 +96,7 @@ function Header() {
               className="object-contain image-auto-aspect"
               style={{ width: 'auto', height: 'auto' }}
               sizes="(max-width: 768px) 120px, 140px"
+              suppressHydrationWarning
             />
           </Link>
           

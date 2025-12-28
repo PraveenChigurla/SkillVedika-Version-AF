@@ -4,6 +4,7 @@ import { useEffect, useState, startTransition, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import CourseRow from './CourseRow';
 import type { Course } from '@/types/api';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 // Lazy load CategorySidebar - it's not critical for initial render
 const CategorySidebar = dynamic(() => import('./CategorySidebar'), {
@@ -37,22 +38,26 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
   useEffect(() => {
     async function load() {
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+        const apiBase = getApiBaseUrl();
+        console.log("apiBase: ", apiBase);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
 
         // Defer categories fetch - sidebar is lazy loaded, not critical for initial render
         // Use requestIdleCallback to defer if available
         const fetchCategories = async () => {
+          const categoriesUrl = `${apiBase}/categories`;
           const catRes = (await Promise.race([
-            fetch(`${apiBase}/categories`, {
+            fetch(categoriesUrl, {
               signal: controller.signal,
               headers: { Accept: 'application/json' },
               cache: 'default', // Browser cache
             }),
             new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500)), // Reduced timeout
           ]).catch(() => ({ ok: false } as Response))) as Response | { ok: false };
-
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[CourseGrid] Categories fetch result:', catRes.ok ? 'success' : 'failed', 'URL:', categoriesUrl);
+          }
           // Set categories with startTransition for non-blocking update
           if (catRes.ok && 'json' in catRes) {
             try {
@@ -82,8 +87,12 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
         }
 
         // Fetch courses immediately (needed for LCP) - optimized with shorter timeout
+        const coursesUrl = `${apiBase}/courses`;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[CourseGrid] Fetching courses from:', coursesUrl);
+        }
         const courseRes = (await Promise.race([
-          fetch(`${apiBase}/courses`, {
+          fetch(coursesUrl, {
             signal: controller.signal,
             headers: { Accept: 'application/json' },
             // Use browser cache - client components can't use Next.js cache options
@@ -100,9 +109,14 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
           try {
             const data = await (courseRes as Response).json();
             coursesData = data?.data || data || [];
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[CourseGrid] Successfully loaded courses:', coursesData.length);
+            }
           } catch (e) {
             console.warn('Failed to parse courses:', e);
           }
+        } else if (process.env.NODE_ENV === 'development') {
+          console.warn('[CourseGrid] Failed to fetch courses. Status:', (courseRes as Response).status, 'URL:', coursesUrl);
         }
 
         // Use startTransition for non-urgent state updates to reduce TBT
