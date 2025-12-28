@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import Image from 'next/image';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 export default function BlogSection({ sidebarName = 'Categories' }: { sidebarName?: string }) {
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  const API = getApiBaseUrl();
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [categories, setCategories] = useState<any[]>([]);

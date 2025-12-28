@@ -38,13 +38,9 @@ export default function QueryPopup({
     // Otherwise, fetch courses
     async function fetchCourses() {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        if (!apiUrl) {
-          console.error('NEXT_PUBLIC_API_URL not set');
-          return;
-        }
-
-        const res = await fetch(`${apiUrl}/courses`);
+        const { getApiUrl } = await import('@/lib/apiConfig');
+        const apiUrl = getApiUrl('/courses');
+        const res = await fetch(apiUrl);
         if (!res.ok) {
           console.error('Failed to fetch courses');
           return;
@@ -88,12 +84,9 @@ export default function QueryPopup({
     // Otherwise, fetch form details
     async function fetchFormDetails() {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        if (!apiUrl) {
-          return;
-        }
-
-        const res = await fetch(`${apiUrl}/form-details`, { cache: 'no-store' });
+        const { getApiUrl } = await import('@/lib/apiConfig');
+        const apiUrl = getApiUrl('/form-details');
+        const res = await fetch(apiUrl, { cache: 'no-store' });
         if (!res.ok) {
           console.warn(`Failed to fetch form-details: ${res.status}`);
           return;

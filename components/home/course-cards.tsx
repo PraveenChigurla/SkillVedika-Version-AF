@@ -28,8 +28,9 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
   useEffect(() => {
     async function load() {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
-        const res = await fetch(`${apiUrl}/courses`, {
+        const { getApiUrl } = await import('@/lib/apiConfig');
+        const apiUrl = getApiUrl('/courses');
+        const res = await fetch(apiUrl, {
           headers: {
             Accept: 'application/json',
           },
