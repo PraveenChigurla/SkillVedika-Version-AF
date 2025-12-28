@@ -39,7 +39,7 @@ export default function WhoIsThisFor({
             {targetLabel || 'TARGET AUDIENCE'}
           </div>
 
-          <h2 className="text-6xl lg:text-7xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
+          <h2 className="text-4xl lg:text-5xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
             {title?.text || 'Who Is This For?'}
           </h2>
 

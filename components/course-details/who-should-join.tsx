@@ -2,13 +2,57 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import whoImg from '@/public/course-details/image 39.png';
+
+// Lazy load EnrollModal
+const EnrollModal = dynamic(
+  () => import('@/components/EmptyLoginForm').then(mod => ({ default: mod.EnrollModal })),
+  { ssr: false }
+);
 
 interface WhoShouldJoinProps {
   list?: (string | number | { title?: string })[] | null;
 }
 
 export default function WhoShouldJoin({ list }: Readonly<WhoShouldJoinProps>) {
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [courses, setCourses] = useState<{ id: number; title: string }[]>([]);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!apiUrl) return;
+
+        const res = await fetch(`${apiUrl}/courses`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        let coursesArray: any[] = [];
+        if (Array.isArray(data)) {
+          coursesArray = data;
+        } else if (data?.data && Array.isArray(data.data)) {
+          coursesArray = data.data;
+        } else if (data?.courses && Array.isArray(data.courses)) {
+          coursesArray = data.courses;
+        }
+
+        const courseList = coursesArray.map((course: any) => ({
+          id: course.id || course.course_id || 0,
+          title: course.title || course.course_name || '',
+        }));
+
+        setCourses(courseList);
+      } catch (err) {
+        console.error('Error fetching courses:', err);
+      }
+    }
+
+    fetchCourses();
+  }, []);
+
   // ---------------------------------------------
   // 🌟 Dynamic + Fallback Items
   // ---------------------------------------------
@@ -81,6 +125,22 @@ export default function WhoShouldJoin({ list }: Readonly<WhoShouldJoinProps>) {
               </motion.div>
             ))}
           </div>
+
+          {/* Learn More Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            viewport={{ once: true }}
+            className="pt-4"
+          >
+            <button
+              onClick={() => setShowEnrollModal(true)}
+              className="bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              Learn More
+            </button>
+          </motion.div>
         </motion.div>
 
         {/* RIGHT IMAGE */}
@@ -122,6 +182,14 @@ export default function WhoShouldJoin({ list }: Readonly<WhoShouldJoinProps>) {
           </div>
         </motion.div>
       </div>
+
+      {showEnrollModal && (
+        <EnrollModal
+          courses={courses}
+          page="Course Details"
+          onClose={() => setShowEnrollModal(false)}
+        />
+      )}
     </section>
   );
 }

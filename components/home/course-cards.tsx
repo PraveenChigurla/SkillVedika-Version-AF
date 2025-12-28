@@ -36,7 +36,17 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
         });
 
         if (!res.ok) {
-          throw new Error(`Failed to fetch courses: ${res.status}`);
+          // Silently handle 500 errors - backend may be temporarily unavailable
+          if (res.status >= 500) {
+            setCourses([]);
+            return;
+          }
+          // Only throw for client errors (4xx) in development
+          if (process.env.NODE_ENV === 'development' && res.status < 500) {
+            console.warn(`Failed to fetch courses: ${res.status}`);
+          }
+          setCourses([]);
+          return;
         }
 
         const responseData = await res.json();
@@ -59,7 +69,14 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
 
         setCourses(coursesArray);
       } catch (error) {
-        console.error('Error fetching courses', error);
+        // Only log non-network errors in development
+        const isNetworkError = error instanceof Error && 
+          (error.message.includes('fetch') || 
+           error.message.includes('network') ||
+           error.message.includes('ECONNREFUSED'));
+        if (!isNetworkError && process.env.NODE_ENV === 'development') {
+          console.warn('Error fetching courses:', error);
+        }
         setCourses([]);
       }
     }
@@ -197,6 +214,8 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                       quality={85}
                       loading="lazy"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      // Bypass Next.js optimization for Cloudinary images to prevent timeout
+                      unoptimized={typeof course.image === 'string' && course.image.includes('res.cloudinary.com')}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
@@ -299,8 +318,8 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                     {Array.from({ length: totalPages }).map((_, i) => (
                       <motion.button
                         key={i}
-                        whileHover={{ scale: 1.15 }}
-                        onClick={() => setCurrentIndex(i)}
+                        whileHover={viewAll ? {} : { scale: 1.15 }}
+                        onClick={() => !viewAll && setCurrentIndex(i)}
                         disabled={viewAll}
                         aria-label={`Go to page ${i + 1}`}
                         className={`w-3 h-3 rounded-full transition-all duration-200 min-w-[4px] min-h-[4px] flex items-center justify-center ${

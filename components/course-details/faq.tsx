@@ -11,8 +11,22 @@ export default function FAQ() {
   useEffect(() => {
     async function loadFaqs() {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
-        const res = await fetch(`${apiUrl}/faqs`);
+        // Use getApiUrl helper for consistent URL construction
+        const { getApiUrl } = await import('@/lib/apiConfig');
+        const apiUrl = getApiUrl('/faqs');
+        
+        console.log('Fetching FAQs from:', apiUrl); // Debug log
+        
+        const res = await fetch(apiUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          // Add credentials for cookie-based auth if needed
+          credentials: 'omit',
+          // Add cache control
+          cache: 'no-store', // Always fetch fresh data for FAQs
+        });
 
         if (!res.ok) {
           console.warn('FAQ API error:', res.status);

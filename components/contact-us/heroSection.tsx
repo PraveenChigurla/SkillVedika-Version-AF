@@ -9,13 +9,11 @@ export default function HeroSection({
   title,
   description,
   buttonText,
-  buttonLink,
   image,
 }: Readonly<{
   title: { part1?: string; part2?: string; text?: string } | null;
   description: string;
   buttonText: string;
-  buttonLink?: string;
   image: string;
 }>) {
   const [showEnrollModal, setShowEnrollModal] = useState(false);
@@ -110,7 +108,7 @@ export default function HeroSection({
           <div className="flex items-center gap-2 text-sm">
             <a
               href="/"
-              className="text-primary hover:underline cursor-pointer font-medium transition-colors"
+              className="text-primary hover:underline font-medium transition-colors"
             >
               Home
             </a>
@@ -119,24 +117,13 @@ export default function HeroSection({
           </div>
 
           {/* CTA Button */}
-          {buttonLink ? (
-            <a href={buttonLink}>
-              <Button
-                size="lg"
-                className="bg-blue-900 hover:opacity-90 text-lg text-white font-semibold px-4 py-3 h-auto shadow-medium transition-all hover:shadow-strong hover:scale-105"
-              >
-                {buttonText || "Let's Connect Together"}
-              </Button>
-            </a>
-          ) : (
-            <Button
-              onClick={() => setShowEnrollModal(true)}
-              size="lg"
-              className="bg-blue-900 hover:opacity-90 text-lg text-white font-semibold px-4 py-3 h-auto shadow-medium transition-all hover:shadow-strong hover:scale-105"
-            >
-              {buttonText || "Let's Connect Together"}
-            </Button>
-          )}
+          <Button
+            onClick={() => setShowEnrollModal(true)}
+            size="lg"
+            className="bg-blue-900 hover:opacity-90 text-lg text-white font-semibold px-4 py-3 h-auto shadow-medium transition-all hover:shadow-strong hover:scale-105"
+          >
+            {buttonText || "Let's Connect Together"}
+          </Button>
 
           {showEnrollModal && (
             <EnrollModal

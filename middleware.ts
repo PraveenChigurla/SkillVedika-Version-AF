@@ -57,7 +57,7 @@ export function middleware(_request: NextRequest) {
 
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://maps.googleapis.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https: blob:",
@@ -65,7 +65,7 @@ export function middleware(_request: NextRequest) {
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-src 'none'",
+    "frame-src 'self' https://www.google.com https://maps.google.com https://www.google.com/maps https://maps.googleapis.com",
     "object-src 'none'",
     // Only enforce upgrade-insecure-requests in production
     ...(isProduction ? ['upgrade-insecure-requests'] : []),

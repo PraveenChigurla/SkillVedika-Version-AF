@@ -116,7 +116,13 @@ export async function generateMetadata() {
   } catch (err) {
     const isAbortError = err instanceof Error && err.name === 'AbortError';
     const isDOMAbortError = err instanceof DOMException && err.name === 'AbortError';
-    if (!isAbortError && !isDOMAbortError) {
+    const isConnectionError = err instanceof Error && 
+      (err.message.includes('ECONNREFUSED') || 
+       err.message.includes('fetch failed') ||
+       (err as any)?.cause?.code === 'ECONNREFUSED');
+    // Suppress connection errors during build and abort errors
+    // Only log other errors in development
+    if (!isAbortError && !isDOMAbortError && !isConnectionError && process.env.NODE_ENV === 'development') {
       console.error('Failed to load course meta:', err);
     }
   }

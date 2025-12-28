@@ -2,7 +2,9 @@ import { Metadata } from 'next';
 import dynamicImport from 'next/dynamic';
 import { getCanonicalUrl } from '@/lib/seo';
 
-export const dynamic = 'force-dynamic';
+// Use auto-dynamic with revalidation for better performance
+export const dynamic = 'auto';
+export const revalidate = 300; // Revalidate every 5 minutes (course details change less frequently)
 
 // Lazy load components for better performance - defer non-critical ones
 const Hero = dynamicImport(() => import('@/components/course-details/hero'), {
@@ -33,18 +35,19 @@ export async function generateMetadata(props: any): Promise<Metadata> {
     };
   }
 
-  const api = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+  // Use getApiUrl helper for consistent URL construction
+  const { getApiUrl } = await import('@/lib/apiConfig');
 
   try {
     // Try course-details endpoint first (supports both slug and ID)
-    let res = await fetch(`${api}/course-details/${identifier}`, {
+    let res = await fetch(getApiUrl(`/course-details/${identifier}`), {
       cache: 'force-cache',
       next: { revalidate: 300 },
     });
 
     // Fallback to courses endpoint for backward compatibility
     if (!res.ok && !Number.isNaN(Number(identifier))) {
-      res = await fetch(`${api}/courses/${identifier}`, {
+      res = await fetch(getApiUrl(`/courses/${identifier}`), {
         cache: 'force-cache',
         next: { revalidate: 300 },
       });
@@ -159,44 +162,60 @@ function normalizeCourseDetails(detailsData: any) {
 
 // Helper to fetch course by identifier
 async function fetchCourseByIdentifier(api: string, identifierString: string): Promise<any> {
-  let courseRes = await fetch(`${api}/course-details/${identifierString}`, {
-    cache: 'force-cache',
-    next: { revalidate: 300 },
-  });
-
-  // Fallback to courses endpoint if needed
-  if (!courseRes.ok && !Number.isNaN(Number(identifierString))) {
-    courseRes = await fetch(`${api}/courses/${identifierString}`, {
+  try {
+    // Try course-details endpoint first (supports slugs)
+    let courseRes = await fetch(`${api}/course-details/${identifierString}`, {
       cache: 'force-cache',
       next: { revalidate: 300 },
+      headers: {
+        'Accept': 'application/json',
+      },
     });
-  }
 
-  if (!courseRes.ok) {
+    // Fallback to courses endpoint if needed (for numeric IDs)
+    if (!courseRes.ok && !Number.isNaN(Number(identifierString))) {
+      courseRes = await fetch(`${api}/courses/${identifierString}`, {
+        cache: 'force-cache',
+        next: { revalidate: 300 },
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+    }
+
+    if (!courseRes.ok) {
+      console.warn(`Course not found: ${identifierString} (Status: ${courseRes.status})`);
+      return null;
+    }
+
+    const json = await courseRes.json();
+    let courseData = json.data || json.course || json;
+    let detailsData = courseData?.details || null;
+
+    // If we got details directly, fetch the course
+    if (courseData && !courseData.title && courseData.course_id) {
+      const courseFetch = await fetch(`${api}/courses/${courseData.course_id}`, {
+        cache: 'force-cache',
+        next: { revalidate: 300 },
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      if (courseFetch.ok) {
+        const courseJson = await courseFetch.json();
+        courseData = courseJson.course || courseJson.data || courseJson;
+        detailsData = courseData?.details || courseData;
+      }
+    }
+
+    return {
+      ...courseData,
+      details: normalizeCourseDetails(detailsData),
+    };
+  } catch (error) {
+    console.error('Error fetching course:', error);
     return null;
   }
-
-  const json = await courseRes.json();
-  let courseData = json.data || json.course || json;
-  let detailsData = courseData?.details || null;
-
-  // If we got details directly, fetch the course
-  if (courseData && !courseData.title && courseData.course_id) {
-    const courseFetch = await fetch(`${api}/courses/${courseData.course_id}`, {
-      cache: 'force-cache',
-      next: { revalidate: 300 },
-    });
-    if (courseFetch.ok) {
-      const courseJson = await courseFetch.json();
-      courseData = courseJson.course || courseJson.data || courseJson;
-      detailsData = courseData?.details || courseData;
-    }
-  }
-
-  return {
-    ...courseData,
-    details: normalizeCourseDetails(detailsData),
-  };
 }
 
 // Helper to fetch all courses
@@ -216,17 +235,27 @@ async function fetchAllCourses(api: string): Promise<any[]> {
   return [];
 }
 
-    // Fetch course data on server
-    const api = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+    // Fetch course data on server - use getApiUrl helper
+    const { getApiBaseUrl } = await import('@/lib/apiConfig');
+    const api = getApiBaseUrl();
 
     let course: any = null;
     let allCourses: any[] = [];
 
     try {
-      course = await fetchCourseByIdentifier(api, identifierString);
-      allCourses = await fetchAllCourses(api);
-    } catch {
-      // Error will be handled in UI
+      // Fetch course and all courses in parallel for better performance
+      const [courseResult, allCoursesResult] = await Promise.allSettled([
+        fetchCourseByIdentifier(api, identifierString),
+        fetchAllCourses(api),
+      ]);
+
+      course = courseResult.status === 'fulfilled' ? courseResult.value : null;
+      allCourses = allCoursesResult.status === 'fulfilled' ? allCoursesResult.value : [];
+    } catch (error) {
+      // Log error but don't throw - we'll show a user-friendly error page
+      console.error('Error loading course data:', error);
+      course = null;
+      allCourses = [];
     }
 
     if (!course) {
@@ -306,9 +335,16 @@ async function fetchAllCourses(api: string): Promise<any[]> {
     // Fetch FAQs for FAQPage schema (server-side)
     let faqs: Array<{ question: string; answer: string }> = [];
     try {
-      const faqsRes = await fetch(`${api}/faqs`, {
+      // Use getApiUrl helper for consistent URL construction
+      const { getApiUrl } = await import('@/lib/apiConfig');
+      const faqsUrl = getApiUrl('/faqs');
+      
+      const faqsRes = await fetch(faqsUrl, {
         cache: 'force-cache',
         next: { revalidate: 3600 },
+        headers: {
+          'Accept': 'application/json',
+        },
       });
       if (faqsRes.ok) {
         const faqsData = await faqsRes.json();

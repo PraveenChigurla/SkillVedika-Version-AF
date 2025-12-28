@@ -19,9 +19,9 @@ const PhoneInput = dynamic(() => import('react-phone-input-2'), {
 });
 
 /* Make country dropdown text black and ensure flags display properly */
-/* Also fix ugly cursor/caret lines in all input fields */
+/* Hide cursor/caret lines in all input fields */
 const phoneStyles = `
-  /* Fix ugly cursor/caret in all inputs */
+  /* Hide cursor/caret in all inputs */
   input[type="text"],
   input[type="email"],
   input[type="tel"],
@@ -29,7 +29,7 @@ const phoneStyles = `
   input[type="number"],
   input[type="search"],
   textarea {
-    caret-color: #0066CC !important;
+    caret-color: #000000 !important;
     outline: none !important;
   }
   
@@ -105,7 +105,7 @@ const phoneStyles = `
     color: #111827 !important;
     background-color: #f9fafb !important;
     width: 100% !important;
-    caret-color: #0066CC !important;
+    caret-color: #000000 !important;
     outline: none !important;
   }
   .react-tel-input .form-control:focus {
@@ -593,7 +593,7 @@ export function EnrollModal({
                         <div
                           key={c.id}
                           onClick={() => toggleCourse(c.id)}
-                          className={`px-3 py-2 cursor-pointer transition-colors flex items-center justify-between ${
+                          className={`px-3 py-2 transition-colors flex items-center justify-between ${
                             isSelected
                               ? 'bg-[#0066CC]/10 text-[#0066CC]'
                               : 'hover:bg-gray-50 text-gray-700'

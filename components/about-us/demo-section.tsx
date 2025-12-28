@@ -263,7 +263,7 @@ export default function DemoSection({
 
               <div
                 onClick={() => setOpen(!open)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white cursor-pointer flex flex-wrap gap-2"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white flex flex-wrap gap-2"
               >
                 {formData.selectedCourses.length === 0 ? (
                   <span className="text-gray-500">
@@ -285,7 +285,7 @@ export default function DemoSection({
                         }}
                       >
                         {course?.title}
-                        <span className="font-bold cursor-pointer">×</span>
+                        <span className="font-bold">×</span>
                       </span>
                     );
                   })
@@ -307,7 +307,7 @@ export default function DemoSection({
                     {filteredCourses.map((c: any) => (
                       <div
                         key={c.id}
-                        className="px-3 py-2 rounded cursor-pointer hover:bg-gray-100"
+                        className="px-3 py-2 rounded hover:bg-gray-100"
                         onClick={() =>
                           setFormData({
                             ...formData,

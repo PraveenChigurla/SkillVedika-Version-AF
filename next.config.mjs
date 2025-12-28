@@ -33,6 +33,9 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    // Note: Custom loader removed - Next.js 16 requires loader to be a string
+    // Cloudinary images will be handled at component level with unoptimized prop
+    // This prevents timeout issues since Cloudinary already serves optimized WebP images
     // Removed contentSecurityPolicy from image config as it's not needed and causes warnings
     // CSP should be set at the application level, not per image
   },
@@ -107,8 +110,12 @@ const nextConfig = {
           '**/coverage/**',
           '**/*.log',
           '**/.DS_Store',
+          '**/.env*.local',
+          '**/dist/**',
+          '**/tmp/**',
+          '**/temp/**',
         ],
-        aggregateTimeout: 300,
+        aggregateTimeout: 500, // Increased to reduce frequent recompilation
         poll: false, // Disable polling on Windows to reduce CPU usage
       };
       return config;
@@ -169,12 +176,11 @@ const nextConfig = {
     }
     return config;
   },
-  // Turbopack configuration (used in dev mode)
-  // Note: Turbopack doesn't support boolean values in resolveAlias
-  // Devtools exclusion is handled via webpack config for production builds
+  // Turbopack configuration (used in dev mode by default in Next.js 16)
+  // Set empty config to silence the warning about webpack config with Turbopack
   turbopack: {},
   // Note: Turbopack handles code splitting and optimization automatically in dev mode
-  // Devtools exclusion is handled via webpack config for production builds
+  // Webpack config above is only used in production builds or when Turbopack is disabled
 }
 
 export default nextConfig

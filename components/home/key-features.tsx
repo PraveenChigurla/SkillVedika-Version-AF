@@ -93,12 +93,12 @@ export default function KeyFeatures({ keyFeatures }: Readonly<KeyFeaturesProps>)
               <Image
                 src="/home/Frame 211.png"
                 alt="Rotating Icon"
-                width={220}
-                height={220}
+                width={420} 
+                height={420}
                 className="z-10 image-auto-aspect"
                 loading="lazy"
                 quality={85}
-                sizes="(max-width: 768px) 220px, 220px"
+                sizes="(max-width: 768px) 420px, 420px"
               />
             </motion.div>
 

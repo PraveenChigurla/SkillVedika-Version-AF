@@ -2,6 +2,7 @@ import '../globals.css';
 import { Metadata } from 'next';
 import SafeHTML from '@/components/SafeHTML';
 
+// Force dynamic rendering to fetch metadata from database at request time
 export const dynamic = 'force-dynamic';
 
 /* ------------------------------------------------------------------
@@ -121,9 +122,7 @@ async function getTerms() {
     }
 
     console.log(`Fetching from: ${apiUrl}/terms`);
-    const res = await fetch(`${apiUrl}/terms`, {
-      cache: 'no-store',
-    });
+    const res = await fetch(`${apiUrl}/terms`, { cache: 'no-store' });
 
     console.log(`Response status: ${res.status}`);
 

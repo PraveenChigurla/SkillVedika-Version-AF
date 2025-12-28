@@ -135,7 +135,7 @@ function ReadyToEmpower({
             {buttonLink ? (
               <a
                 href={buttonLink}
-                className="relative overflow-hidden bg-blue-900 hover:bg-blue-900 text-white px-8 py-6 rounded-xl font-semibold text-base shadow-md transition-all duration-300 group inline-block"
+                className="relative overflow-hidden bg-blue-900 hover:bg-blue-900 text-white px-8 py-4 rounded-xl font-semibold text-base shadow-md transition-all duration-300 group inline-block"
                 aria-label={buttonText || 'Contact Us Today'}
               >
                 <span className="relative z-10">{buttonText || 'Contact Us Today'}</span>

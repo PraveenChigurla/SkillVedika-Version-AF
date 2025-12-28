@@ -7,6 +7,7 @@ import { StructuredData, generateContactPageSchema } from '@/lib/structuredData'
 import { getBaseSchemas } from '@/lib/getBaseSchemas';
 import { getCanonicalUrl } from '@/lib/seo';
 
+// Force dynamic rendering to fetch metadata from database at request time
 export const dynamic = 'force-dynamic';
 
 /* ----------------------------------------------------
@@ -14,7 +15,8 @@ export const dynamic = 'force-dynamic';
    Fetches meta fields from the API so editors can change SEO
 ---------------------------------------------------- */
 export async function generateMetadata(): Promise<Metadata> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const { getApiUrl } = await import('@/lib/apiConfig');
+  const apiUrl = getApiUrl('/seo/7');
 
   const fallbackTitle = 'Contact Us | SkillVedika – Connect With Our Training & Support Team';
   const fallbackDescription =
@@ -37,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // We fetch the specific row by primary key (id = 7) which corresponds
     // to the Contact page in the seed data. This keeps content and SEO
     // separate (admins can manage SEO independently).
-    const res = await fetch(`${apiUrl}/seo/7`, { cache: 'no-store' });
+    const res = await fetch(apiUrl, { cache: 'no-store' });
     if (!res.ok) {
       throw new Error(`Failed to fetch contact page metadata: ${res.status}`);
     }
@@ -127,13 +129,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ContactUsPage() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const { getApiUrl } = await import('@/lib/apiConfig');
 
   // ⚡ OPTIMIZATION: Fetch all data in parallel for better performance
   const [coursesRes, contentRes, formDetailsRes] = await Promise.allSettled([
-    fetch(`${apiUrl}/courses`, { next: { revalidate: 86400 } }),
-    fetch(`${apiUrl}/contact-page`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/form-details`, { cache: 'no-store' }),
+    fetch(getApiUrl('/courses'), { next: { revalidate: 86400 } }),
+    fetch(getApiUrl('/contact-page'), { cache: 'no-store' }),
+    fetch(getApiUrl('/form-details'), { cache: 'no-store' }),
   ]);
 
   // Process courses
@@ -192,7 +194,7 @@ export default async function ContactUsPage() {
   // Fetch footer settings for organization data (email, phone, social links)
   let footerSettings: any = null;
   try {
-    const footerRes = await fetch(`${apiUrl}/footer-settings`, {
+    const footerRes = await fetch(getApiUrl('/footer-settings'), {
       cache: 'force-cache',
       next: { revalidate: 3600 },
     });
@@ -286,7 +288,6 @@ export default async function ContactUsPage() {
         title={content.hero_title ?? null}
         description={content.hero_description ?? ''}
         buttonText={content.hero_button ?? ''}
-        buttonLink={content.hero_button_link ?? '#'}
         image={content.hero_image ?? ''}
       />
 

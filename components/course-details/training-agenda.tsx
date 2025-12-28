@@ -1,12 +1,8 @@
 'use client';
 
-import type { ComponentType } from 'react';
 import { useState } from 'react';
-import { ChevronDown, BookOpen, Target, ShieldCheck, Rocket } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-// Icon rotation sequence
-const icons = [BookOpen, Rocket, Target, ShieldCheck, Rocket, BookOpen];
 
 interface AgendaItem {
   week?: number | string;
@@ -21,12 +17,12 @@ export default function TrainingAgenda({ agenda = [] }: { agenda?: AgendaItem[] 
 
   // Map backend agenda to UI format
   const agendaList = agenda.map((item, index) => {
-    const Icon = icons[index % icons.length] as ComponentType<{ className?: string }>;
+    // const Icon = icons[index % icons.length] as ComponentType<{ className?: string }>;
     return {
       week: item.week || index + 1,
       title: item.title || `Module ${index + 1}`,
       content: item.content || '',
-      icon: <Icon className="w-5 h-5" />,
+      // icon: <Icon className="w-5 h-5" />,
     };
   });
 
@@ -91,13 +87,13 @@ export default function TrainingAgenda({ agenda = [] }: { agenda?: AgendaItem[] 
                     </span>
 
                     {/* Icon */}
-                    <div
+                    {/* <div
                       className={`text-gray-400 transition-colors ${
                         openIdx === idx ? 'text-blue-500' : ''
                       }`}
                     >
                       {item.icon}
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 

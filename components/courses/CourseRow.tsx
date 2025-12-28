@@ -112,6 +112,8 @@ export default function CourseRow({
                     loading={index < 3 ? 'eager' : 'lazy'}
                     priority={index < 3}
                     quality={75}
+                    // Bypass Next.js optimization for Cloudinary images to prevent timeout
+                    unoptimized={typeof course.image === 'string' && course.image.includes('res.cloudinary.com')}
                     onError={e => {
                       // Fallback to placeholder on error
                       e.currentTarget.src = '/placeholder-course.jpg';

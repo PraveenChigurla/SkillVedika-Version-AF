@@ -252,26 +252,26 @@ export default function CourseSearchBar() {
   };
 
   return (
-    <div className="relative w-full max-w-xl">
+    <div className="relative w-full max-w-xl mx-auto">
       {/* INPUT + BUTTON */}
-      <div className="flex gap-2">
-        <div className="flex-1 flex items-center bg-white rounded-md px-4">
+      <div className="flex gap-2 flex-row w-full items-center overflow-hidden">
+        <div className="flex-1 flex items-center bg-white rounded-md px-2 sm:px-3 md:px-4 border border-gray-200 min-w-0 overflow-hidden">
           <input
-            type="text"
+            type="text" 
             placeholder="Search by skill"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            className="w-full py-3 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none"
+            className="w-full py-2.5 sm:py-3 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none text-sm sm:text-base min-w-0"
           />
         </div>
 
         <button
           onClick={handleSearch}
           aria-label="Search courses by skill"
-          className="bg-[#2C5AA0] text-white px-6 py-3 rounded-md hover:bg-[#1A3F66] transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
+          className="bg-[#2C5AA0] text-white px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-md hover:bg-[#1A3F66] transition-colors flex items-center justify-center w-[44px] sm:w-auto min-w-[44px] h-[44px] flex-shrink-0"
         >
-          <Search size={20} aria-hidden="true" />
+          <Search size={20} aria-hidden="true" className="flex-shrink-0 w-5 h-5" />
         </button>
       </div>
 
@@ -279,7 +279,7 @@ export default function CourseSearchBar() {
       {showDropdown && (
         <div
           ref={dropdownRef}
-          className="absolute top-full mt-2 w-full bg-white border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto"
+          className="absolute top-full mt-2 w-full bg-white border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto left-0 right-0"
         >
           {/* CLOSE */}
           <div className="flex justify-end p-2 border-b">
@@ -299,7 +299,7 @@ export default function CourseSearchBar() {
               {suggestions.popular.map((item: string) => (
                 <div
                   key={item}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  className="px-4 py-2 hover:bg-gray-100"
                   onClick={() => {
                     setSearchTerm(item);
                     handleSearch();

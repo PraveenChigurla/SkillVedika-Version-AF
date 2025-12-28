@@ -37,9 +37,9 @@ const DemoSection = dynamicImport(() => import('@/components/corporate-training/
   loading: () => null,
 });
 
-// Use dynamic rendering but with better caching
-export const dynamic = 'force-dynamic';
-export const revalidate = 300; // Revalidate every 5 minutes
+// Use auto-dynamic with revalidation for better performance
+export const dynamic = 'auto';
+export const revalidate = 300; // Revalidate every 5 minutes (corporate training changes less frequently)
 
 /* ============================================================
    📌 DYNAMIC METADATA — Fetches from SEO database
@@ -60,7 +60,15 @@ export async function generateMetadata() {
       meta = json.data ?? json;
     }
   } catch (err) {
-    console.error('❌ Metadata Fetch Error (Corporate):', err);
+    // Suppress connection errors during build (backend not available)
+    const isConnectionError = err instanceof Error && 
+      (err.message.includes('ECONNREFUSED') || 
+       err.message.includes('fetch failed') ||
+       (err as any)?.cause?.code === 'ECONNREFUSED');
+    // Only log non-connection errors in development
+    if (!isConnectionError && process.env.NODE_ENV === 'development') {
+      console.error('❌ Metadata Fetch Error (Corporate):', err);
+    }
   }
 
   // If API unavailable → fallback SEO
@@ -297,7 +305,6 @@ export default async function CorporateTraining() {
         titleHighlight={hero.highlight}
         subheading={content.hero_subheading}
         buttonText={content.hero_button_text}
-        buttonLink={content.hero_button_link}
         imagePath={content.hero_image}
         courses={mappedCourses}
       />

@@ -5,7 +5,9 @@ import DemoSection from '@/components/blog-detail/DemoSection';
 import fs from 'node:fs';
 import path from 'node:path';
 
-export const dynamic = 'force-dynamic';
+// Use auto-dynamic with revalidation for better performance
+export const dynamic = 'auto';
+export const revalidate = 300; // Revalidate every 5 minutes (blog posts change less frequently)
 
 // Helper to resolve slug from props
 async function resolveSlug(props: any): Promise<string> {

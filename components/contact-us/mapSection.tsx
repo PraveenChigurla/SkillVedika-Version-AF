@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 
 export default function MapSection({
   title,
@@ -13,6 +14,13 @@ export default function MapSection({
   mapLink: string;
   mapLinkIndia?: string;
 }) {
+  // Debug: Log map links in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Map Links:', { mapLink, mapLinkIndia });
+    }
+  }, [mapLink, mapLinkIndia]);
+
   const hasParts = Boolean(
     (title?.part1 && title.part1.trim()) || (title?.part2 && title.part2.trim())
   );
@@ -59,34 +67,44 @@ export default function MapSection({
         {/* Grid for both maps */}
         <div className="grid md:grid-cols-2 gap-8">
           {/* USA Office Map */}
-          <div className="relative rounded-3xl overflow-hidden shadow-strong border border-border group">
-            {/* Hover Glow */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-700"></div>
+          {mapLink ? (
+            <div className="relative rounded-3xl overflow-hidden shadow-strong border border-border group">
+              {/* Hover Glow */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-700"></div>
 
-            {/* Map Frame */}
-            <div className="relative z-10 rounded-3xl overflow-hidden border border-border/40 shadow-inner transition-transform duration-700 group-hover:scale-[1.01]">
-              <h3 className="absolute top-4 left-4 z-20 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-sm font-semibold text-gray-900">
-                USA Office
-              </h3>
-              <iframe
-                width="100%"
-                height="400"
-                style={{ border: 0 }}
-                src={mapLink}
-                allowFullScreen={false}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="w-full h-[400px] grayscale-[30%] hover:grayscale-0 transition-all duration-700"
-              />
+              {/* Map Frame */}
+              <div className="relative z-10 rounded-3xl overflow-hidden border border-border/40 shadow-inner transition-transform duration-700 group-hover:scale-[1.01]">
+                <h3 className="absolute top-4 left-4 z-20 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-sm font-semibold text-gray-900">
+                  USA Office
+                </h3>
+                <iframe
+                  width="100%"
+                  height="400"
+                  style={{ border: 0 }}
+                  src={mapLink}
+                  allowFullScreen={false}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="w-full h-[400px] grayscale-[30%] hover:grayscale-0 transition-all duration-700"
+                  title="USA Office Location"
+                />
+              </div>
+
+              {/* Decorative Corners */}
+              <div className="absolute -top-2 -left-2 w-24 h-24 border-l-4 border-t-4 border-primary/70 rounded-tl-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700"></div>
+              <div className="absolute -bottom-2 -right-2 w-24 h-24 border-r-4 border-b-4 border-accent/70 rounded-br-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700"></div>
             </div>
-
-            {/* Decorative Corners */}
-            <div className="absolute -top-2 -left-2 w-24 h-24 border-l-4 border-t-4 border-primary/70 rounded-tl-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700"></div>
-            <div className="absolute -bottom-2 -right-2 w-24 h-24 border-r-4 border-b-4 border-accent/70 rounded-br-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700"></div>
-          </div>
+          ) : (
+            <div className="relative rounded-3xl overflow-hidden shadow-strong border border-border bg-gray-100 flex items-center justify-center min-h-[400px]">
+              <div className="text-center p-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">USA Office</h3>
+                <p className="text-gray-600 text-sm">Map link not configured</p>
+              </div>
+            </div>
+          )}
 
           {/* India Office Map */}
-          {mapLinkIndia && (
+          {mapLinkIndia ? (
             <div className="relative rounded-3xl overflow-hidden shadow-strong border border-border group">
               {/* Hover Glow */}
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-700"></div>
@@ -105,12 +123,20 @@ export default function MapSection({
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   className="w-full h-[400px] grayscale-[30%] hover:grayscale-0 transition-all duration-700"
+                  title="India Office Location"
                 />
               </div>
 
               {/* Decorative Corners */}
               <div className="absolute -top-2 -left-2 w-24 h-24 border-l-4 border-t-4 border-primary/70 rounded-tl-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700"></div>
               <div className="absolute -bottom-2 -right-2 w-24 h-24 border-r-4 border-b-4 border-accent/70 rounded-br-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700"></div>
+            </div>
+          ) : (
+            <div className="relative rounded-3xl overflow-hidden shadow-strong border border-border bg-gray-100 flex items-center justify-center min-h-[400px]">
+              <div className="text-center p-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">India Office</h3>
+                <p className="text-gray-600 text-sm">Map link not configured</p>
+              </div>
             </div>
           )}
         </div>

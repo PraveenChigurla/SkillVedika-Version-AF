@@ -17,19 +17,19 @@ export default function Hero({
   titleHighlight,
   subheading,
   buttonText,
-  buttonLink,
   imagePath,
   courses = [],
-}: {
+}: Readonly<{
   titlePart1: string;
   titleHighlight: string;
   subheading: string;
   buttonText: string;
-  buttonLink: string;
   imagePath: string;
   courses?: { id: number; title: string }[];
-}) {
+  buttonLink?: string; // Accept but ignore
+}>) {
   const [showEnrollModal, setShowEnrollModal] = useState(false);
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#E8F0F7] to-[#F0F4F9] py-20 md:py-24">
       {/* === Hero Content === */}
@@ -43,22 +43,13 @@ export default function Hero({
           <p className="text-lg text-gray-600 mb-8 max-w-lg">{subheading}</p>
 
           <div className="flex flex-wrap gap-4">
-            {buttonLink ? (
-              <a href={buttonLink}>
-                <button
-                  className="px-8 py-3 bg-blue-800 text-white rounded-lg font-semibold shadow hover:bg-[#0066d3] transition-transform hover:scale-105 active:scale-95"
-                >
-                  {buttonText}
-                </button>
-              </a>
-            ) : (
-              <button
-                onClick={() => setShowEnrollModal(true)}
-                className="px-8 py-3 bg-blue-800 text-white rounded-lg font-semibold shadow hover:bg-[#0066d3] transition-transform hover:scale-105 active:scale-95"
-              >
-                {buttonText}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setShowEnrollModal(true)}
+              className="px-8 py-3 bg-blue-800 text-white rounded-lg font-semibold shadow hover:bg-[#0066d3] transition-transform hover:scale-105 active:scale-95"
+            >
+              {buttonText}
+            </button>
           </div>
 
           {showEnrollModal && (

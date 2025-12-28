@@ -299,7 +299,7 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
 
           {/* SEARCH WITH DROPDOWN */}
           <div className="relative mb-4" ref={searchDropdownRef}>
-            <div className="flex items-center rounded-full px-4 py-2">
+            <div className="flex items-center rounded-full px-4 py-2 border border-gray-300">
               <input
                 type="text"
                 placeholder="Search blog..."

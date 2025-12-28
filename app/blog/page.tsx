@@ -6,6 +6,7 @@ const Hero = dynamicImport(() => import('@/components/blog/hero'));
 const BlogSection = dynamicImport(() => import('@/components/blog/blog-section'));
 const DemoSection = dynamicImport(() => import('@/components/blog/demo-section'));
 
+// Force dynamic rendering to fetch metadata from database at request time
 export const dynamic = 'force-dynamic';
 
 /* ------------------------------------------------------------------
@@ -33,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   try {
     // Fetch SEO metadata for the Blog page from the `seos` table.
-    // id = 7 corresponds to "Blog Listing" in the seed data.
+    // id = 6 corresponds to "Blog Listing" in the seed data.
     const res = await fetch(`${apiUrl}/seo/6`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Failed to fetch seo/6: ${res.status}`);
 

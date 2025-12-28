@@ -3,6 +3,14 @@
 import type { ComponentType } from 'react';
 import { Briefcase, Target, ClipboardList, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+// Lazy load EnrollModal
+const EnrollModal = dynamic(
+  () => import('@/components/EmptyLoginForm').then(mod => ({ default: mod.EnrollModal })),
+  { ssr: false }
+);
 
 const icons = [Briefcase, Target, ClipboardList, CheckCircle];
 const accents = [
@@ -17,6 +25,42 @@ interface WhyChooseProps {
 }
 
 export default function WhyChoose({ list }: Readonly<WhyChooseProps>) {
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [courses, setCourses] = useState<{ id: number; title: string }[]>([]);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!apiUrl) return;
+
+        const res = await fetch(`${apiUrl}/courses`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        let coursesArray: any[] = [];
+        if (Array.isArray(data)) {
+          coursesArray = data;
+        } else if (data?.data && Array.isArray(data.data)) {
+          coursesArray = data.data;
+        } else if (data?.courses && Array.isArray(data.courses)) {
+          coursesArray = data.courses;
+        }
+
+        const courseList = coursesArray.map((course: any) => ({
+          id: course.id || course.course_id || 0,
+          title: course.title || course.course_name || '',
+        }));
+
+        setCourses(courseList);
+      } catch (err) {
+        console.error('Error fetching courses:', err);
+      }
+    }
+
+    fetchCourses();
+  }, []);
+
   // -----------------------------------------
   // 🛡 Ensure dynamic content is safe
   // -----------------------------------------
@@ -95,12 +139,12 @@ export default function WhyChoose({ list }: Readonly<WhyChooseProps>) {
                 <p className="mt-2 text-gray-600 text-sm leading-relaxed">{item.description}</p>
 
                 <div className="mt-4">
-                  <a
-                    href="#contact"
-                    className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700"
+                  <button
+                    onClick={() => setShowEnrollModal(true)}
+                    className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700 cursor-pointer"
                   >
                     Learn more →
-                  </a>
+                  </button>
                 </div>
               </div>
             </motion.article>
@@ -109,12 +153,12 @@ export default function WhyChoose({ list }: Readonly<WhyChooseProps>) {
 
         {/* Bottom CTA */}
         <div className="mt-12 text-center">
-          <motion.a
-            href="#demo"
+          <motion.button
+            onClick={() => setShowEnrollModal(true)}
             initial={{ scale: 0.98 }}
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.3 }}
-            className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary-50 to-primary-100 px-6 py-3 border border-gray-100 shadow-sm hover:shadow-md"
+            className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary-50 to-primary-100 px-6 py-3 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer"
           >
             {/* small filled blue circle before CTA label */}
             <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" aria-hidden="true" />
@@ -123,9 +167,17 @@ export default function WhyChoose({ list }: Readonly<WhyChooseProps>) {
               Get a Demo
             </span>
             <span className="text-sm text-gray-700">Speak with our training advisors</span>
-          </motion.a>
+          </motion.button>
         </div>
       </div>
+
+      {showEnrollModal && (
+        <EnrollModal
+          courses={courses}
+          page="Course Details"
+          onClose={() => setShowEnrollModal(false)}
+        />
+      )}
     </section>
   );
 }

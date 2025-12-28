@@ -11,7 +11,9 @@ export default function FAQ() {
   useEffect(() => {
     async function loadHrFaqs() {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/hr-faqs`);
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+        const apiUrl = apiBase.endsWith('/api') ? apiBase : `${apiBase}/api`;
+        const res = await fetch(`${apiUrl}/hr-faqs`);
         const data = await res.json();
         setFaqs(data);
       } catch (error) {

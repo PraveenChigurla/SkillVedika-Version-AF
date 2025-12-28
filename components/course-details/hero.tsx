@@ -302,7 +302,7 @@ export default function Hero({
                   aria-expanded={open}
                   aria-haspopup="listbox"
                   onClick={() => setOpen(!open)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer flex justify-between items-center"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white flex justify-between items-center"
                 >
                   <div className="flex flex-wrap gap-2 max-w-[85%]">
                     {formData.selectedCourses.map((id, index) => {
@@ -314,7 +314,7 @@ export default function Hero({
                         >
                           {c?.title}
                           <span
-                            className="cursor-pointer"
+                            className=""
                             onClick={e => {
                               e.stopPropagation();
                               setFormData({
@@ -357,7 +357,7 @@ export default function Hero({
                       .map((c: any) => (
                         <div
                           key={c.id}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-4 py-2 hover:bg-gray-100"
                           onClick={() =>
                             setFormData({
                               ...formData,

@@ -1,18 +1,23 @@
 /* ===== Professional Cursor Styles for Skill Vedika ===== */
 
-/* Interactive Elements - Pointer Cursor */
-button,
-a,
-[role='button'],
+/* Form Elements Only - Pointer Cursor */
+/* Only form elements should show pointer cursor */
 label[for],
-select,
-input[type='checkbox'],
-input[type='radio'],
+select:not(:disabled),
+input[type='checkbox']:not(:disabled),
+input[type='radio']:not(:disabled),
 .cursor-pointer {
   cursor: pointer;
 }
 
-/* Text Input Fields - Text Cursor */
+/* Buttons, links, and other interactive elements - Default cursor */
+button,
+a,
+[role='button'] {
+  cursor: default;
+}
+
+/* Text Input Fields - Text cursor (I-beam) for typing */
 input[type='text'],
 input[type='email'],
 input[type='password'],
@@ -130,7 +135,7 @@ img {
   cursor: cell;
 }
 
-/* Prevent text cursor on dropdowns */
+/* Dropdowns - Pointer cursor (form element) */
 select {
   cursor: pointer;
 }
@@ -153,9 +158,9 @@ img[draggable='false'] {
   pointer-events: none;
 }
 
-/* Links should always be clickable */
+/* Links - Default cursor (not pointer) */
 a[href] {
-  cursor: pointer;
+  cursor: default;
 }
 
 /* Focus visible states */
@@ -170,18 +175,37 @@ label:focus-visible {
 }
 
 /* Hover states with smooth cursor feedback */
-button:hover:not(:disabled),
-a:hover,
-[role='button']:hover,
-label:hover {
+/* Only form elements show pointer on hover */
+label:hover,
+select:hover:not(:disabled),
+input[type='checkbox']:hover:not(:disabled),
+input[type='radio']:hover:not(:disabled) {
   cursor: pointer;
   transition: all 150ms ease-in-out;
 }
 
-/* Text input cursor positioning */
+/* Buttons and links - Default cursor even on hover */
+button:hover:not(:disabled):not([disabled]),
+a:hover,
+[role='button']:hover:not([disabled]) {
+  cursor: default;
+  transition: all 150ms ease-in-out;
+}
+
+/* Text input - Text cursor (I-beam) for typing */
 input:not([type='checkbox']):not([type='radio']):not([type='button']):not([type='submit']):not(
     [type='reset']
   ):not([type='hidden']),
 textarea {
   cursor: text;
+}
+
+/* Prevent text cursor from appearing in non-input elements */
+p, h1, h2, h3, h4, h5, h6, span, div:not([contenteditable]), 
+article, section, header, footer, nav, aside, main {
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }

@@ -291,7 +291,7 @@ export default function DemoSection({
               </label>
 
               <div
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl cursor-pointer bg-white flex flex-wrap gap-2"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white flex flex-wrap gap-2"
                 onClick={() => setOpen(!open)}
               >
                 {formData.selectedCourses.length === 0 ? (
@@ -314,7 +314,7 @@ export default function DemoSection({
                         }}
                       >
                         {course?.title}
-                        <span className="font-bold cursor-pointer">×</span>
+                        <span className="font-bold">×</span>
                       </span>
                     );
                   })
@@ -340,7 +340,7 @@ export default function DemoSection({
                       />
                       {searchTerm && (
                         <span
-                          className="text-gray-500 cursor-pointer font-bold text-lg px-2"
+                          className="text-gray-500 font-bold text-lg px-2"
                           onClick={() => setSearchTerm('')}
                         >
                           ×
@@ -353,7 +353,7 @@ export default function DemoSection({
                     {filteredCourses.map((c: any) => (
                       <div
                         key={c.id}
-                        className="px-3 py-2 rounded cursor-pointer hover:bg-gray-100"
+                        className="px-3 py-2 rounded hover:bg-gray-100"
                         onClick={() =>
                           setFormData({
                             ...formData,

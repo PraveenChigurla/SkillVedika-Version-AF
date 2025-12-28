@@ -24,8 +24,8 @@ export default function RealTime({
   subsection2Desc: string;
   imagePath: string;
 }) {
-  const [isVisible, setIsVisible] = useState(false);
   const IMAGE_SCALE = 0.75;
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -59,8 +59,9 @@ export default function RealTime({
                   alt="Real-Time Help"
                   width={260}
                   height={260}
-                  className="w-full h-full object-contain"
-                  style={{ width: 'auto', height: 'auto' }}
+                  className="object-contain"
+                  style={{ width: '100%', height: '100%' }}
+                  unoptimized={typeof imagePath === 'string' && imagePath.includes('res.cloudinary.com')}
                   quality={85}
                   loading="lazy"
                   sizes="(max-width: 768px) 260px, 260px"

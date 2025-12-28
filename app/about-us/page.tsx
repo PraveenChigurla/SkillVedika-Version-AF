@@ -5,6 +5,7 @@ import { StructuredData, generateAboutPageSchema } from '@/lib/structuredData';
 import { getBaseSchemas } from '@/lib/getBaseSchemas';
 import { getCanonicalUrl } from '@/lib/seo';
 
+// Force dynamic rendering to fetch metadata from database at request time
 export const dynamic = 'force-dynamic';
 
 /* ----------------------------------------
@@ -30,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   try {
     // Fetch SEO metadata for the About page from the `seos` table.
-    // We fetch the specific row by primary key (id = 6) which corresponds
+    // We fetch the specific row by primary key (id = 5) which corresponds
     // to the About page in the seed data. This keeps content and SEO
     // separate (admins can manage SEO independently).
     const res = await fetch(`${api}/seo/5`, { cache: 'no-store' });

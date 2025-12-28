@@ -108,6 +108,8 @@ export default function RecentBlogs({ blogs, blogHeading }: any) {
                           className="object-cover"
                           loading="lazy"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
+                          // Bypass Next.js optimization for Cloudinary images to prevent timeout
+                          unoptimized={typeof img === 'string' && img.includes('res.cloudinary.com')}
                         />
                       </div>
 

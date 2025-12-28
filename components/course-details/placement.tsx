@@ -156,14 +156,15 @@ export default function Placement() {
           })}
         </div>
 
-        {/* Dots */}
+        {/* Dots - Non-interactive indicators */}
         <div className="flex justify-center gap-2 mt-10">
           {images.map((logo, idx) => (
             <div
               key={`dot-${logo.src}-${idx}`}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-default ${
                 idx === activeIdx ? 'bg-blue-600 scale-110' : 'bg-gray-300'
               }`}
+              aria-hidden="true"
             />
           ))}
         </div>

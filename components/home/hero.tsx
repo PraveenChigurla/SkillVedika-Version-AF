@@ -480,8 +480,8 @@ function Hero({ hero }: Readonly<HeroProps>) {
 
             {/* ⭐ BULLET FEATURES FROM CMS ARRAY */}
             <ul className="flex flex-wrap gap-4 text-sm text-gray-700 list-none">
-              {heroContent.map((item: string, index: number) => (
-                <li key={index} className="flex items-center gap-2">
+              {heroContent.map((item: string) => (
+                <li key={item} className="flex items-center gap-2">
                   <CheckCircle2 size={16} className="text-[#2C5AA0]" aria-hidden="true" />
                   <span>{item}</span>
                 </li>
@@ -489,7 +489,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
             </ul>
 
             {/* SEARCH BAR */}
-            <div className="pt-4 relative">
+            <div className="pt-4 relative w-full z-10">
               {/* Accessibility: Proper form with labels */}
               <form
                 onSubmit={(e) => {
@@ -498,12 +498,13 @@ function Hero({ hero }: Readonly<HeroProps>) {
                 }}
                 role="search"
                 aria-label="Search courses"
+                className="w-full"
               >
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-row w-full items-center overflow-hidden">
                   <label htmlFor="hero-search" className="sr-only">
-                    Search by skill
+                    Search by skill 
                   </label>
-                  <div className="flex-1 flex items-center bg-white rounded-md px-4">
+                  <div className="flex-1 flex items-center bg-white rounded-md px-2 sm:px-3 md:px-4 border border-gray-200 min-w-0 overflow-hidden">
                     <input
                       id="hero-search"
                       type="text"
@@ -516,11 +517,11 @@ function Hero({ hero }: Readonly<HeroProps>) {
                           setShowDropdown(true);
                         }
                       }}
-                      className="w-full py-3 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                      className="w-full py-2.5 sm:py-3 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none text-sm sm:text-base min-w-0"
                       aria-autocomplete="list"
-                      aria-expanded={showDropdown}
                       aria-controls="search-suggestions"
                       aria-describedby="search-description"
+                      aria-haspopup="listbox"
                     />
                     <span id="search-description" className="sr-only">
                       Search for courses by entering a skill name
@@ -530,9 +531,9 @@ function Hero({ hero }: Readonly<HeroProps>) {
                   <button
                     type="submit"
                     aria-label="Search courses by skill"
-                    className="bg-[#2C5AA0] text-white px-6 py-3 rounded-md hover:bg-[#1A3F66] transition-colors flex items-center justify-center min-w-[44px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="bg-[#2C5AA0] text-white px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-md hover:bg-[#1A3F66] transition-colors flex items-center justify-center w-[44px] sm:w-auto min-w-[44px] h-[44px] flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
-                    <Search size={20} aria-hidden="true" />
+                    <Search size={20} aria-hidden="true" className="flex-shrink-0 w-5 h-5" />
                   </button>
                 </div>
               </form>
@@ -542,8 +543,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
                 <div
                   ref={dropdownRef}
                   id="search-suggestions"
-                  className="absolute top-full mt-2 w-full bg-white border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto"
-                  role="listbox"
+                  className="absolute top-full mt-2 w-full bg-white border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto left-0 right-0"
                   aria-label="Search suggestions"
                 >
                   <div className="flex justify-end p-2 border-b">
@@ -562,17 +562,19 @@ function Hero({ hero }: Readonly<HeroProps>) {
                       <div className="px-4 pb-2 text-xs text-gray-500 font-semibold">
                         Popular Searches
                       </div>
-                      {suggestions.popular.map((item: string) => (
-                        <button
-                          key={item}
-                          onClick={() => handleSuggestionClick(item)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer focus:outline-none focus:bg-gray-100 focus:ring-2 focus:ring-blue-500"
-                          role="option"
-                          aria-label={`Search for ${item}`}
-                        >
-                          {item}
-                        </button>
-                      ))}
+                      <ul className="list-none">
+                        {suggestions.popular.map((item: string) => (
+                          <li key={item}>
+                            <button
+                              onClick={() => handleSuggestionClick(item)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring-2 focus:ring-blue-500"
+                              aria-label={`Search for ${item}`}
+                            >
+                              {item}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
                     </>
                   )}
                 </div>
@@ -603,7 +605,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
                 </div>
               </div>
 
-              <style jsx>{`
+              <style>{`
                 .marquee-track {
                   display: inline-flex;
                   align-items: center;

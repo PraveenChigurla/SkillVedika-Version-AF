@@ -1,6 +1,4 @@
 import dynamicImport from 'next/dynamic';
-import path from 'node:path';
-import fs from 'node:fs';
 import type { HeroSectionProps } from '@/components/on-job-support/hero-section';
 import type { ReadyToEmpowerProps } from '@/components/on-job-support/ready-to-empower';
 
@@ -17,140 +15,94 @@ const WhyChoose = dynamicImport(() => import('@/components/on-job-support/why-ch
 const ReadyToEmpower = dynamicImport<ReadyToEmpowerProps>(() => import('@/components/on-job-support/ready-to-empower'));
 const GetLiveDemo = dynamicImport(() => import('@/components/on-job-support/get-live-demo'));
 
+// Force dynamic rendering to fetch metadata from database at request time
 export const dynamic = 'force-dynamic';
-
-// Helper to extract text from various API response shapes
-function extractText(value: any): string | null {
-  if (!value) return null;
-  if (typeof value === 'string') return value;
-  
-  if (Array.isArray(value)) {
-    const first = value[0];
-    if (!first) return null;
-    if (typeof first === 'string') return first;
-    if (typeof first === 'object') {
-      return first.text || first.title || Object.values(first).find(v => typeof v === 'string') || null;
-    }
-  }
-  
-  if (typeof value === 'object') {
-    return value.text || value.title || Object.values(value).find(v => typeof v === 'string') || null;
-  }
-  
-  return null;
-}
-
-// Helper to process image URL
-function processImageUrlForOJS(imageRaw: string, apiBase: string): string {
-  const imageClean = String(imageRaw ?? '/placeholder.svg')
-    .replaceAll(/\s+/g, '')
-    .trim();
-  
-  if (imageClean.startsWith('http')) {
-    return imageClean;
-  }
-  
-  const publicFile = path.join(process.cwd(), 'public', imageClean.replace(/^\/+/, ''));
-  if (fs.existsSync(publicFile)) {
-    return imageClean.startsWith('/') ? imageClean : `/${imageClean}`;
-  }
-  
-  const backendOrigin = apiBase.endsWith('/api') ? apiBase.replace(/\/api$/, '') : apiBase;
-  return imageClean.startsWith('/')
-    ? `${backendOrigin}${imageClean}`
-    : `${backendOrigin}/${imageClean}`;
-}
 
 /* ============================================================
    ⭐ 1. Dynamic Metadata for On-Job-Support Page
    Compatible with Next.js 16 (params & props are Promises)
 ============================================================ */
 export async function generateMetadata() {
-  let apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-  const api = apiBase.endsWith('/api') ? apiBase : `${apiBase}/api`;
+  // Use getApiUrl helper for consistent URL construction
+  const { getApiUrl } = await import('@/lib/apiConfig');
 
-  // Fetch metadata content from backend
-  let meta = null;
+  const fallbackTitle = 'On-Job Support | SkillVedika';
+  const fallbackDescription = "Get real-time expert help, hands-on technical support, and job-ready guidance with SkillVedika's On-Job Support.";
+  const fallbackKeywords = [
+    'on job support',
+    'skillvedika support',
+    'real time project help',
+    'technical support',
+  ];
+
   try {
-    const res = await fetch(`${api}/seo/4`, { cache: 'no-store' });
+    // Fetch SEO metadata for the On-Job Support page from the `seos` table.
+    // We fetch the specific row by primary key (id = 4) which corresponds
+    // to the On-Job Support page in the seed data.
+    const res = await fetch(getApiUrl('/seo/4'), { cache: 'no-store' });
     if (res.ok) {
       const json = await res.json();
-      meta = json.data ?? json;
+      const content = json.data || json;
+
+      let keywords: string[];
+      if (content.meta_keywords) {
+        if (typeof content.meta_keywords === 'string') {
+          keywords = content.meta_keywords.split(',').map((k: string) => k.trim());
+        } else {
+          keywords = content.meta_keywords;
+        }
+      } else {
+        keywords = fallbackKeywords;
+      }
+
+      const { getCanonicalUrl } = await import('@/lib/seo');
+      const canonicalUrl = getCanonicalUrl('/on-job-support');
+
+      return {
+        title: content.meta_title || fallbackTitle,
+        description: content.meta_description || fallbackDescription,
+        keywords,
+        alternates: {
+          canonical: canonicalUrl,
+        },
+        openGraph: {
+          title: content.meta_title || fallbackTitle,
+          description: content.meta_description || fallbackDescription,
+          url: canonicalUrl,
+          type: 'website',
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: content.meta_title || fallbackTitle,
+          description: content.meta_description || fallbackDescription,
+        },
+      };
     }
   } catch (err) {
-    console.error('❌ Metadata Fetch Error (OJS):', err);
+    console.error('Error fetching metadata for On-Job Support page:', err);
   }
 
-  // If API unavailable → fallback SEO
-  if (!meta) {
-    return {
-      title: 'On-Job Support | SkillVedikaAA',
-      description:
-        "Get real-time expert help, hands-on technical support, and job-ready guidance with SkillVedika's On-Job Support.",
-      keywords: [
-        'on job support',
-        'skillvedika support',
-        'real time project help',
-        'technical support',
-      ],
-    };
-  }
-
-  // Prefer explicit SEO/meta fields, then fall back to hero fields
-  const baseTitle =
-    extractText(meta.meta_title) ||
-    extractText(meta.seo_title) ||
-    extractText(meta.hero_title) ||
-    'On-Job Support';
-  const title = `${baseTitle} `;
-  const description =
-    extractText(meta.meta_description) ||
-    extractText(meta.seo_description) ||
-    extractText(meta.hero_description) ||
-    'Get hands-on technical guidance, real-time issue resolution, and expert-driven On-Job Support at SkillVedika.';
-
-  // Allow backend to provide keywords (string or array) via `meta.meta_keywords`, `meta.keywords` or `meta.seo_keywords`
-  const rawKeywords = meta.meta_keywords || meta.keywords || meta.seo_keywords || null;
-  let keywords: string[];
-  if (rawKeywords) {
-    if (Array.isArray(rawKeywords)) {
-      keywords = rawKeywords;
-    } else {
-      keywords = String(rawKeywords)
-        .split(',')
-        .map((k: string) => k.trim())
-        .filter(Boolean);
-    }
-  } else {
-    keywords = ['on job support', 'real time support', 'project support', 'technical help', 'skillvedika'];
-  }
-
-  // Build image URL: prefer frontend public folder, then backend
-  const imageRaw = meta.hero_image || meta.hero_banner || '/placeholder.svg';
-  const image = processImageUrlForOJS(imageRaw, apiBase);
+  // Fallback metadata
+  const { getCanonicalUrl } = await import('@/lib/seo');
+  const canonicalUrl = getCanonicalUrl('/on-job-support');
 
   return {
-    title,
-    description,
-    keywords,
-
-    openGraph: {
-      title,
-      description,
-      images: [image],
-      type: 'website',
-      url: 'https://skillvedika.com/on-job-support',
+    title: fallbackTitle,
+    description: fallbackDescription,
+    keywords: fallbackKeywords,
+    alternates: {
+      canonical: canonicalUrl,
     },
-
+    openGraph: {
+      title: fallbackTitle,
+      description: fallbackDescription,
+      url: canonicalUrl,
+      type: 'website',
+    },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
-      images: [image],
-    },
-
-    alternates: {
-      canonical: (await import('@/lib/seo')).getCanonicalUrl('/on-job-support'),
+      title: fallbackTitle,
+      description: fallbackDescription,
     },
   };
 }
@@ -188,13 +140,14 @@ function parseFormDetailsForOJS(json: any): any {
 }
 
 export default async function OnJobSupport() {
-  const api = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-
+  // Use getApiUrl helper for consistent URL construction
+  const { getApiUrl } = await import('@/lib/apiConfig');
+  
   // ⚡ OPTIMIZATION: Fetch all data in parallel for better performance
   const [contentRes, coursesRes, formDetailsRes] = await Promise.allSettled([
-    fetch(`${api}/on-job-support-page`, { cache: 'no-store' }),
-    fetch(`${api}/courses`, { next: { revalidate: 86400 } }),
-    fetch(`${api}/form-details`, { cache: 'no-store' }),
+    fetch(getApiUrl('/on-job-support-page'), { cache: 'no-store' }),
+    fetch(getApiUrl('/courses'), { next: { revalidate: 86400 } }),
+    fetch(getApiUrl('/form-details'), { cache: 'no-store' }),
   ]);
 
   // Process all responses using helper functions
@@ -257,7 +210,6 @@ export default async function OnJobSupport() {
         title={content.hero_title}
         description={content.hero_description}
         buttonText={content.hero_button_text}
-        buttonLink={content.hero_button_link}
         imagePath={content.hero_image}
       />
 
