@@ -1,8 +1,9 @@
 /**
  * Google Analytics 4 (GA4) Component
  *
- * Performance-safe, non-blocking GA4 implementation.
+ * Performance-safe, non-blocking GA4 implementation using lazyOnload strategy.
  * Only loads on client-side and excludes admin routes.
+ * Uses lazyOnload to prevent render-blocking and improve Lighthouse scores.
  *
  * Usage: Add <GoogleAnalytics /> to root layout
  */
@@ -82,14 +83,14 @@ export default function GoogleAnalytics() {
 
   return (
     <>
-      {/* Google Analytics Script - Load asynchronously, non-blocking */}
+      {/* Google Analytics Script - Load with lazyOnload strategy to avoid render-blocking */}
       <Script
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         src={`https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`}
       />
       <Script
         id="google-analytics"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];

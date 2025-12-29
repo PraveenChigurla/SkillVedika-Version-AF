@@ -130,12 +130,11 @@ export default function RootLayout({
         {/* Performance: DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://wa.me" />
+        {/* Note: wa.me removed - WhatsAppButton is lazy-loaded and handles its own preconnect */}
       </head>
       <body className={`font-sans antialiased`} suppressHydrationWarning>
         <ErrorBoundary>
-          {/* Performance: Load analytics with afterInteractive strategy - non-blocking */}
+          {/* Performance: Load analytics with lazyOnload strategy - non-blocking, non-render-blocking */}
           <Suspense fallback={null}>
             <GoogleAnalytics />
           </Suspense>
