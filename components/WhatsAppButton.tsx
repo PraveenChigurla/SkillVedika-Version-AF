@@ -56,7 +56,7 @@ function WhatsAppButton() {
   return (
     <>
       {/* Performance: Preconnect to WhatsApp for faster navigation */}
-      <link rel="preconnect" href="https://wa.me" />
+      {/* <link rel="preconnect" href="https://wa.me" /> */}
       
       <div className="fixed bottom-16 right-6 z-50 group" role="complementary" aria-label="WhatsApp contact">
         {/* Accessibility: Tooltip with proper ARIA */}

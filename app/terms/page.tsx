@@ -1,4 +1,3 @@
-import '../globals.css';
 import { Metadata } from 'next';
 import SafeHTML from '@/components/SafeHTML';
 

@@ -1,9 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import './globals.css';
-import './cursor-styles.css';
-import './compatibility-fixes.css';
-import './animations.css';
+import './globals.css'; // Consolidated CSS - includes all styles to reduce chunk fragmentation
 import './error-handler';
 import './font-error-handler';
 import Header from '@/components/header';

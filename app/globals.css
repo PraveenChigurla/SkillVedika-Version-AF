@@ -1,7 +1,17 @@
+/* ============================================================================
+   CONSOLIDATED GLOBAL STYLES - Optimized for single CSS chunk
+   All styles consolidated to reduce render-blocking resources
+   ============================================================================ */
+
+/* Tailwind CSS imports */
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
+
+/* ============================================================================
+   CRITICAL BASE STYLES - Above the fold, must load first
+   ============================================================================ */
 
 /* Prevent horizontal scrolling and ensure responsive behavior */
 html,
@@ -14,6 +24,18 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Browser Compatibility Fixes - Critical for cross-browser support */
+html {
+  /* Standard property for Chrome 54+, Edge 79+, Firefox */
+  text-size-adjust: 100%;
+  /* Webkit prefix for Safari (Tailwind already adds this, but ensuring it's here) */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ============================================================================
+   CSS VARIABLES - Color System & Theme
+   ============================================================================ */
 
 :root {
   /* SkillVedika Color System */
@@ -129,6 +151,132 @@ body {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ============================================================================
+   BROWSER COMPATIBILITY FIXES - Critical for cross-browser support
+   ============================================================================ */
+
+/* Backdrop Filter - Add webkit prefix for Safari compatibility */
+.backdrop-blur-sm,
+[class*='backdrop-blur-sm'] {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.backdrop-blur-md,
+[class*='backdrop-blur-md'] {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.backdrop-blur-lg,
+[class*='backdrop-blur-lg'] {
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.backdrop-blur-xl,
+[class*='backdrop-blur-xl'] {
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
+
+.backdrop-blur,
+[class*='backdrop-blur']:not([class*='backdrop-blur-sm']):not([class*='backdrop-blur-md']):not(
+    [class*='backdrop-blur-lg']
+  ):not([class*='backdrop-blur-xl']) {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Width Stretch - Add webkit prefix for Edge compatibility */
+.w-stretch,
+[class*='w-stretch'],
+[style*='width: stretch'],
+[style*='width:stretch'] {
+  width: -webkit-fill-available; /* Fallback for Edge */
+  width: stretch; /* Modern browsers */
+}
+
+/* Scrollbar Properties - Add fallbacks for Safari */
+.scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+}
+
+.scrollbar-width-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-width-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-width-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-width-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* Text Wrap - Add fallbacks for older Safari */
+.text-wrap-balance {
+  text-wrap: normal;
+  text-wrap: balance;
+}
+
+.text-wrap-pretty {
+  text-wrap: normal;
+  text-wrap: pretty;
+}
+
+/* Mask Image - Add webkit prefix for Edge compatibility */
+[style*='mask-image'],
+[class*='mask'] {
+  -webkit-mask-image: var(--mask-image, none);
+  mask-image: var(--mask-image, none);
+}
+
+.mask-image-gradient {
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+  mask-image: linear-gradient(to bottom, black, transparent);
+}
+
+/* Field Sizing - Add fallback for Firefox and Safari */
+input[field-sizing='content'],
+.field-sizing-content,
+[class*='field-sizing-content'],
+.field-utilities {
+  width: auto;
+  min-width: fit-content;
+  field-sizing: content;
+}
+
+@supports not (field-sizing: content) {
+  input[field-sizing='content'],
+  .field-sizing-content,
+  [class*='field-sizing-content'],
+  .field-utilities {
+    width: auto;
+    min-width: fit-content;
+  }
+}
+
+/* ============================================================================
+   BASE LAYER STYLES - Tailwind base layer
+   ============================================================================ */
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -176,4 +324,334 @@ body {
     outline-offset: 2px !important;
     border-radius: 0.5rem !important;
   }
+}
+
+/* ============================================================================
+   CURSOR STYLES - Professional cursor behavior
+   ============================================================================ */
+
+/* Form Elements Only - Pointer Cursor */
+label[for],
+select:not(:disabled),
+input[type='checkbox']:not(:disabled),
+input[type='radio']:not(:disabled),
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Buttons, links, and other interactive elements - Default cursor */
+button,
+a,
+[role='button'] {
+  cursor: default;
+}
+
+/* Text Input Fields - Text cursor (I-beam) for typing */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='search'],
+input[type='tel'],
+input[type='url'],
+input[type='number'],
+textarea {
+  cursor: text;
+}
+
+/* Disabled Elements - Not Allowed Cursor */
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled,
+[disabled],
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+/* Images - Default Cursor (No Text Selection) */
+img {
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Cursor Utility Classes */
+.cursor-default {
+  cursor: default;
+}
+
+.cursor-auto {
+  cursor: auto;
+}
+
+.cursor-zoom-in {
+  cursor: zoom-in;
+}
+
+.cursor-zoom-out {
+  cursor: zoom-out;
+}
+
+.cursor-grab {
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
+
+[title],
+.cursor-help {
+  cursor: help;
+}
+
+.cursor-wait {
+  cursor: wait;
+}
+
+.cursor-progress {
+  cursor: progress;
+}
+
+.cursor-move {
+  cursor: move;
+}
+
+.cursor-no-drop {
+  cursor: no-drop;
+}
+
+.cursor-crosshair {
+  cursor: crosshair;
+}
+
+.cursor-all-scroll {
+  cursor: all-scroll;
+}
+
+.cursor-resize-ns {
+  cursor: ns-resize;
+}
+
+.cursor-resize-ew {
+  cursor: ew-resize;
+}
+
+.cursor-resize-nwse {
+  cursor: nwse-resize;
+}
+
+.cursor-resize-nesw {
+  cursor: nesw-resize;
+}
+
+.cursor-cell {
+  cursor: cell;
+}
+
+/* Dropdowns - Pointer cursor (form element) */
+select {
+  cursor: pointer;
+}
+
+/* Smooth transitions for interactive elements */
+button,
+a,
+input,
+select,
+textarea,
+label {
+  transition: all 150ms ease-in-out;
+}
+
+/* Disable pointer events on images to prevent text selection cursor */
+img[draggable='false'] {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Links - Default cursor (not pointer) */
+a[href] {
+  cursor: default;
+}
+
+/* Focus visible states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+label:focus-visible {
+  outline: 2px solid var(--ring, currentColor);
+  outline-offset: 2px;
+}
+
+/* Hover states with smooth cursor feedback */
+label:hover,
+select:hover:not(:disabled),
+input[type='checkbox']:hover:not(:disabled),
+input[type='radio']:hover:not(:disabled) {
+  cursor: pointer;
+  transition: all 150ms ease-in-out;
+}
+
+button:hover:not(:disabled):not([disabled]),
+a:hover,
+[role='button']:hover:not([disabled]) {
+  cursor: default;
+  transition: all 150ms ease-in-out;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='button']):not([type='submit']):not(
+    [type='reset']
+  ):not([type='hidden']),
+textarea {
+  cursor: text;
+}
+
+/* Prevent text cursor from appearing in non-input elements */
+p, h1, h2, h3, h4, h5, h6, span, div:not([contenteditable]), 
+article, section, header, footer, nav, aside, main {
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* ============================================================================
+   ANIMATIONS - GPU-accelerated animations (less critical, loaded after base)
+   ============================================================================ */
+
+/* Performance optimizations for animations */
+* {
+  will-change: auto;
+}
+
+/* Marquee Animation - Uses transform (GPU accelerated) */
+@keyframes marquee {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Shake Animation - Uses transform (GPU accelerated) */
+@keyframes shake {
+  0% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(-12deg);
+  }
+  30% {
+    transform: rotate(10deg);
+  }
+  45% {
+    transform: rotate(-8deg);
+  }
+  60% {
+    transform: rotate(6deg);
+  }
+  75% {
+    transform: rotate(-4deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.shake {
+  display: inline-block;
+  transform-origin: center;
+  animation: shake 0.9s ease-in-out infinite;
+}
+
+/* Float Animation - Uses transform (GPU accelerated) */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Image aspect ratio styles */
+.image-auto-aspect {
+  width: auto;
+  height: auto;
+}
+
+/* Transform utility */
+.transform-translate-x {
+  transform: translateX(-6px);
+}
+
+/* Fade In Animation */
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in,
+[class*='animate-fade-in'] {
+  animation: fadein 0.3s ease-in-out;
+}
+
+@keyframes fadein-safe {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide In Animations - GPU accelerated */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.4s ease-out 0.6s both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out 0.4s both;
 }
