@@ -11,7 +11,7 @@ export default function StickyFooter() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [formDetails, setFormDetails] = useState<any>(null);
   const [contactDetails, setContactDetails] = useState<{ phone?: string; email?: string }>({
-    phone: '+91 8790900881',
+    phone: '+91 8790536265',
     email: 'support@skillvedika.com',
   });
 
@@ -76,19 +76,19 @@ export default function StickyFooter() {
     }
   }
 
-  // Helper function to fetch contact details
+  // Helper function to fetch contact details from contact page (same source as contact page)
   async function fetchContactDetails(apiUrl: string): Promise<void> {
     try {
-      const footerRes = await fetch(`${apiUrl}/footer-settings`, { cache: 'no-store' });
-      if (!footerRes.ok) return;
+      const contactRes = await fetch(`${apiUrl}/contact-page`, { cache: 'no-store' });
+      if (!contactRes.ok) return;
 
-      const footerResponse = await footerRes.json();
-      const footerData = footerResponse?.data || footerResponse;
+      const contactResponse = await contactRes.json();
+      const contactData = contactResponse?.data || contactResponse;
 
-      if (footerData?.contact_details) {
+      if (contactData) {
         setContactDetails({
-          phone: footerData.contact_details.phone || '+91 9182617094',
-          email: footerData.contact_details.email || 'support@skillvedika.com',
+          phone: contactData.contacts_phone_number || '+91 9182617094',
+          email: contactData.contacts_email_id || 'support@skillvedika.com',
         });
       }
     } catch (err) {

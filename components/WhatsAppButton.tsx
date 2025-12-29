@@ -2,6 +2,7 @@
 
 import { FaWhatsapp } from 'react-icons/fa';
 import { useEffect, useState, useCallback, memo } from 'react';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 // Performance: Memoize WhatsApp button to prevent unnecessary re-renders
 function WhatsAppButton() {
@@ -9,25 +10,24 @@ function WhatsAppButton() {
   const message = 'Hi, I need more information about the courses.';
 
   // Performance: useCallback to memoize fetch function
+  // Fetch from contact page (same source as contact page)
   const fetchContactDetails = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!apiUrl) {
-        return;
-      }
-
-      // Performance: Use cache for footer settings - don't change often
-      const footerRes = await fetch(`${apiUrl}/footer-settings`, { 
-        cache: 'force-cache',
-        next: { revalidate: 3600 }, // Revalidate every hour
+      const apiBaseUrl = getApiBaseUrl();
+      
+      // Fetch from contact page endpoint (same as contact page uses)
+      const contactRes = await fetch(`${apiBaseUrl}/contact-page`, { 
+        cache: 'no-store', // Client-side fetch - use no-store for fresh data
       });
-      if (footerRes.ok) {
-        const footerResponse = await footerRes.json();
-        const footerData = footerResponse?.data || footerResponse;
+      
+      if (contactRes.ok) {
+        const contactResponse = await contactRes.json();
+        // Handle response format: {data: {...}} or direct object
+        const contactData = contactResponse?.data || contactResponse;
 
-        if (footerData?.contact_details?.phone) {
+        if (contactData?.contacts_phone_number) {
           // Format phone number for WhatsApp: remove +, spaces, and any non-digit characters
-          const formattedPhone = footerData.contact_details.phone
+          const formattedPhone = contactData.contacts_phone_number
             .replaceAll('+', '')
             .replaceAll(/\s+/g, '')
             .replaceAll(/\D/g, '');
