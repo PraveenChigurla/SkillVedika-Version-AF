@@ -122,12 +122,34 @@ export default function DemoSection({
       });
 
       if (!res.ok) {
-        alert('Failed to submit form');
+        // Try to read error response
+        let errorMessage = 'Failed to submit form';
+        try {
+          const errorData = await res.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.errors) {
+            // Handle validation errors
+            const errors = Object.values(errorData.errors).flat();
+            errorMessage = errors.join(', ') || errorMessage;
+          }
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = `Failed to submit form (${res.status}: ${res.statusText})`;
+        }
+        console.error('Form submission error:', {
+          status: res.status,
+          statusText: res.statusText,
+          url: `${apiUrl}/enroll`,
+        });
+        alert(errorMessage);
         return;
       }
 
       const json = await res.json();
-      alert(json.message || 'Submitted!');
+      alert(json.message || (json.success ? 'Submitted successfully!' : 'Submitted!'));
 
       // Reset
       setFormData({

@@ -45,39 +45,77 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
 
         // Defer categories fetch - sidebar is lazy loaded, not critical for initial render
         // Use requestIdleCallback to defer if available
+        // const fetchCategories = async () => {
+        //   const categoriesUrl = `${apiBase}/categories`;
+        //   const catRes = (await Promise.race([
+        //     fetch(categoriesUrl, {
+        //       signal: controller.signal,
+        //       headers: { Accept: 'application/json' },
+        //       cache: 'default', // Browser cache
+        //     }),
+        //     new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500)), // Reduced timeout
+        //   ]).catch(() => ({ ok: false } as Response))) as Response | { ok: false };
+        //   if (process.env.NODE_ENV === 'development') {
+        //     console.log('[CourseGrid] Categories fetch result:', catRes.ok ? 'success' : 'failed', 'URL:', categoriesUrl);
+        //   }
+        //   // Set categories with startTransition for non-blocking update
+        //   if (catRes.ok && 'json' in catRes) {
+        //     try {
+        //       const data = await (catRes as Response).json();
+        //       const categoriesData = data?.data || data || [];
+        //       startTransition(() => {
+        //         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        //       });
+        //     } catch (e) {
+        //       console.warn('Failed to parse categories:', e);
+        //       startTransition(() => {
+        //         setCategories([]);
+        //       });
+        //     }
+        //   } else {
+        //     startTransition(() => {
+        //       setCategories([]);
+        //     });
+        //   }
+        // };
+
         const fetchCategories = async () => {
-          const categoriesUrl = `${apiBase}/categories`;
-          const catRes = (await Promise.race([
-            fetch(categoriesUrl, {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // ✅ 5s timeout
+        
+          try {
+            const res = await fetch(`${apiBase}/categories`, {
               signal: controller.signal,
               headers: { Accept: 'application/json' },
-              cache: 'default', // Browser cache
-            }),
-            new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500)), // Reduced timeout
-          ]).catch(() => ({ ok: false } as Response))) as Response | { ok: false };
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[CourseGrid] Categories fetch result:', catRes.ok ? 'success' : 'failed', 'URL:', categoriesUrl);
-          }
-          // Set categories with startTransition for non-blocking update
-          if (catRes.ok && 'json' in catRes) {
-            try {
-              const data = await (catRes as Response).json();
-              const categoriesData = data?.data || data || [];
-              startTransition(() => {
-                setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-              });
-            } catch (e) {
-              console.warn('Failed to parse categories:', e);
-              startTransition(() => {
-                setCategories([]);
-              });
-            }
-          } else {
-            startTransition(() => {
-              setCategories([]);
+              cache: 'default',
             });
+        
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+        
+            const data = await res.json();
+            const categoriesData = data?.data || data || [];
+        
+            startTransition(() => {
+              setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+            });
+        
+            console.log('[CourseGrid] Categories loaded:', categoriesData.length);
+          } catch (err: any) {
+            if (err.name === 'AbortError') {
+              console.warn('[CourseGrid] Categories request timed out');
+            } else {
+              console.error('[CourseGrid] Categories fetch failed:', err);
+            }
+        
+            startTransition(() => setCategories([]));
+          } finally {
+            clearTimeout(timeoutId); // ✅ IMPORTANT
           }
         };
+        
+        
 
         // Defer categories fetch to reduce initial TBT
         if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {

@@ -2,7 +2,7 @@
 
 import { useState, startTransition } from 'react';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
-import Image from 'next/image';
+
 
 interface CourseRowProps {
   title: string;
@@ -103,20 +103,29 @@ export default function CourseRow({
             >
               <div className="relative w-full h-40 overflow-hidden bg-gray-100">
                 {course.image ? (
-                  <Image
+                  // <Image
+                  //   src={course.image}
+                  //   alt={course.title || 'Course'}
+                  //   fill
+                  //   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  //   className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  //   loading={index < 3 ? 'eager' : 'lazy'}
+                  //   priority={index < 3}
+                  //   quality={75}
+                  //   // Bypass Next.js optimization for Cloudinary images to prevent timeout
+                  //   unoptimized={typeof course.image === 'string' && course.image.includes('res.cloudinary.com')}
+                  //   onError={e => {
+                  //     // Fallback to placeholder on error
+                  //     e.currentTarget.src = '/placeholder-course.jpg';
+                  //   }}
+                  // />
+                  <img
                     src={course.image}
                     alt={course.title || 'Course'}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading={index < 3 ? 'eager' : 'lazy'}
-                    priority={index < 3}
-                    quality={75}
-                    // Bypass Next.js optimization for Cloudinary images to prevent timeout
-                    unoptimized={typeof course.image === 'string' && course.image.includes('res.cloudinary.com')}
                     onError={e => {
-                      // Fallback to placeholder on error
-                      e.currentTarget.src = '/placeholder-course.jpg';
+                      e.currentTarget.src = '/placeholder-course.svg';
                     }}
                   />
                 ) : (
