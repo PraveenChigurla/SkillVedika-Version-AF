@@ -186,25 +186,25 @@ export default function DemoSection({
        UI
   ----------------------------- */
   return (
-    <section className="bg-gradient-to-br from-blue-50 to-purple-100 px-6 py-20 relative overflow-hidden">
+    <section className="bg-gradient-to-br from-blue-50 to-purple-100 py-10 sm:py-14 lg:py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <style>{phoneStyles}</style>
 
-      {/* Decorative Elements */}
-      <div className="absolute top-10 left-10 w-32 h-32 border-8 border-orange-400 rounded-full opacity-40"></div>
-      <div className="absolute bottom-20 left-20 w-40 h-40 border-8 border-orange-400 rounded-full opacity-30"></div>
-      <div className="absolute bottom-10 right-10 w-48 h-48 bg-blue-900 rounded-full opacity-20"></div>
+      {/* Decorative Elements - Hidden on mobile, visible on desktop */}
+      <div className="hidden lg:block absolute top-10 left-10 w-32 h-32 border-8 border-orange-400 rounded-full opacity-40"></div>
+      <div className="hidden lg:block absolute bottom-20 left-20 w-40 h-40 border-8 border-orange-400 rounded-full opacity-30"></div>
+      <div className="hidden lg:block absolute bottom-10 right-10 w-48 h-48 bg-blue-900 rounded-full opacity-20"></div>
 
-      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center relative z-10">
+      <div className="max-w-7xl mx-auto flex flex-col gap-6 lg:flex-row lg:gap-12 items-start relative z-10">
         {/* LEFT CONTENT */}
-        <div className="space-y-6">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+        <div className="w-full lg:w-1/2 space-y-4 sm:space-y-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
             {title?.main || title?.title || 'Get A Live Free Demo'}
           </h2>
 
-          <ul className="space-y-4 text-gray-700">
+          <ul className="space-y-3 sm:space-y-4 text-sm sm:text-base text-gray-700">
             {(points || []).map((point, idx) => (
               <li key={idx} className="flex gap-3">
-                <span className="text-blue-600">•</span>
+                <span className="text-blue-600 flex-shrink-0">•</span>
                 <span>{point}</span>
               </li>
             ))}
@@ -212,23 +212,23 @@ export default function DemoSection({
         </div>
 
         {/* RIGHT FORM */}
-        <div className="bg-white rounded-2xl p-10 shadow-xl">
+        <div className="w-full lg:w-1/2 bg-white rounded-2xl p-6 sm:p-8 lg:p-10 shadow-xl">
           {/* TITLE */}
-          <h2 className="text-4xl font-bold text-center text-black">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-black mb-2 sm:mb-4">
             {formDetails?.form_title || 'Book Your Free Demo'}
           </h2>
 
           {/* Sub heading */}
-          <p className="text-gray-600 text-center text-[17px] mt-2 flex items-center justify-center gap-2">
+          <p className="text-sm sm:text-base text-gray-600 text-center mt-2 flex items-center justify-center gap-2">
             {formDetails?.form_subtitle || 'Our team will contact you shortly.'}
             <span className="text-yellow-500 inline-block shake">🔔</span>
           </p>
 
           {/* FORM */}
-          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
             {/* NAME */}
             <div className="space-y-2">
-              <label htmlFor="corporate-name" className="text-gray-700 font-medium">
+              <label htmlFor="corporate-name" className="text-sm sm:text-base text-gray-700 font-medium">
                 {formDetails?.full_name_label || 'Full Name'}
               </label>
               <input
@@ -241,13 +241,13 @@ export default function DemoSection({
                 onChange={e =>
                   startTransition(() => setFormData({ ...formData, fullName: e.target.value }))
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm sm:text-base min-h-[44px]"
               />
             </div>
 
             {/* EMAIL */}
             <div className="space-y-2">
-              <label htmlFor="corporate-email" className="text-gray-700 font-medium">
+              <label htmlFor="corporate-email" className="text-sm sm:text-base text-gray-700 font-medium">
                 {formDetails?.email_label || 'Email Address'}
               </label>
               <input
@@ -261,13 +261,13 @@ export default function DemoSection({
                 onChange={e =>
                   startTransition(() => setFormData({ ...formData, email: e.target.value }))
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm sm:text-base min-h-[44px]"
               />
             </div>
 
             {/* PHONE */}
             <div className="space-y-2">
-              <label htmlFor="corporate-phone" className="text-gray-700 font-medium">
+              <label htmlFor="corporate-phone" className="text-sm sm:text-base text-gray-700 font-medium">
                 {formDetails?.phone_label || 'Phone Number'}
               </label>
 
@@ -421,7 +421,10 @@ export default function DemoSection({
             </div>
 
             {/* SUBMIT BUTTON */}
-            <button className="w-full bg-[#1e5ba8] text-white py-3 rounded-xl font-semibold hover:opacity-90 transition">
+            <button 
+              type="submit"
+              className="w-full bg-[#1e5ba8] text-white py-3 rounded-xl font-semibold hover:opacity-90 active:opacity-80 transition-opacity min-h-[44px] flex items-center justify-center text-sm sm:text-base"
+            >
               {formDetails?.submit_button_text || 'Submit Your Details'}
             </button>
           </form>

@@ -15,10 +15,30 @@ function WhatsAppButton() {
     try {
       const apiBaseUrl = getApiBaseUrl();
       
+      if (!apiBaseUrl) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[WhatsAppButton] API base URL not configured');
+        }
+        return;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       // Fetch from contact page endpoint (same as contact page uses)
-      const contactRes = await fetch(`${apiBaseUrl}/contact-page`, { 
+      const contactRes = await fetch(`${apiBaseUrl}/contact-page`, {
+        signal: controller.signal,
         cache: 'no-store', // Client-side fetch - use no-store for fresh data
+        headers: { Accept: 'application/json' },
+      }).catch((fetchError) => {
+        // Handle network errors
+        if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+          throw new Error('Network error: Unable to reach the API server');
+        }
+        throw fetchError;
       });
+
+      clearTimeout(timeoutId);
       
       if (contactRes.ok) {
         const contactResponse = await contactRes.json();
@@ -36,9 +56,21 @@ function WhatsAppButton() {
             setPhoneNumber(formattedPhone);
           }
         }
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[WhatsAppButton] Failed to fetch contact details: HTTP ${contactRes.status}`);
+        }
       }
-    } catch (err) {
-      console.error('Error fetching contact details for WhatsApp:', err);
+    } catch (err: any) {
+      // Only log errors in development
+      if (process.env.NODE_ENV === 'development') {
+        if (err.name === 'AbortError') {
+          console.warn('[WhatsAppButton] Contact details request timed out');
+        } else {
+          console.error('[WhatsAppButton] Error fetching contact details:', err.message || err);
+        }
+      }
+      // Don't break the UI - keep default phone number
     }
   }, []);
 
@@ -58,7 +90,12 @@ function WhatsAppButton() {
       {/* Performance: Preconnect to WhatsApp for faster navigation */}
       {/* <link rel="preconnect" href="https://wa.me" /> */}
       
-      <div className="fixed bottom-16 right-6 z-50 group" role="complementary" aria-label="WhatsApp contact">
+      <div 
+        className="hidden sm:block fixed right-4 sm:right-6 bottom-24 z-50 group safe-area-inset-bottom"
+        role="complementary" 
+        aria-label="WhatsApp contact" 
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0)' }}
+      >
         {/* Accessibility: Tooltip with proper ARIA */}
         <div
           className="
@@ -83,16 +120,16 @@ function WhatsAppButton() {
           rel="noopener noreferrer"
           className="
             relative
-            bg-green-500 hover:bg-green-600
+            bg-green-500 hover:bg-green-600 active:bg-green-700
             rounded-full shadow-xl
-            w-11 h-11
+            w-11 h-11 sm:w-12 sm:h-12
             flex items-center justify-center
-            transition-transform hover:scale-110
+            transition-transform hover:scale-110 active:scale-95
             focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
           "
           aria-label="Chat with us on WhatsApp"
         >
-          <FaWhatsapp className="w-8 h-8 text-white" aria-hidden="true" />
+          <FaWhatsapp className="w-6 h-6 sm:w-8 sm:h-8 text-white" aria-hidden="true" />
         </a>
       </div>
     </>

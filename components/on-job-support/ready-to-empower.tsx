@@ -79,7 +79,7 @@ function ReadyToEmpower({
 
   return (
     <section className="relative bg-gradient-to-b from-white via-white to-white py-10 px-6 sm:px-10 lg:px-16 overflow-hidden">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-16 relative z-10">
+      <div className="max-w-7xl mx-auto flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-16 relative z-10">
         {/* LEFT IMAGE */}
         <motion.div
           initial={{ opacity: 0, x: -60 }}

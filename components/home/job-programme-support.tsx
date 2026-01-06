@@ -66,7 +66,7 @@ export default function JobProgrammeSupport({ jobSupport }: JobProgrammeSupportP
 
   return (
     <section
-      className="relative py-24 bg-cover bg-center"
+      className="relative py-12 sm:py-16 md:py-20 lg:py-24 bg-cover bg-center overflow-hidden"
       style={{
         backgroundImage: "url('/home/handshake.jpg')",
       }}
@@ -75,23 +75,23 @@ export default function JobProgrammeSupport({ jobSupport }: JobProgrammeSupportP
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* ⭐ Dynamic Title (safe wrapper) */}
-        <div className="text-3xl md:text-4xl font-bold text-white mb-4">
+        <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4 px-2">
           {jobSupport?.job_support_title
             ? parse(jobSupport.job_support_title)
             : 'Job Programme Support'}
         </div>
 
         {/* ⭐ Dynamic Content (safe wrapper) */}
-        <div className="text-gray-100 text-sm md:text-base mb-8 max-w-2xl mx-auto">
+        <div className="text-gray-100 text-sm sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
           {jobSupport?.job_support_content ? parse(jobSupport.job_support_content) : null}
         </div>
 
         {/* ⭐ Dynamic Payment Type Buttons */}
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-6 px-2">
           {paymentTypes.map((type: string, index: number) => (
             <button
               key={`payment-type-${type}-${index}`}
-              className="bg-white text-[#2C5AA0] px-8 py-2 rounded font-semibold hover:bg-gray-100 transition-colors capitalize"
+              className="bg-white text-[#2C5AA0] px-6 sm:px-8 py-2 sm:py-2.5 rounded font-semibold hover:bg-gray-100 active:bg-gray-200 transition-colors capitalize text-sm sm:text-base min-h-[44px]"
             >
               {type}
             </button>
@@ -101,7 +101,7 @@ export default function JobProgrammeSupport({ jobSupport }: JobProgrammeSupportP
         {/* ⭐ Dynamic Main Button */}
         <button
           onClick={() => setShowEnrollModal(true)}
-          className="inline-block bg-[#2C5AA0] text-white px-8 py-3 rounded font-semibold hover:bg-[#1A3F66] transition-colors"
+          className="inline-block bg-[#2C5AA0] text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded font-semibold hover:bg-[#1A3F66] active:bg-[#153355] transition-colors text-sm sm:text-base min-h-[44px]"
         >
           {jobSupport?.job_support_button || 'Get Started'}
         </button>

@@ -59,24 +59,96 @@ export default function KeyFeatures({ keyFeatures }: Readonly<KeyFeaturesProps>)
   const activeIndex = Math.floor(((rotation + 45) % 360) / 90) % features.length;
 
   return (
-    <section className="relative bg-gradient-to-br from-[#F6FAFF] via-[#EEF4FA] to-[#E6EEFA] py-24 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-        <div className="grid md:grid-cols-3 gap-16 items-center">
+    <section className="relative bg-gradient-to-br from-[#F6FAFF] via-[#EEF4FA] to-[#E6EEFA] py-12 sm:py-16 md:py-20 lg:py-24 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Mobile: Single column layout with features on left */}
+        <div className="block md:hidden space-y-8">
+          {/* Title and Description */}
+          <div className="space-y-4">
+            <div className="text-2xl sm:text-3xl font-extrabold leading-tight text-[#1A3F66]">
+              {keyFeatures?.key_features_title ? parse(keyFeatures.key_features_title) : null}
+            </div>
+            <div className="text-gray-700 text-sm sm:text-base leading-relaxed">
+              {keyFeatures?.key_features_content ? parse(keyFeatures.key_features_content) : null}
+            </div>
+          </div>
+
+          {/* Center Icon - Smaller on mobile */}
+          <div className="relative flex justify-center items-center py-4">
+            <div className="relative w-48 h-48 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-[3px] border-[#2C5AA0]/30" />
+              <Image
+                src="/home/Frame 211.png"
+                alt="Rotating Icon"
+                width={200} 
+                height={200}
+                className="z-10 image-auto-aspect"
+                loading="lazy"
+                quality={85}
+                sizes="200px"
+              />
+              <div className="absolute w-56 h-56 bg-[#2C5AA0]/10 blur-3xl rounded-full" />
+            </div>
+          </div>
+
+          {/* Feature Cards - Left aligned on mobile */}
+          <div className="flex flex-col gap-4">
+            {features.map((feature: any, index: number) => {
+              const isActive = index === activeIndex;
+              return (
+                <motion.div
+                  key={index}
+                  animate={{
+                    scale: isActive ? 1.02 : 1,
+                    backgroundColor: isActive
+                      ? 'rgba(44, 90, 160, 0.15)'
+                      : 'rgba(255, 255, 255, 0.9)',
+                  }}
+                  transition={{ duration: 0.4, ease: 'easeInOut' }}
+                  className={`relative flex items-center gap-4 rounded-xl border border-[#D6E4F0] px-4 py-3 shadow-md backdrop-blur-sm transition-all duration-300 ${
+                    isActive ? 'ring-2 ring-[#2C5AA0]/40' : ''
+                  }`}
+                >
+                  {/* Circular Icon - Left aligned */}
+                  <div
+                    className={`flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 ${
+                      isActive ? 'bg-[#2C5AA0] text-white shadow-lg' : 'bg-[#E6EEFA] text-[#2C5AA0]'
+                    }`}
+                  >
+                    {feature.icon}
+                  </div>
+
+                  {/* Text */}
+                  <p
+                    className={`font-semibold text-sm sm:text-base transition-all duration-300 ${
+                      isActive ? 'text-[#2C5AA0]' : 'text-[#1A3F66]'
+                    }`}
+                  >
+                    {feature.text}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Desktop: 3-column layout */}
+        <div className="hidden md:grid md:grid-cols-3 gap-8 md:gap-12 lg:gap-16 items-center">
           {/* LEFT CONTENT — now fully dynamic */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6"
           >
             {/* ⭐ Dynamic Title */}
-            <div className="text-3xl md:text-4xl font-extrabold leading-snug text-[#1A3F66]">
+            <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight sm:leading-snug text-[#1A3F66]">
               {keyFeatures?.key_features_title ? parse(keyFeatures.key_features_title) : null}
             </div>
 
             {/* ⭐ Dynamic Paragraph */}
-            <div className="text-gray-700 text-base md:text-lg leading-relaxed max-w-md">
+            <div className="text-gray-700 text-sm sm:text-base md:text-lg leading-relaxed max-w-md">
               {keyFeatures?.key_features_content ? parse(keyFeatures.key_features_content) : null}
             </div>
           </motion.div>

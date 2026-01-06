@@ -266,7 +266,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F0F4F9]">
+    <main className="min-h-screen bg-[#F0F4F9] overflow-x-hidden w-full max-w-full">
       {/* Structured Data for SEO */}
       <StructuredData data={[organizationSchema, websiteSchema, webPageSchema]} />
 

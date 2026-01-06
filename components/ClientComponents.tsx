@@ -22,13 +22,19 @@ const StickyFooter = dynamic(() => import('@/components/StickyFooter'), {
   loading: () => null,
 });
 
-// Performance: Lazy load WhatsAppButton - not critical for initial render
+// Performance: Lazy load UnifiedHelpButton - mobile-first unified FAB
+const UnifiedHelpButton = dynamic(() => import('@/components/UnifiedHelpButton'), {
+  ssr: false, // Client-only component
+  loading: () => null,
+});
+
+// Performance: Lazy load WhatsAppButton - desktop only
 const WhatsAppButton = dynamic(() => import('@/components/WhatsAppButton'), {
   ssr: false, // Client-only component
   loading: () => null,
 });
 
-// Performance: Lazy load QueryPopup - appears after interaction
+// Performance: Lazy load QueryPopup - desktop only
 const QueryPopup = dynamic(() => import('@/components/QueryPopup'), {
   ssr: false, // Client-only component
   loading: () => null,
@@ -44,8 +50,13 @@ export default function ClientComponents() {
   return (
     <>
       <StickyFooter />
-      <WhatsAppButton />
-      <QueryPopup />
+      {/* Mobile: Unified Help Button */}
+      <UnifiedHelpButton />
+      {/* Desktop: Separate buttons */}
+      <div className="hidden sm:block">
+        <WhatsAppButton />
+        <QueryPopup />
+      </div>
       <CookieConsentWrapper />
     </>
   );

@@ -27,8 +27,27 @@ export default function StickyFooter() {
   // Helper function to fetch courses
   async function fetchCourses(apiUrl: string): Promise<void> {
     try {
-      const coursesRes = await fetch(`${apiUrl}/courses`);
-      if (!coursesRes.ok) return;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const coursesRes = await fetch(`${apiUrl}/courses`, {
+        signal: controller.signal,
+        headers: { Accept: 'application/json' },
+      }).catch((fetchError) => {
+        if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+          throw new Error('Network error: Unable to reach the API server');
+        }
+        throw fetchError;
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!coursesRes.ok) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[StickyFooter] Failed to fetch courses: HTTP ${coursesRes.status}`);
+        }
+        return;
+      }
 
       const coursesResponse = await coursesRes.json();
       // Handle different API response formats: {success: true, data: [...]} or direct array
@@ -49,16 +68,43 @@ export default function StickyFooter() {
         .filter((c: any) => c.id && c.title); // Filter out invalid courses
 
       setCourses(courseList);
-    } catch (err) {
-      console.error('Error fetching courses:', err);
+    } catch (err: any) {
+      if (process.env.NODE_ENV === 'development') {
+        if (err.name === 'AbortError') {
+          console.warn('[StickyFooter] Courses request timed out');
+        } else {
+          console.error('[StickyFooter] Error fetching courses:', err.message || err);
+        }
+      }
+      // Don't break the UI - keep existing courses or empty array
     }
   }
 
   // Helper function to fetch form details
   async function fetchFormDetails(apiUrl: string): Promise<void> {
     try {
-      const formRes = await fetch(`${apiUrl}/form-details`, { cache: 'no-store' });
-      if (!formRes.ok) return;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const formRes = await fetch(`${apiUrl}/form-details`, {
+        signal: controller.signal,
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      }).catch((fetchError) => {
+        if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+          throw new Error('Network error: Unable to reach the API server');
+        }
+        throw fetchError;
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!formRes.ok) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[StickyFooter] Failed to fetch form details: HTTP ${formRes.status}`);
+        }
+        return;
+      }
 
       const rawPayload = await formRes.json();
       let payload = rawPayload;
@@ -71,16 +117,43 @@ export default function StickyFooter() {
       }
 
       setFormDetails(payload);
-    } catch (err) {
-      console.error('Error fetching form details:', err);
+    } catch (err: any) {
+      if (process.env.NODE_ENV === 'development') {
+        if (err.name === 'AbortError') {
+          console.warn('[StickyFooter] Form details request timed out');
+        } else {
+          console.error('[StickyFooter] Error fetching form details:', err.message || err);
+        }
+      }
+      // Don't break the UI - keep existing form details or null
     }
   }
 
   // Helper function to fetch contact details from contact page (same source as contact page)
   async function fetchContactDetails(apiUrl: string): Promise<void> {
     try {
-      const contactRes = await fetch(`${apiUrl}/contact-page`, { cache: 'no-store' });
-      if (!contactRes.ok) return;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const contactRes = await fetch(`${apiUrl}/contact-page`, {
+        signal: controller.signal,
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      }).catch((fetchError) => {
+        if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+          throw new Error('Network error: Unable to reach the API server');
+        }
+        throw fetchError;
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!contactRes.ok) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[StickyFooter] Failed to fetch contact details: HTTP ${contactRes.status}`);
+        }
+        return;
+      }
 
       const contactResponse = await contactRes.json();
       const contactData = contactResponse?.data || contactResponse;
@@ -91,8 +164,15 @@ export default function StickyFooter() {
           email: contactData.contacts_email_id || 'support@skillvedika.com',
         });
       }
-    } catch (err) {
-      console.error('Error fetching contact details:', err);
+    } catch (err: any) {
+      if (process.env.NODE_ENV === 'development') {
+        if (err.name === 'AbortError') {
+          console.warn('[StickyFooter] Contact details request timed out');
+        } else {
+          console.error('[StickyFooter] Error fetching contact details:', err.message || err);
+        }
+      }
+      // Don't break the UI - keep default contact details
     }
   }
 
@@ -116,57 +196,75 @@ export default function StickyFooter() {
     fetchData();
   }, []);
 
+  // Format phone number for tel: link (remove spaces and special chars, keep + and digits)
+  const phoneForCall = contactDetails.phone
+    ? contactDetails.phone.replaceAll(/\s+/g, '').replaceAll(/[^\d+]/g, '')
+    : '';
+
   return (
-    <div
-      className={`
-        fixed left-0 w-full z-50
-        transition-all duration-500 ease-in-out
-        ${show ? 'bottom-0' : '-bottom-24'}
-      `}
-    >
-      <div className="bg-gray-100 border-t border-gray-300">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-700">
-          {/* Contact Numbers */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <span>
-              <b>For Assistance contact:</b>
-            </span>
+    <>
+      {/* Mobile-only Call Button - Hidden since we have "Call Us" in UnifiedHelpButton */}
+      {/* Removed: Call option is now available in the "Need Help?" bottom sheet */}
 
-            {contactDetails.phone && (
-              <a
-                href={`tel:${contactDetails.phone.replaceAll(/\s+/g, '')}`}
-                className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
-              >
-                <img
-                  src="https://flagcdn.com/w20/in.png"
-                  alt="India"
-                  className="w-5 h-3.5 object-cover"
-                />
-                <b>{contactDetails.phone}</b>
-              </a>
-            )}
-            {contactDetails.phone && contactDetails.email && (
-              <span className="hidden sm:block">|</span>
-            )}
-            {contactDetails.email && (
-              <a
-                href={`mailto:${contactDetails.email}`}
-                className="hover:text-blue-600 transition-colors"
-              >
-                <b>Email: {contactDetails.email}</b>
-              </a>
-            )}
+      {/* Desktop Footer (hidden on mobile) */}
+      <div
+        className={`
+          hidden md:block
+          fixed left-0 w-full z-40
+          transition-all duration-500 ease-in-out
+          ${show ? 'bottom-0' : '-bottom-24'}
+          safe-area-inset-bottom
+        `}
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0)',
+        }}
+      >
+        <div className="bg-gray-100 border-t border-gray-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-700">
+            {/* Contact Numbers */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <span>
+                <b>For Assistance contact:</b>
+              </span>
+
+              {contactDetails.phone && (
+                <a
+                  href={`tel:${phoneForCall}`}
+                  className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                >
+                  <img
+                    src="https://flagcdn.com/w20/in.png"
+                    alt="India"
+                    className="w-5 h-3.5 object-cover"
+                  />
+                  <b>{contactDetails.phone}</b>
+                </a>
+              )}
+              {contactDetails.phone && contactDetails.email && (
+                <span className="hidden sm:block">|</span>
+              )}
+              {contactDetails.email && (
+                <a
+                  href={`mailto:${contactDetails.email}`}
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  <b>Email: {contactDetails.email}</b>
+                </a>
+              )}
+            </div>
+
+            {/* CTA Button */}
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2 rounded-full transition"
+            >
+              Contact us for more information
+            </button>
           </div>
-
-          {/* CTA Button */}
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2 rounded-full transition"
-          >
-            Contact us for more information
-          </button>
         </div>
       </div>
+
+      {/* Modal */}
       {isModalOpen && (
         <EnrollModal
           courses={courses}
@@ -175,6 +273,6 @@ export default function StickyFooter() {
           onClose={() => setIsModalOpen(false)}
         />
       )}
-    </div>
+    </>
   );
 }

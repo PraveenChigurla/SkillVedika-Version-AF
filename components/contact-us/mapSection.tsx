@@ -21,6 +21,26 @@ export default function MapSection({
     }
   }, [mapLink, mapLinkIndia]);
 
+  // Suppress Google Maps API referrer errors (non-critical for iframe embeds)
+  useEffect(() => {
+    const originalError = console.error;
+    console.error = (...args: any[]) => {
+      // Suppress Google Maps referrer errors - these are non-critical for iframe embeds
+      if (
+        args[0]?.includes?.('RefererNotAllowedMapError') ||
+        args[0]?.includes?.('referer-not-allowed-map-error')
+      ) {
+        // Silently ignore - iframe embeds don't require API key restrictions
+        return;
+      }
+      originalError.apply(console, args);
+    };
+
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
+
   const hasParts = Boolean(
     (title?.part1 && title.part1.trim()) || (title?.part2 && title.part2.trim())
   );

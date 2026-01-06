@@ -6,6 +6,94 @@ import CourseRow from './CourseRow';
 import type { Course } from '@/types/api';
 import { getApiBaseUrl } from '@/lib/apiConfig';
 
+// Skeleton Loader Component - More realistic
+function CourseSkeletonLoader() {
+  return (
+    <div className="py-6 sm:py-8">
+      <div className="space-y-10 sm:space-y-12">
+        {/* Simulate 2 category sections */}
+        {Array.from({ length: 2 }, (_, sectionIdx) => (
+          <div key={`skeleton-section-${sectionIdx}`}>
+            {/* Section header skeleton */}
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <div className="h-7 bg-gray-200 rounded w-32 animate-pulse" />
+              <div className="h-8 bg-gray-200 rounded-full w-24 animate-pulse" />
+            </div>
+            {/* Cards grid skeleton */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 lg:gap-6">
+              {Array.from({ length: 4 }, (_, i) => (
+                <div
+                  key={`skeleton-${sectionIdx}-${i}`}
+                  className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-pulse"
+                >
+                  <div className="w-full aspect-[16/10] bg-gray-200" />
+                  <div className="p-3 sm:p-4 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2" />
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="h-7 bg-gray-200 rounded w-20" />
+                      <div className="h-4 bg-gray-200 rounded w-12" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Empty State Component - Improved UX
+function EmptyState() {
+  return (
+    <div className="text-center py-16 sm:py-20 px-4">
+      <div className="max-w-md mx-auto">
+        <div className="mb-6">
+          <svg
+            className="mx-auto h-20 w-20 sm:h-24 sm:w-24 text-gray-300"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+          No courses found
+        </h3>
+        <p className="text-gray-600 text-sm sm:text-base mb-6">
+          No courses match your current filters. Try adjusting your search or category selection.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                const params = new URLSearchParams(window.location.search);
+                params.delete('search');
+                params.delete('category');
+                const cleanUrl = `/courses${params.toString() ? `?${params}` : ''}`;
+                window.history.replaceState({}, '', cleanUrl);
+                window.location.reload();
+              }
+            }}
+            className="px-4 py-2 bg-[#2C5AA0] text-white rounded-lg hover:bg-[#1A3F66] transition-colors text-sm font-medium"
+          >
+            Clear all filters
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Lazy load CategorySidebar - it's not critical for initial render
 const CategorySidebar = dynamic(() => import('./CategorySidebar'), {
   loading: () => <div className="w-64 h-96 bg-gray-50 rounded-lg animate-pulse"></div>,
@@ -39,7 +127,7 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
     async function load() {
       try {
         const apiBase = getApiBaseUrl();
-        console.log("apiBase: ", apiBase);
+        console.log('apiBase: ', apiBase);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
 
@@ -82,40 +170,56 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
         const fetchCategories = async () => {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 5000); // ✅ 5s timeout
-        
+
           try {
+            if (!apiBase) {
+              throw new Error('API base URL is not configured');
+            }
+
             const res = await fetch(`${apiBase}/categories`, {
               signal: controller.signal,
               headers: { Accept: 'application/json' },
               cache: 'default',
+            }).catch((fetchError) => {
+              // Handle network errors (CORS, connection refused, etc.)
+              if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+                throw new Error('Network error: Unable to reach the API server. Please check if the server is running.');
+              }
+              throw fetchError;
             });
-        
+
             if (!res.ok) {
-              throw new Error(`HTTP ${res.status}`);
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             }
-        
+
             const data = await res.json();
             const categoriesData = data?.data || data || [];
-        
+
             startTransition(() => {
               setCategories(Array.isArray(categoriesData) ? categoriesData : []);
             });
-        
-            console.log('[CourseGrid] Categories loaded:', categoriesData.length);
+
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[CourseGrid] Categories loaded:', categoriesData.length);
+            }
           } catch (err: any) {
             if (err.name === 'AbortError') {
-              console.warn('[CourseGrid] Categories request timed out');
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('[CourseGrid] Categories request timed out');
+              }
             } else {
-              console.error('[CourseGrid] Categories fetch failed:', err);
+              // Only log errors in development to avoid console noise
+              if (process.env.NODE_ENV === 'development') {
+                console.error('[CourseGrid] Categories fetch failed:', err.message || err);
+              }
             }
-        
+
+            // Set empty array on error - UI will still work
             startTransition(() => setCategories([]));
           } finally {
             clearTimeout(timeoutId); // ✅ IMPORTANT
           }
         };
-        
-        
 
         // Defer categories fetch to reduce initial TBT
         if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
@@ -129,15 +233,41 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
         if (process.env.NODE_ENV === 'development') {
           console.log('[CourseGrid] Fetching courses from:', coursesUrl);
         }
-        const courseRes = (await Promise.race([
-          fetch(coursesUrl, {
-            signal: controller.signal,
-            headers: { Accept: 'application/json' },
-            // Use browser cache - client components can't use Next.js cache options
-            cache: 'default', // Browser will use cache if available
-          }),
-          new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000)), // Reduced to 2s
-        ]).catch(() => ({ ok: false } as Response))) as Response | { ok: false };
+
+        let courseRes: Response | { ok: false } = { ok: false };
+        
+        try {
+          if (!apiBase) {
+            throw new Error('API base URL is not configured');
+          }
+
+          courseRes = (await Promise.race([
+            fetch(coursesUrl, {
+              signal: controller.signal,
+              headers: { Accept: 'application/json' },
+              // Use browser cache - client components can't use Next.js cache options
+              cache: 'default', // Browser will use cache if available
+            }).catch((fetchError) => {
+              // Handle network errors
+              if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+                throw new Error('Network error: Unable to reach the API server. Please check if the server is running.');
+              }
+              throw fetchError;
+            }),
+            new Promise<Response>((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout')), 2000)
+            ), // Reduced to 2s
+          ]).catch(() => ({ ok: false }) as Response)) as Response | { ok: false };
+        } catch (fetchError: any) {
+          if (process.env.NODE_ENV === 'development') {
+            if (fetchError.name === 'AbortError') {
+              console.warn('[CourseGrid] Courses request timed out');
+            } else {
+              console.error('[CourseGrid] Failed to fetch courses:', fetchError.message || fetchError);
+            }
+          }
+          courseRes = { ok: false };
+        }
 
         clearTimeout(timeoutId);
 
@@ -151,10 +281,18 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
               console.log('[CourseGrid] Successfully loaded courses:', coursesData.length);
             }
           } catch (e) {
-            console.warn('Failed to parse courses:', e);
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('[CourseGrid] Failed to parse courses:', e);
+            }
           }
         } else if (process.env.NODE_ENV === 'development') {
-          console.warn('[CourseGrid] Failed to fetch courses. Status:', (courseRes as Response).status, 'URL:', coursesUrl);
+          const status = (courseRes as Response).status;
+          console.warn(
+            '[CourseGrid] Failed to fetch courses.',
+            status ? `Status: ${status}` : 'Network error',
+            'URL:',
+            coursesUrl
+          );
         }
 
         // Use startTransition for non-urgent state updates to reduce TBT
@@ -236,9 +374,23 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
     const coursesArray = Array.isArray(courses) ? courses : [];
     const categoriesArray = Array.isArray(categories) ? categories : [];
 
-    // Early return if no data to avoid unnecessary computation
-    if (coursesArray.length === 0 || categoriesArray.length === 0) {
+    // ⛔ If courses not loaded → show nothing
+    if (coursesArray.length === 0) {
       return { finalCategories: [], visibleCount: 0 };
+    }
+
+    // ✅ Categories may load later → allow render
+    if (categoriesArray.length === 0) {
+      return {
+        finalCategories: [
+          {
+            id: 'all',
+            name: 'All Courses',
+            courses: coursesArray,
+          },
+        ],
+        visibleCount: coursesArray.length,
+      };
     }
 
     // Create a map for faster lookups instead of multiple filters
@@ -318,41 +470,44 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
   // Don't block render - show structure immediately
 
   return (
-    <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-5 py-0">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-        {/* ⭐ HIDE SIDEBAR IN VIEW-ALL MODE */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-6 sm:pt-6 sm:pb-8 pb-24 sm:pb-40">
+      {/* Safe bottom padding for sticky footer + floating buttons */}
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+        {/* ⭐ SIDEBAR - Hide in view-all mode */}
         {!forcedCategory && (
-          <CategorySidebar
-            categories={categories}
-            selected={selectedCats}
-            isSearchMode={isSearchMode}
-            totalResults={visibleCount}
-            onChange={handleCategorySelect}
-          />
+          <aside className="lg:w-64 lg:flex-shrink-0">
+            <CategorySidebar
+              categories={categories}
+              selected={selectedCats}
+              isSearchMode={isSearchMode}
+              totalResults={visibleCount}
+              onChange={handleCategorySelect}
+            />
+          </aside>
         )}
 
-        {/* ⭐ FULL WIDTH WHEN SIDEBAR HIDDEN */}
-        <div className={forcedCategory ? 'col-span-4' : 'md:col-span-3'}>
+        {/* ⭐ MAIN CONTENT - Vertical category sections */}
+        <main className="flex-1 min-w-0 relative">
           {loading && finalCategories.length === 0 ? (
-            <div className="py-20 text-center text-gray-600">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              <p className="mt-4">Loading courses...</p>
-            </div>
+            <CourseSkeletonLoader />
           ) : finalCategories.length > 0 ? (
-            finalCategories.map(category => (
-              <CourseRow
-                key={category.id}
-                title={category.name}
-                courses={category.courses}
-                disableArrows={Boolean(catQuery || forcedCategory)}
-                onViewAll={title => setForcedCategory(title)}
-                onBack={() => setForcedCategory('')}
-              />
-            ))
+            <div className="space-y-6 sm:space-y-8 lg:space-y-10">
+              {finalCategories.map((category, index) => (
+                <CourseRow
+                  key={category.id}
+                  title={category.name}
+                  courses={category.courses}
+                  disableArrows={Boolean(catQuery || forcedCategory)}
+                  onViewAll={title => setForcedCategory(title)}
+                  onBack={() => setForcedCategory('')}
+                  isFirst={index === 0}
+                />
+              ))}
+            </div>
           ) : (
-            <div className="text-center py-20 text-gray-600">No courses match your filters.</div>
+            <EmptyState />
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

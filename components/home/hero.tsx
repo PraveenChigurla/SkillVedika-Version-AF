@@ -462,34 +462,34 @@ function Hero({ hero }: Readonly<HeroProps>) {
 
   return (
     <section 
-      className="bg-gradient-to-br from-[#E8F0F7] to-[#F0F4F9] py-16 md:py-24"
+      className="bg-gradient-to-br from-[#E8F0F7] to-[#F0F4F9] py-8 sm:py-12 md:py-16 lg:py-24 overflow-hidden"
       aria-labelledby="hero-heading"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* LEFT SECTION */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6 order-2 md:order-1">
             {/* ⭐ HERO HEADING FROM CMS */}
-            <div className="space-y-4" id="hero-heading">
+            <div className="space-y-3 sm:space-y-4" id="hero-heading">
               {hero?.hero_heading ? parse(hero.hero_heading) : (
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
                   Learn Skills That Matter
                 </h1>
               )}
             </div>
 
             {/* ⭐ BULLET FEATURES FROM CMS ARRAY */}
-            <ul className="flex flex-wrap gap-4 text-sm text-gray-700 list-none">
+            <ul className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm text-gray-700 list-none">
               {heroContent.map((item: string) => (
-                <li key={item} className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-[#2C5AA0]" aria-hidden="true" />
-                  <span>{item}</span>
+                <li key={item} className="flex items-center gap-1.5 sm:gap-2">
+                  <CheckCircle2 size={14} className="sm:w-4 sm:h-4 text-[#2C5AA0] flex-shrink-0" aria-hidden="true" />
+                  <span className="leading-tight">{item}</span>
                 </li>
               ))}
             </ul>
 
             {/* SEARCH BAR */}
-            <div className="pt-4 relative w-full z-10">
+            <div className="pt-3 sm:pt-4 relative w-full z-10">
               {/* Accessibility: Proper form with labels */}
               <form
                 onSubmit={(e) => {
@@ -582,9 +582,9 @@ function Hero({ hero }: Readonly<HeroProps>) {
             </div>
 
             {/* ⭐ MARQUEE FROM CMS */}
-            <div className="pt-4">
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-semibold text-gray-700 mr-3">Popular:</span>
+            <div className="pt-3 sm:pt-4">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-xs sm:text-sm font-semibold text-gray-700 mr-2 sm:mr-3 whitespace-nowrap">Popular:</span>
 
                 <div className="relative w-full overflow-hidden h-6" aria-label="Popular skills">
                   <div className="marquee-track">
@@ -618,19 +618,19 @@ function Hero({ hero }: Readonly<HeroProps>) {
             </div>
           </div>
 
-          {/* ⭐ RIGHT IMAGE FROM CMS */}
+          {/* ⭐ RIGHT IMAGE FROM CMS - Visible on all devices */}
           {/* Performance: Priority image for LCP - hero image is above the fold */}
-          <div className="hidden md:flex justify-center relative">
-            <div className="relative w-[400px] h-[400px] flex items-center justify-center z-10">
+          <div className="flex justify-center items-center relative order-1 md:order-2 mb-6 sm:mb-8 md:mb-0 w-full">
+            <div className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[380px] lg:max-w-[450px] h-[240px] sm:h-[280px] md:h-[360px] lg:h-[450px] flex items-center justify-center z-10">
               <Image
                 src={heroImage}
                 alt="SkillVedika - Professional IT Training and Courses"
                 width={450}
                 height={450}
-                className="object-contain drop-shadow-lg image-auto-aspect"
+                className="object-contain drop-shadow-lg w-full h-full"
                 priority
                 quality={85}
-                sizes="(max-width: 768px) 0px, 450px"
+                sizes="(max-width: 640px) 280px, (max-width: 768px) 320px, (max-width: 1024px) 380px, 450px"
                 fetchPriority="high"
               />
             </div>

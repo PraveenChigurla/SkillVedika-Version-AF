@@ -40,9 +40,34 @@ export default function QueryPopup({
       try {
         const { getApiUrl } = await import('@/lib/apiConfig');
         const apiUrl = getApiUrl('/courses');
-        const res = await fetch(apiUrl);
+        
+        if (!apiUrl) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[QueryPopup] API URL not configured');
+          }
+          return;
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const res = await fetch(apiUrl, {
+          signal: controller.signal,
+          headers: { Accept: 'application/json' },
+        }).catch((fetchError) => {
+          // Handle network errors
+          if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+            throw new Error('Network error: Unable to reach the API server');
+          }
+          throw fetchError;
+        });
+
+        clearTimeout(timeoutId);
+
         if (!res.ok) {
-          console.error('Failed to fetch courses');
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[QueryPopup] Failed to fetch courses: HTTP ${res.status}`);
+          }
           return;
         }
 
@@ -65,8 +90,17 @@ export default function QueryPopup({
           .filter((c: any) => c.id && c.title); // Filter out invalid courses
 
         setCourses(courseList);
-      } catch (err) {
-        console.error('Error fetching courses in QueryPopup:', err);
+      } catch (err: any) {
+        // Only log errors in development
+        if (process.env.NODE_ENV === 'development') {
+          if (err.name === 'AbortError') {
+            console.warn('[QueryPopup] Courses request timed out');
+          } else {
+            console.error('[QueryPopup] Error fetching courses:', err.message || err);
+          }
+        }
+        // Don't break the UI - just use empty array
+        setCourses([]);
       }
     }
 
@@ -86,9 +120,35 @@ export default function QueryPopup({
       try {
         const { getApiUrl } = await import('@/lib/apiConfig');
         const apiUrl = getApiUrl('/form-details');
-        const res = await fetch(apiUrl, { cache: 'no-store' });
+        
+        if (!apiUrl) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[QueryPopup] API URL not configured');
+          }
+          return;
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const res = await fetch(apiUrl, {
+          signal: controller.signal,
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        }).catch((fetchError) => {
+          // Handle network errors
+          if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+            throw new Error('Network error: Unable to reach the API server');
+          }
+          throw fetchError;
+        });
+
+        clearTimeout(timeoutId);
+
         if (!res.ok) {
-          console.warn(`Failed to fetch form-details: ${res.status}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[QueryPopup] Failed to fetch form-details: HTTP ${res.status}`);
+          }
           return;
         }
 
@@ -103,8 +163,16 @@ export default function QueryPopup({
         }
 
         setFormDetails(payload);
-      } catch (err) {
-        console.warn('Failed to fetch form-details in QueryPopup:', err);
+      } catch (err: any) {
+        // Only log errors in development
+        if (process.env.NODE_ENV === 'development') {
+          if (err.name === 'AbortError') {
+            console.warn('[QueryPopup] Form details request timed out');
+          } else {
+            console.error('[QueryPopup] Error fetching form details:', err.message || err);
+          }
+        }
+        // Don't break the UI - keep existing form details or null
       }
     }
 
@@ -113,28 +181,32 @@ export default function QueryPopup({
 
   return (
     <>
-      {/* Floating Icon Button */}
-      <div className="fixed right-1 bottom-28 right-2 z-10 group">
+      {/* Floating Icon Button - Desktop only */}
+      <div className="hidden sm:block fixed right-4 sm:right-6 bottom-36 z-50 group safe-area-inset-bottom" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0)' }}>
         {/* Tooltip */}
         <div
           className="
             absolute right-16 top-1/2 -translate-y-1/2
             bg-black text-white text-xs
             px-3 py-1 rounded-md
-            opacity-0 group-hover:opacity-100
+            opacity-0 group-hover:opacity-100 group-focus-within:opacity-100
             transition-opacity duration-300
             whitespace-nowrap
             pointer-events-none
+            z-10
           "
+          role="tooltip"
+          aria-hidden="true"
         >
           Share your Interest
         </div>
 
         <button
           onClick={() => setOpen(true)}
-          className="rounded-full p-3 hover:scale-105 transition"
+          className="rounded-full p-3 hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-[#2C5AA0] focus:ring-offset-2"
+          aria-label="Share your interest"
         >
-          <img src="/fillform3.png" alt="Open Query" className="w-14 h-14" />
+          <img src="/fillform3.png" alt="Share your interest" className="w-12 h-12 sm:w-14 sm:h-14" />
         </button>
       </div>
 

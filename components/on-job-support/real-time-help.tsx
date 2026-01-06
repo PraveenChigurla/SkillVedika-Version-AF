@@ -38,7 +38,7 @@ export default function RealTime({
       <div className="absolute bottom-20 right-10 w-80 h-80 bg-indigo-300/20 rounded-full blur-[120px] animate-pulse delay-700"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-16">
           {/* LEFT IMAGE */}
           <div
             className={`flex justify-center lg:justify-start w-full lg:w-[45%] transition-all duration-1000 ${

@@ -295,7 +295,7 @@ export default async function CorporateTraining() {
   });
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background overflow-x-hidden w-full max-w-full">
       {/* Structured Data for SEO */}
       <StructuredData data={[organizationSchema, websiteSchema, webPageSchema]} />
 

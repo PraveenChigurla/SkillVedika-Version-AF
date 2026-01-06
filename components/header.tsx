@@ -78,7 +78,7 @@ function Header() {
       role="banner"
       aria-label="Main navigation"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-0">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-4">
           {/* Accessibility: Logo link with proper aria-label */}
           <Link 

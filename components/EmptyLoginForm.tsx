@@ -561,7 +561,7 @@ export function EnrollModal({
                 />
 
                 {!formData.fullPhone && (
-                  <span className="absolute left-[82px] inset-y-0 flex items-center text-gray-400 pointer-events-none text-sm">
+                  <span className="absolute left-[92px] inset-y-0 flex items-center text-gray-400 pointer-events-none text-sm">
                     {formDetails?.phone_placeholder || '  Enter phone number'}
                   </span>
                 )}

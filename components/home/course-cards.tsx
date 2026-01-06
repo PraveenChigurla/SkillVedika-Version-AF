@@ -152,7 +152,7 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
   // Show loading state while fetching
   if (courses.length === 0 && filteredCourses.length === 0) {
     return (
-      <section className="py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-gray-500">Loading courses...</p>
         </div>
@@ -163,7 +163,7 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
   // Show empty state if no courses match filter
   if (filteredCourses.length === 0) {
     return (
-      <section className="py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-gray-500">
             No {statusFilter} courses available at the moment.
@@ -192,9 +192,9 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
               }}
               className={`grid ${
                 viewAll
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
-                  : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-              } gap-8 mb-6`}
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
+              : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+            } gap-4 sm:gap-6 md:gap-8 mb-6`}
             >
               {visibleCourses.map((course, index) => (
                 <motion.div
