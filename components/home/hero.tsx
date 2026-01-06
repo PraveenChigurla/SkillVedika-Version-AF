@@ -350,7 +350,9 @@ function Hero({ hero }: Readonly<HeroProps>) {
         process.env.NEXT_PUBLIC_API_BASE_URL ||
         'http://127.0.0.1:8000/api';
 
-      const url = `${apiBase.replace(/\/$/, '')}/search/suggestions?q=${encodeURIComponent(searchTerm)}`;
+      // If no search term, use empty string to get popular searches
+      const query = searchTerm.trim() || '';
+      const url = `${apiBase.replace(/\/$/, '')}/search/suggestions?q=${encodeURIComponent(query)}`;
 
       const res = await fetch(url, {
         headers: {
@@ -366,10 +368,19 @@ function Hero({ hero }: Readonly<HeroProps>) {
 
       // Defer heavy computation to avoid blocking main thread
       const processSuggestions = async () => {
-        const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
-        const backendPopular = Array.isArray(data.popular) ? data.popular : [];
-
-        const mergedPopular = Array.from(new Set([...backendPopular, ...rankedIndustry])).slice(0, 15);
+        let mergedPopular: string[] = [];
+        
+        if (query) {
+          // If there's a search term, rank and merge
+          const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
+          const backendPopular = Array.isArray(data.popular) ? data.popular : [];
+          mergedPopular = Array.from(new Set([...backendPopular, ...rankedIndustry])).slice(0, 15);
+        } else {
+          // If no search term, show top popular from backend or default industry skills
+          const backendPopular = Array.isArray(data.popular) ? data.popular : [];
+          const defaultPopular = INDUSTRY_SKILLS.slice(0, 15);
+          mergedPopular = Array.from(new Set([...backendPopular, ...defaultPopular])).slice(0, 15);
+        }
 
         // Use startTransition for non-urgent UI updates
         startTransition(() => {
@@ -379,7 +390,10 @@ function Hero({ hero }: Readonly<HeroProps>) {
             courses: data.courses || [],
             blogs: data.blogs || [],
           });
-          setShowDropdown(true);
+          // Only show dropdown if there's a search term or popular suggestions
+          if (searchTerm.trim() || mergedPopular.length > 0) {
+            setShowDropdown(true);
+          }
         });
       };
 
@@ -393,15 +407,26 @@ function Hero({ hero }: Readonly<HeroProps>) {
       console.error(error);
       // Defer fallback computation too
       const processFallback = async () => {
-        const ranked = await rankSkills(INDUSTRY_SKILLS, searchTerm);
+        let fallbackPopular: string[] = [];
+        
+        if (searchTerm.trim()) {
+          fallbackPopular = await rankSkills(INDUSTRY_SKILLS, searchTerm);
+        } else {
+          // Show default popular skills
+          fallbackPopular = INDUSTRY_SKILLS.slice(0, 15);
+        }
+        
         startTransition(() => {
           setSuggestions({
-            popular: ranked,
+            popular: fallbackPopular,
             categories: [],
             courses: [],
             blogs: [],
           });
-          setShowDropdown(true);
+          // Only show dropdown if there's a search term or popular suggestions
+          if (searchTerm.trim() || fallbackPopular.length > 0) {
+            setShowDropdown(true);
+          }
         });
       };
 
@@ -416,10 +441,12 @@ function Hero({ hero }: Readonly<HeroProps>) {
   // Debounce search input - optimized with requestIdleCallback
   useEffect(() => {
     if (!searchTerm.trim()) {
+      // Don't auto-fetch or show dropdown when search term is empty
       setShowDropdown(false);
       return;
     }
 
+    // If there's a search term, debounce the fetch
     let timeoutId: NodeJS.Timeout;
     const scheduleFetch = () => {
       timeoutId = setTimeout(() => {
@@ -489,7 +516,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
             </ul>
 
             {/* SEARCH BAR */}
-            <div className="pt-3 sm:pt-4 relative w-full z-10">
+            <div className="pt-3 sm:pt-4 relative w-full z-50">
               {/* Accessibility: Proper form with labels */}
               <form
                 onSubmit={(e) => {
@@ -500,22 +527,32 @@ function Hero({ hero }: Readonly<HeroProps>) {
                 aria-label="Search courses"
                 className="w-full"
               >
-                <div className="flex gap-2 flex-row w-full items-center overflow-hidden">
+                <div className="flex gap-2 flex-row w-full items-center">
                   <label htmlFor="hero-search" className="sr-only">
                     Search by skill 
                   </label>
-                  <div className="flex-1 flex items-center bg-white rounded-md px-2 sm:px-3 md:px-4 border border-gray-200 min-w-0 overflow-hidden">
+                  <div className="flex-1 flex items-center bg-white rounded-md px-2 sm:px-3 md:px-4 border border-gray-200 min-w-0 relative">
                     <input
                       id="hero-search"
                       type="text"
                       placeholder="Search by skill"
                       value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
+                      onChange={e => {
+                        setSearchTerm(e.target.value);
+                        // Show dropdown when user starts typing
+                        if (e.target.value.trim()) {
+                          // Will be handled by the useEffect
+                        } else {
+                          setShowDropdown(false);
+                        }
+                      }}
                       onKeyDown={handleKeyDown}
                       onFocus={() => {
-                        if (searchTerm.trim()) {
+                        // Only show dropdown if user has typed something and suggestions exist
+                        if (searchTerm.trim() && suggestions.popular?.length > 0) {
                           setShowDropdown(true);
                         }
+                        // Don't auto-open dropdown on focus - let user type first
                       }}
                       className="w-full py-2.5 sm:py-3 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none text-sm sm:text-base min-w-0"
                       aria-autocomplete="list"
@@ -538,44 +575,55 @@ function Hero({ hero }: Readonly<HeroProps>) {
                 </div>
               </form>
 
-              {/* DROPDOWN */}
-              {showDropdown && (
+              {/* DROPDOWN - Positioned relative to parent div */}
+              {showDropdown && (suggestions.popular?.length > 0 || searchTerm.trim()) && (
                 <div
                   ref={dropdownRef}
                   id="search-suggestions"
-                  className="absolute top-full mt-2 w-full bg-white border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto left-0 right-0"
+                  className="absolute top-full mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto left-0"
+                  role="listbox"
                   aria-label="Search suggestions"
                 >
-                  <div className="flex justify-end p-2 border-b">
+                  {/* Header with close button */}
+                  <div className="sticky top-0 bg-white border-b border-gray-200 flex items-center justify-between px-4 py-2 z-10">
+                    <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                      {searchTerm.trim() ? 'Suggestions' : 'Popular Searches'}
+                    </div>
                     <button
                       onClick={() => setShowDropdown(false)}
                       aria-label="Close search suggestions"
-                      className="text-gray-500 hover:text-gray-700 min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                      className="text-gray-400 hover:text-gray-600 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <X size={18} aria-hidden="true" />
+                      <X size={16} aria-hidden="true" />
                     </button>
                   </div>
 
-                  {/* Popular */}
+                  {/* Popular Suggestions */}
                   {suggestions.popular?.length > 0 && (
-                    <>
-                      <div className="px-4 pb-2 text-xs text-gray-500 font-semibold">
-                        Popular Searches
-                      </div>
-                      <ul className="list-none">
-                        {suggestions.popular.map((item: string) => (
-                          <li key={item}>
-                            <button
-                              onClick={() => handleSuggestionClick(item)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:ring-2 focus:ring-blue-500"
-                              aria-label={`Search for ${item}`}
-                            >
-                              {item}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
+                    <div className="py-1">
+                      {suggestions.popular.map((item: string) => (
+                        <button
+                          key={item}
+                          onClick={() => handleSuggestionClick(item)}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#2C5AA0] transition-colors focus:outline-none focus:bg-blue-50 focus:text-[#2C5AA0] focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                          role="option"
+                          aria-selected="false"
+                          tabIndex={0}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Search size={14} className="text-gray-400 flex-shrink-0" aria-hidden="true" />
+                            <span>{item}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Empty state */}
+                  {(!suggestions.popular || suggestions.popular.length === 0) && searchTerm.trim() && (
+                    <div className="px-4 py-8 text-center text-sm text-gray-500">
+                      No suggestions found for "{searchTerm}"
+                    </div>
                   )}
                 </div>
               )}

@@ -187,9 +187,6 @@ interface CourseRowProps {
   title: string;
   courses: any[];
   disableArrows?: boolean;
-  gapTop?: string;
-  gapBottom?: string;
-  onViewAll?: (title: string) => void;
   onBack?: () => void;
   isFirst?: boolean;
 }
@@ -198,9 +195,6 @@ function CourseRow({
   title,
   courses,
   disableArrows = false,
-  gapTop,
-  gapBottom,
-  onViewAll = () => {},
   onBack = () => {},
   isFirst = false,
 }: CourseRowProps) {
@@ -245,8 +239,7 @@ function CourseRow({
   // When expanded or in focused view, show all courses in vertical grid
   const shouldShowPreview = !disableArrows && !isExpanded && courses.length > initialLimit;
   const visibleCourses = shouldShowPreview ? courses.slice(0, initialLimit) : courses;
-  const remainingCount = courses.length - initialLimit;
-  
+
   // Determine layout: horizontal scroll for preview on mobile, vertical grid for expanded/focused
   const useVerticalGrid = isExpanded || disableArrows || !shouldShowPreview;
 
@@ -381,7 +374,7 @@ function CourseRow({
             <div
               key={course.id}
               data-card
-              onClick={(e) => {
+              onClick={() => {
                 // On mobile, make entire card clickable
                 if (isMobile) {
                   window.location.href = courseUrl;

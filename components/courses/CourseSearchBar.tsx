@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, startTransition } from 'react';
 import { Search, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // Defer heavy ranking logic until after initial render
 
@@ -15,9 +15,30 @@ export default function CourseSearchBar() {
     blogs: [],
   });
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isInitialMount, setIsInitialMount] = useState(true);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const isFromUrlRef = useRef(false); // Use ref to persist across renders
+
+  // Read search query from URL on mount
+  useEffect(() => {
+    const urlSearch = searchParams?.get('search') || '';
+    if (urlSearch) {
+      isFromUrlRef.current = true; // Mark that search term is coming from URL
+      setSearchTerm(urlSearch);
+      setShowDropdown(false); // Explicitly close dropdown
+      // Reset the flag after component has fully mounted
+      setTimeout(() => {
+        isFromUrlRef.current = false;
+        setIsInitialMount(false);
+      }, 500); // Longer delay to ensure all effects have run
+    } else {
+      isFromUrlRef.current = false;
+      setIsInitialMount(false);
+    }
+  }, [searchParams]);
 
   // 🎯 SAME industry skills + ranking logic
   const INDUSTRY_SKILLS = [
@@ -167,20 +188,27 @@ export default function CourseSearchBar() {
 
   // DEBOUNCE LOGIC - defer heavy operations
   useEffect(() => {
+    // Don't auto-fetch or show dropdown on initial mount (when coming from URL)
+    if (isInitialMount || isFromUrlRef.current) {
+      return;
+    }
+
     if (!searchTerm.trim()) {
+      // Don't auto-open dropdown when search term is cleared
       setShowDropdown(false);
       return;
     }
 
-    // Use startTransition for non-urgent search updates
-    const delay = setTimeout(() => {
+    // If there's a search term (and user is actively typing), debounce the fetch
+    let delay: NodeJS.Timeout;
+    delay = setTimeout(() => {
       startTransition(() => {
         fetchSuggestions();
       });
     }, 200);
     return () => clearTimeout(delay);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]);
+  }, [searchTerm, isInitialMount]);
 
   // CLOSE DROPDOWN
   useEffect(() => {
@@ -197,8 +225,9 @@ export default function CourseSearchBar() {
   const fetchSuggestions = async () => {
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+      const query = searchTerm.trim() || '';
 
-      const res = await fetch(`${apiBase}/search/suggestions?q=${encodeURIComponent(searchTerm)}`, {
+      const res = await fetch(`${apiBase}/search/suggestions?q=${encodeURIComponent(query)}`, {
         headers: {
           Accept: 'application/json',
         },
@@ -211,11 +240,19 @@ export default function CourseSearchBar() {
       const data = await res.json();
 
       // Process ranking asynchronously to avoid blocking
-      const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
-      const mergedPopular = Array.from(new Set([...(data.popular || []), ...rankedIndustry])).slice(
-        0,
-        15
-      );
+      let mergedPopular: string[] = [];
+      
+      if (query) {
+        // If there's a search term, rank and merge
+        const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
+        const backendPopular = Array.isArray(data.popular) ? data.popular : [];
+        mergedPopular = Array.from(new Set([...backendPopular, ...rankedIndustry])).slice(0, 15);
+      } else {
+        // If no search term, show top popular from backend or default industry skills
+        const backendPopular = Array.isArray(data.popular) ? data.popular : [];
+        const defaultPopular = INDUSTRY_SKILLS.slice(0, 15);
+        mergedPopular = Array.from(new Set([...backendPopular, ...defaultPopular])).slice(0, 15);
+      }
 
       // Use startTransition for non-urgent UI updates
       startTransition(() => {
@@ -225,22 +262,34 @@ export default function CourseSearchBar() {
           courses: data.courses || [],
           blogs: data.blogs || [],
         });
+        // Only show dropdown if user is actively typing (not from URL or initial mount)
+        if (!isInitialMount && !isFromUrlRef.current && searchTerm.trim()) {
+          setShowDropdown(true);
+        }
       });
-
-      setShowDropdown(true);
     } catch (err) {
       console.error(err);
       // Fallback to local ranking if API fails
-      rankSkills(INDUSTRY_SKILLS, searchTerm).then(ranked => {
-        startTransition(() => {
-          setSuggestions({
-            popular: ranked,
-            categories: [],
-            courses: [],
-            blogs: [],
-          });
-          setShowDropdown(true);
+      let fallbackPopular: string[] = [];
+      
+      if (searchTerm.trim()) {
+        fallbackPopular = await rankSkills(INDUSTRY_SKILLS, searchTerm);
+      } else {
+        // Show default popular skills
+        fallbackPopular = INDUSTRY_SKILLS.slice(0, 15);
+      }
+      
+      startTransition(() => {
+        setSuggestions({
+          popular: fallbackPopular,
+          categories: [],
+          courses: [],
+          blogs: [],
         });
+        // Only show dropdown if user is actively typing (not from URL or initial mount)
+        if (!isInitialMount && !isFromUrlRef.current && searchTerm.trim()) {
+          setShowDropdown(true);
+        }
       });
     }
   };
@@ -251,64 +300,114 @@ export default function CourseSearchBar() {
     setShowDropdown(false);
   };
 
+  const handleSuggestionClick = (item: string) => {
+    setSearchTerm(item);
+    handleSearch();
+  };
+
   return (
     <div className="relative w-full max-w-xl mx-auto">
       {/* INPUT + BUTTON */}
-      <div className="flex gap-2 flex-row w-full items-center overflow-hidden">
-        <div className="flex-1 flex items-center bg-white rounded-md px-2 sm:px-3 md:px-4 border border-gray-200 min-w-0 overflow-hidden">
+      <div className="flex gap-2 flex-row w-full items-center overflow-visible">
+        <div className="flex-1 flex items-center bg-white rounded-md px-2 sm:px-3 md:px-4 border border-gray-200 min-w-0 overflow-visible relative">
           <input
             type="text" 
             placeholder="Search by skill"
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            onChange={e => {
+              // Mark that this is user input, not from URL
+              isFromUrlRef.current = false;
+              setIsInitialMount(false);
+              setSearchTerm(e.target.value);
+              // Show dropdown when user starts typing
+              if (e.target.value.trim()) {
+                // Will be handled by the useEffect
+              } else {
+                setShowDropdown(false);
+              }
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                handleSearch();
+              } else if (e.key === 'Escape') {
+                setShowDropdown(false);
+              }
+            }}
+            onFocus={() => {
+              // Only show dropdown if:
+              // 1. User has typed something (not from URL)
+              // 2. Suggestions exist
+              // 3. This is not the initial mount with URL search
+              if (!isFromUrlRef.current && !isInitialMount && searchTerm.trim() && suggestions.popular?.length > 0) {
+                setShowDropdown(true);
+              }
+              // Don't auto-open dropdown on focus when search term comes from URL
+            }}
             className="w-full py-2.5 sm:py-3 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none text-sm sm:text-base min-w-0"
+            aria-autocomplete="list"
+            aria-controls="course-search-suggestions"
+            aria-haspopup="listbox"
           />
         </div>
 
         <button
           onClick={handleSearch}
           aria-label="Search courses by skill"
-          className="bg-[#2C5AA0] text-white px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-md hover:bg-[#1A3F66] transition-colors flex items-center justify-center w-[44px] sm:w-auto min-w-[44px] h-[44px] flex-shrink-0"
+          className="bg-[#2C5AA0] text-white px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-md hover:bg-[#1A3F66] transition-colors flex items-center justify-center w-[44px] sm:w-auto min-w-[44px] h-[44px] flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           <Search size={20} aria-hidden="true" className="flex-shrink-0 w-5 h-5" />
         </button>
       </div>
 
       {/* DROPDOWN */}
-      {showDropdown && (
+      {showDropdown && (suggestions.popular?.length > 0 || searchTerm.trim()) && (
         <div
           ref={dropdownRef}
-          className="absolute top-full mt-2 w-full bg-white border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto left-0 right-0"
+          id="course-search-suggestions"
+          className="absolute top-full mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto"
+          role="listbox"
+          aria-label="Search suggestions"
         >
-          {/* CLOSE */}
-          <div className="flex justify-end p-2 border-b">
+          {/* Header with close button */}
+          <div className="sticky top-0 bg-white border-b border-gray-200 flex items-center justify-between px-4 py-2">
+            <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              {searchTerm.trim() ? 'Suggestions' : 'Popular Searches'}
+            </div>
             <button
               onClick={() => setShowDropdown(false)}
               aria-label="Close search suggestions"
-              className="text-gray-500 hover:text-gray-700 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="text-gray-400 hover:text-gray-600 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <X size={18} aria-hidden="true" />
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
 
-          {/* POPULAR */}
-          {suggestions.popular.length > 0 && (
-            <>
-              <div className="px-4 pb-2 text-xs text-gray-500">Popular Searches</div>
+          {/* POPULAR SUGGESTIONS */}
+          {suggestions.popular?.length > 0 && (
+            <div className="py-1">
               {suggestions.popular.map((item: string) => (
-                <div
+                <button
                   key={item}
-                  className="px-4 py-2 hover:bg-gray-100"
-                  onClick={() => {
-                    setSearchTerm(item);
-                    handleSearch();
-                  }}
+                  onClick={() => handleSuggestionClick(item)}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#2C5AA0] transition-colors focus:outline-none focus:bg-blue-50 focus:text-[#2C5AA0] focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                  role="option"
+                  aria-selected="false"
+                  tabIndex={0}
                 >
-                  {item}
-                </div>
+                  <div className="flex items-center gap-2">
+                    <Search size={14} className="text-gray-400 flex-shrink-0" aria-hidden="true" />
+                    <span>{item}</span>
+                  </div>
+                </button>
               ))}
-            </>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {(!suggestions.popular || suggestions.popular.length === 0) && searchTerm.trim() && (
+            <div className="px-4 py-8 text-center text-sm text-gray-500">
+              No suggestions found for "{searchTerm}"
+            </div>
           )}
         </div>
       )}

@@ -498,7 +498,6 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
                   title={category.name}
                   courses={category.courses}
                   disableArrows={Boolean(catQuery || forcedCategory)}
-                  onViewAll={title => setForcedCategory(title)}
                   onBack={() => setForcedCategory('')}
                   isFirst={index === 0}
                 />
