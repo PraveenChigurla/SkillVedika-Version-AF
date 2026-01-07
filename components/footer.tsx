@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Send, MessageCircle, Instagram, Twitter, Youtube, Facebook } from 'lucide-react';
 import { getApiUrl } from '@/lib/apiConfig';
 import { logger } from '@/lib/logger';
-import { EMAIL_VALIDATION, DEFER_TIMEOUTS, CACHE_REVALIDATION } from '@/lib/constants';
+import { EMAIL_VALIDATION, DEFER_TIMEOUTS } from '@/lib/constants';
 import type { FooterSettings } from '@/types/api';
 
 // Performance: Regular function for social icons (not a component, so no memo needed)
@@ -39,12 +39,19 @@ function Footer() {
   const fetchFooterSettings = useCallback(async () => {
     try {
       const apiUrl = getApiUrl('/footer-settings');
-      // Performance: Use cache for better performance - footer settings don't change often
+      // Use no-cache to ensure we get fresh data from admin updates
       const res = await fetch(apiUrl, {
-        cache: 'force-cache',
-        next: { revalidate: CACHE_REVALIDATION.FOOTER },
+        cache: 'no-store',
+        headers: { 'Accept': 'application/json' },
       });
-      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(`Failed to fetch footer settings: ${res.status}`);
+      }
+      
+      const response = await res.json();
+      // Handle API response structure: { success: true, data: {...} } or direct {...}
+      const data = response?.data || response;
       setFooterSettings(data as FooterSettings);
     } catch (err) {
       logger.error('Failed to fetch footer settings:', err);
@@ -61,54 +68,100 @@ function Footer() {
   }, [fetchFooterSettings]);
 
   // Performance: Memoize settings object to prevent recalculation
-  const settings: FooterSettings = useMemo(() => ({
-    get_in_touch: footerSettings?.get_in_touch || 'Get in touch with us:',
-    email_placeholder: footerSettings?.email_placeholder || 'Enter your email',
-    logo: footerSettings?.logo || '/home/Frame 236.png',
-    about:
-      footerSettings?.about ||
-      'SkillVedika is a professional training institute offering high-quality, expert-led courses designed to help learners grow and succeed in their careers.',
-    explore: footerSettings?.explore || 'Explore',
-    explore_links: footerSettings?.explore_links || [
-      { text: 'All courses', slug: '/courses' },
-      { text: 'About', slug: '/about-us' },
-      { text: 'Contact', slug: '/contact-us' },
-      { text: 'Blog', slug: '/blog' },
-    ],
-    support: footerSettings?.support || 'Support',
-    support_links: footerSettings?.support_links || [
-      { text: 'Job support', slug: '/on-job-support' },
-      { text: 'Become an instructor', slug: '/become-instructor' },
-      { text: 'Tutorials', slug: '/tutorials' },
-      { text: 'Trending courses', slug: '/courses/trending' },
-      { text: 'Interview questions', slug: '/interview-questions' },
-    ],
-    contact: footerSettings?.contact || 'Contact',
-    contact_details: footerSettings?.contact_details || {
-      phone: '+91 8790900881',
-      email: 'support@skillvedika.com',
-      locations: [
-        '501, Manjeera Majestic Commercial, KPHB, Hyderabad, India.',
-        '25730 Lennox Hale Dr Aldie VA 20105, USA.',
+  // Use API data when available, fallback to defaults only if API data is missing
+  const settings: FooterSettings = useMemo(() => {
+    // If we have footer settings from API, use them directly (they may have empty strings/null, which is fine)
+    if (footerSettings) {
+      return {
+        get_in_touch: footerSettings.get_in_touch ?? 'Get in touch with us:',
+        email_placeholder: footerSettings.email_placeholder ?? 'Enter your email',
+        logo: footerSettings.logo ?? '/home/Frame 236.png',
+        about: footerSettings.about ?? 'SkillVedika is a professional training institute offering high-quality, expert-led courses designed to help learners grow and succeed in their careers.',
+        explore: footerSettings.explore ?? 'Explore',
+        explore_links: footerSettings.explore_links && footerSettings.explore_links.length > 0 
+          ? footerSettings.explore_links 
+          : [
+              { text: 'All courses', slug: '/courses' },
+              { text: 'About', slug: '/about-us' },
+              { text: 'Contact', slug: '/contact-us' },
+              { text: 'Blog', slug: '/blog' },
+            ],
+        support: footerSettings.support ?? 'Support',
+        support_links: footerSettings.support_links && footerSettings.support_links.length > 0
+          ? footerSettings.support_links
+          : [
+              { text: 'Job support', slug: '/on-job-support' },
+              { text: 'Become an instructor', slug: '/become-instructor' },
+              { text: 'Tutorials', slug: '/tutorials' },
+              { text: 'Trending courses', slug: '/courses/trending' },
+              { text: 'Interview questions', slug: '/interview-questions' },
+            ],
+        contact: footerSettings.contact ?? 'Contact',
+        contact_details: footerSettings.contact_details || {
+          phone: '+91 8790900881',
+          email: 'support@skillvedika.com',
+          locations: [
+            '501, Manjeera Majestic Commercial, KPHB, Hyderabad, India.',
+            '25730 Lennox Hale Dr Aldie VA 20105, USA.',
+          ],
+        },
+        follow_us: footerSettings.follow_us ?? 'Follow us on social media:',
+        social_media_icons: footerSettings.social_media_icons && footerSettings.social_media_icons.length > 0
+          ? footerSettings.social_media_icons
+          : ['whatsapp', 'instagram', 'twitter', 'youtube', 'facebook'],
+        social_links: footerSettings.social_links || {
+          whatsapp: '#',
+          instagram: '#',
+          twitter: '#',
+          youtube: '#',
+          facebook: '#',
+        },
+        copyright: footerSettings.copyright ?? 'SkillVedika © 2025 - All Rights Reserved',
+      };
+    }
+    
+    // Fallback defaults when API data is not yet loaded
+    return {
+      get_in_touch: 'Get in touch with us:',
+      email_placeholder: 'Enter your email',
+      logo: '/home/Frame 236.png',
+      about: 'SkillVedika is a professional training institute offering high-quality, expert-led courses designed to help learners grow and succeed in their careers.',
+      explore: 'Explore',
+      explore_links: [
+        { text: 'All courses', slug: '/courses' },
+        { text: 'About', slug: '/about-us' },
+        { text: 'Contact', slug: '/contact-us' },
+        { text: 'Blog', slug: '/blog' },
       ],
-    },
-    follow_us: footerSettings?.follow_us || 'Follow us on social media:',
-    social_media_icons: footerSettings?.social_media_icons || [
-      'whatsapp',
-      'instagram',
-      'twitter',
-      'youtube',
-      'facebook',
-    ],
-    social_links: footerSettings?.social_links || {
-      whatsapp: '#',
-      instagram: '#',
-      twitter: '#',
-      youtube: '#',
-      facebook: '#',
-    },
-    copyright: footerSettings?.copyright || 'SkillVedika © 2025 - All Rights Reserved',
-  }), [footerSettings]);
+      support: 'Support',
+      support_links: [
+        { text: 'Job support', slug: '/on-job-support' },
+        { text: 'Become an instructor', slug: '/become-instructor' },
+        { text: 'Tutorials', slug: '/tutorials' },
+        { text: 'Trending courses', slug: '/courses/trending' },
+        { text: 'Interview questions', slug: '/interview-questions' },
+      ],
+      contact: 'Contact',
+      contact_details: {
+        phone: '+91 8790900881',
+        email: 'support@skillvedika.com',
+        locations: [
+          '501, Manjeera Majestic Commercial, KPHB, Hyderabad, India.',
+          '25730 Lennox Hale Dr Aldie VA 20105, USA.',
+        ],
+      },
+      follow_us: 'Follow us on social media:',
+      social_media_icons: ['whatsapp', 'instagram', 'twitter', 'youtube', 'facebook'],
+      social_links: {
+        whatsapp: '#',
+        instagram: '#',
+        twitter: '#',
+        youtube: '#',
+        facebook: '#',
+      },
+      copyright: 'SkillVedika © 2025 - All Rights Reserved',
+    };
+  }, [footerSettings]);
 
   // Performance: useCallback for form submission
   // Accessibility: Proper form handling with error announcements
@@ -212,7 +265,7 @@ function Footer() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder={settings.email_placeholder}
-                className="flex-1 px-5 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-l-full"
+                className="flex-1 px-5 py-3 text-gray-800 focus:outline-none rounded-l-full"
                 aria-required="true"
                 aria-invalid={errorMessage ? 'true' : 'false'}
                 aria-describedby={errorMessage ? 'footer-email-error' : undefined}
@@ -226,7 +279,7 @@ function Footer() {
                 type="submit"
                 disabled={submitting}
                 aria-label="Subscribe to newsletter"
-                className="bg-[#4A90E2] px-5 flex items-center justify-center hover:bg-[#2C5AA0] transition-colors disabled:opacity-60 min-w-[44px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="bg-[#4A90E2] px-5 flex items-center justify-center hover:bg-[#2C5AA0] transition-colors disabled:opacity-60 min-w-[44px] min-h-[44px] focus:outline-none"
               >
                 <Send size={22} className="text-white" aria-hidden="true" />
                 {submitting && <span className="sr-only">Submitting...</span>}
@@ -262,7 +315,7 @@ function Footer() {
                     <Link
                       href={settings.social_links?.[platform] || '#'}
                       aria-label={`Follow us on ${platform}`}
-                      className="hover:text-[#4A90E2] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                      className="hover:text-[#4A90E2] transition-colors focus:outline-none"
                     >
                       {getSocialIcon(platform)}
                     </Link>
@@ -284,7 +337,7 @@ function Footer() {
                     href={link.slug}
                     target={link.new_tab ? '_blank' : undefined}
                     rel={link.new_tab ? 'noopener noreferrer' : undefined}
-                    className="hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                    className="hover:text-white focus:outline-none"
                   >
                     {link.text}
                   </Link>
@@ -305,7 +358,7 @@ function Footer() {
                     href={link.slug}
                     target={link.new_tab ? '_blank' : undefined}
                     rel={link.new_tab ? 'noopener noreferrer' : undefined}
-                    className="hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                    className="hover:text-white focus:outline-none"
                   >
                     {link.text}
                   </Link>
@@ -325,7 +378,7 @@ function Footer() {
                   <span className="font-medium text-white">Mobile:</span>{' '}
                   <a 
                     href={`tel:${settings.contact_details.phone.replaceAll(/\s+/g, '')}`}
-                    className="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                    className="hover:underline focus:outline-none"
                   >
                     {settings.contact_details.phone}
                   </a>
@@ -336,17 +389,45 @@ function Footer() {
                   <span className="font-medium text-white">Email:</span>{' '}
                   <a 
                     href={`mailto:${settings.contact_details.email}`}
-                    className="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                    className="hover:underline focus:outline-none"
                   >
                     {settings.contact_details.email}
                   </a>
                 </div>
               )}
-              {settings.contact_details?.locations?.map((location, idx) => (
-                <div key={`location-${location}-${idx}`} suppressHydrationWarning>
-                  <span className="font-medium text-white">Location:</span> {location}
-                </div>
-              ))}
+              {settings.contact_details?.locations?.map((location, idx) => {
+                // Parse location - supports both old string format and new JSON format with URL
+                let locationText = location;
+                let locationUrl: string | undefined;
+                
+                try {
+                  const parsed = JSON.parse(location);
+                  if (typeof parsed === 'object' && parsed.text) {
+                    locationText = parsed.text;
+                    locationUrl = parsed.url;
+                  }
+                } catch {
+                  // Not JSON, use as plain text
+                }
+                
+                return (
+                  <div key={`location-${location}-${idx}`} suppressHydrationWarning>
+                    <span className="font-medium text-white">Location:</span>{' '}
+                    {locationUrl ? (
+                      <a
+                        href={locationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline focus:outline-none"
+                      >
+                        {locationText}
+                      </a>
+                    ) : (
+                      <span>{locationText}</span>
+                    )}
+                  </div>
+                );
+              })}
             </address>
           </section>
         </div>

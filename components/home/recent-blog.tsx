@@ -1,12 +1,14 @@
 'use client';
 
-import { useMemo, useRef, useEffect, useState } from 'react';
+import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import parse from 'html-react-parser';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function RecentBlogs({ blogs, blogHeading }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true); // Always show initially, will update on check
 
   // Normalize blog data from API (handle different field names)
   const normalizedBlogs = blogs.map((blog: any) => ({
@@ -18,54 +20,166 @@ export default function RecentBlogs({ blogs, blogHeading }: any) {
     recent_blog: blog.recent_blog,
   }));
 
-  // Sort blogs newest → oldest, then reverse for right-to-left scrolling
+  // Sort blogs newest → oldest
   const sortedBlogs = useMemo(() => {
-    const sorted = [...normalizedBlogs].sort(
+    return [...normalizedBlogs].sort(
       (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
-    // Reverse for right-to-left scrolling (newest appears on right)
-    return sorted.reverse();
   }, [normalizedBlogs]);
 
-  // Duplicate blogs for seamless infinite scroll
-  const duplicatedBlogs = useMemo(() => {
-    return [...sortedBlogs, ...sortedBlogs, ...sortedBlogs];
-  }, [sortedBlogs]);
-
-  // Auto-scroll continuously from right to left, pause on hover
-  useEffect(() => {
+  // Check scroll position and update button states
+  const checkScrollPosition = useCallback(() => {
     if (!scrollRef.current) return;
+    const el = scrollRef.current;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    
+    // Check if content overflows
+    const hasOverflow = scrollWidth > clientWidth;
+    
+    if (!hasOverflow) {
+      // No overflow, hide both buttons
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+    
+    // Check if we can scroll left (not at the start)
+    setCanScrollLeft(scrollLeft > 10);
+    
+    // Check if we can scroll right (not at the end)
+    // Use a small threshold (10px) to account for rounding
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+  }, []);
 
-    let rafId: number;
-    const speed = isHovered ? 0 : 1.2; // Scroll speed (adjust as needed)
+  // Update scroll position on scroll events
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
 
-    const step = () => {
-      const el = scrollRef.current!;
-      if (!el) return;
-
-      // Scroll from right to left (decrease scrollLeft)
-      el.scrollLeft += speed;
-
-      // Reset to beginning when reaching the end (for seamless infinite scroll)
-      // Since we duplicate the blogs 3 times, reset when we've scrolled past one set
-      const oneSetWidth = el.scrollWidth / 3;
-      if (el.scrollLeft >= oneSetWidth) {
-        el.scrollLeft = 0;
-      }
-
-      rafId = requestAnimationFrame(step);
+    const handleScroll = () => {
+      checkScrollPosition();
     };
 
-    // Start scrolling after a brief delay
-    const startDelay = setTimeout(() => {
-      rafId = requestAnimationFrame(step);
+    el.addEventListener('scroll', handleScroll);
+    
+    // Initial check with multiple delays to ensure content is rendered
+    const timeoutId1 = setTimeout(() => {
+      checkScrollPosition();
     }, 100);
+    
+    const timeoutId2 = setTimeout(() => {
+      checkScrollPosition();
+    }, 500);
+    
+    const timeoutId3 = setTimeout(() => {
+      checkScrollPosition();
+    }, 1000);
+
+    // Also check on resize
+    const handleResize = () => {
+      checkScrollPosition();
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Use ResizeObserver to detect when content size changes
+    const resizeObserver = new ResizeObserver(() => {
+      checkScrollPosition();
+    });
+    resizeObserver.observe(el);
 
     return () => {
-      cancelAnimationFrame(rafId);
-      clearTimeout(startDelay);
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
+      clearTimeout(timeoutId3);
+      el.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
     };
-  }, [isHovered]);
+  }, [checkScrollPosition, sortedBlogs]);
+
+  // Scroll handlers
+  const scrollLeft = useCallback((e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (!scrollRef.current) return;
+    const el = scrollRef.current;
+    
+    // Check if element is scrollable
+    if (el.scrollWidth <= el.clientWidth) {
+      return; // Not scrollable
+    }
+    
+    // Calculate scroll amount based on card width + gap
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const isTablet = typeof window !== 'undefined' && window.innerWidth < 768;
+    const cardWidth = isMobile ? 280 : isTablet ? 320 : 350;
+    const gap = isMobile ? 16 : isTablet ? 24 : 32;
+    const scrollAmount = cardWidth + gap;
+    
+    // Get current scroll position
+    const currentScroll = el.scrollLeft;
+    
+    // Calculate new scroll position
+    let newScrollLeft = currentScroll - scrollAmount;
+    
+    // Ensure we don't scroll past the start
+    if (newScrollLeft < 0) {
+      newScrollLeft = 0;
+    }
+    
+    // Use scrollTo for more precise control
+    el.scrollTo({ 
+      left: newScrollLeft, 
+      behavior: 'smooth' 
+    });
+    
+    // Update button states after scroll animation
+    setTimeout(() => {
+      checkScrollPosition();
+    }, 400);
+  }, [checkScrollPosition]);
+
+  const scrollRight = useCallback((e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (!scrollRef.current) return;
+    const el = scrollRef.current;
+    
+    // Check if element is scrollable
+    if (el.scrollWidth <= el.clientWidth) {
+      return; // Not scrollable
+    }
+    
+    // Calculate scroll amount based on card width + gap
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const isTablet = typeof window !== 'undefined' && window.innerWidth < 768;
+    const cardWidth = isMobile ? 280 : isTablet ? 320 : 350;
+    const gap = isMobile ? 16 : isTablet ? 24 : 32;
+    const scrollAmount = cardWidth + gap;
+    
+    // Get current scroll position and max scroll
+    const currentScroll = el.scrollLeft;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    
+    // Calculate new scroll position
+    let newScrollLeft = currentScroll + scrollAmount;
+    
+    // Ensure we don't scroll past the end
+    if (newScrollLeft > maxScroll) {
+      newScrollLeft = maxScroll;
+    }
+    
+    // Use scrollTo for more precise control
+    el.scrollTo({ 
+      left: newScrollLeft, 
+      behavior: 'smooth' 
+    });
+    
+    // Update button states after scroll animation
+    setTimeout(() => {
+      checkScrollPosition();
+    }, 400);
+  }, [checkScrollPosition]);
 
   return (
     <section className="py-12 sm:py-16 px-4 sm:px-6 bg-white relative">
@@ -85,20 +199,44 @@ export default function RecentBlogs({ blogs, blogHeading }: any) {
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 sm:mb-12 px-2">Recent Blogs</h2>
         )}
 
-        {/* Horizontal Scrollable Container - Auto-scrolls right to left */}
-        <div className="overflow-x-auto overflow-y-visible scrollbar-hidden pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
+        {/* Horizontal Scrollable Container with Navigation Buttons */}
+        <div className="relative -mx-4 sm:-mx-6 px-4 sm:px-6 group" style={{ minHeight: '450px' }}>
+          {/* Left Scroll Button - Always visible */}
+          <button
+            onClick={scrollLeft}
+            aria-label="Scroll left"
+            className={`absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 bg-transparent transition-all duration-200 hover:scale-110 active:scale-95 focus-visible:outline-none ${
+              canScrollLeft 
+                ? 'opacity-100 cursor-pointer' 
+                : 'opacity-50 cursor-pointer'
+            }`}
+          >
+            <ChevronLeft className={`w-8 h-8 sm:w-10 sm:h-10 ${canScrollLeft ? 'text-blue-600 hover:text-blue-700' : 'text-gray-400'}`} />
+          </button>
+
+          {/* Right Scroll Button - Always visible */}
+          <button
+            onClick={scrollRight}
+            aria-label="Scroll right"
+            className={`absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 bg-transparent transition-all duration-200 hover:scale-110 active:scale-95 focus-visible:outline-none ${
+              canScrollRight 
+                ? 'opacity-100 cursor-pointer' 
+                : 'opacity-50 cursor-pointer'
+            }`}
+          >
+            <ChevronRight className={`w-8 h-8 sm:w-10 sm:h-10 ${canScrollRight ? 'text-blue-600 hover:text-blue-700' : 'text-gray-400'}`} />
+          </button>
+
+          {/* Scrollable Content */}
           <div
             ref={scrollRef}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onTouchStart={() => setIsHovered(true)}
-            onTouchEnd={() => setIsHovered(false)}
-            className="flex gap-4 sm:gap-6 md:gap-8 min-w-max"
+            className="overflow-x-auto overflow-y-visible scrollbar-hidden pb-4 flex gap-4 sm:gap-6 md:gap-8"
             style={{
-              scrollBehavior: 'auto', // Disable smooth scroll for programmatic scrolling
+              scrollBehavior: 'smooth',
+              WebkitOverflowScrolling: 'touch',
             }}
           >
-            {duplicatedBlogs.map((b: any, index: number) => {
+            {sortedBlogs.map((b: any, index: number) => {
               // Image extraction - normalized field
               let img = b.image || '/placeholder.svg';
 

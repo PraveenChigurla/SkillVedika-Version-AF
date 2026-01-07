@@ -194,7 +194,7 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                 viewAll
               ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
               : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-            } gap-4 sm:gap-6 md:gap-8 mb-6`}
+            } gap-4 sm:gap-6 md:gap-8 mb-6 items-stretch`}
             >
               {visibleCourses.map((course, index) => (
                 <motion.div
@@ -203,49 +203,41 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                   animate={viewAll ? { opacity: 1, y: 0 } : {}}
                   transition={viewAll ? { duration: 0.36, delay: index * 0.08 } : {}}
                   whileHover={{ y: -6 }}
-                  className="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
+                  className="group bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
                 >
-                  <div className="relative">
+                  <div className="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden">
                     <Image
                       src={course.image || '/placeholder-course.png'}
                       alt={course.title}
-                      width={400}
-                      height={192}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500 image-auto-aspect"
+                      fill
+                      className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                       quality={85}
                       loading="lazy"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 400px"
                       // Bypass Next.js optimization for Cloudinary images to prevent timeout
                       unoptimized={typeof course.image === 'string' && course.image.includes('res.cloudinary.com')}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder-course.png';
+                        target.onerror = null;
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
 
-                  <div className="p-6 text-left flex flex-col flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-2 text-lg leading-snug line-clamp-2">
+                  <div className="p-4 sm:p-5 text-left flex flex-col flex-1 min-h-0">
+                    <h3 className="font-semibold text-gray-900 mb-2 text-base sm:text-lg leading-snug line-clamp-2 min-h-[3.5rem] sm:min-h-[3.5rem]">
                       {course.title}
                     </h3>
-                    {course.students && (
-                      <p className="text-xs text-gray-600 mb-2">
-                        {course.students} Students enrolled
-                      </p>
-                    )}
+                    <div className="mb-3 min-h-[1.25rem]">
+                      {course.students && (
+                        <p className="text-xs text-gray-600">
+                          {course.students} Students enrolled
+                        </p>
+                      )}
+                    </div>
 
-                    {/* 
-                    <p className="text-sm font-semibold text-[#2C5AA0] mb-4">
-                      ₹250/Month
-                    </p> */}
-
-                    <div className="mt-auto flex items-center justify-between">
-                      {/* <a
-                        href="/course-details"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-[#2C5AA0] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#1A3F66] transition-all shadow-sm hover:shadow-md"
-                      >
-                        View more
-                      </a> */}
-
+                    <div className="mt-auto pt-2 flex items-center justify-between gap-3">
                       <button
                         onClick={() =>
                           router.push(
@@ -253,18 +245,18 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                           )
                         }
                         aria-label={`View more details about ${course.title}`}
-                        className="bg-[#2C5AA0] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#1A3F66] transition-all shadow-sm hover:shadow-md min-h-[44px]"
+                        className="bg-[#2C5AA0] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#1A3F66] transition-all shadow-sm hover:shadow-md min-h-[44px] flex-shrink-0 whitespace-nowrap"
                       >
                         View more
                       </button>
 
-                      {course.rating && (
-                        <div className="flex items-center gap-2">
-                          <div className="flex gap-1">
+                      {course.rating ? (
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <div className="flex gap-0.5">
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                size={14}
+                                size={12}
                                 className={
                                   i < course.rating!
                                     ? 'fill-yellow-400 text-yellow-400'
@@ -273,10 +265,12 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                               />
                             ))}
                           </div>
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
                             ({Number(course.rating).toFixed(1)})
                           </span>
                         </div>
+                      ) : (
+                        <div className="min-w-[60px]"></div>
                       )}
                     </div>
                   </div>

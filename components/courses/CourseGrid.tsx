@@ -20,19 +20,19 @@ function CourseSkeletonLoader() {
               <div className="h-8 bg-gray-200 rounded-full w-24 animate-pulse" />
             </div>
             {/* Cards grid skeleton */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 lg:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 lg:gap-7">
               {Array.from({ length: 4 }, (_, i) => (
                 <div
                   key={`skeleton-${sectionIdx}-${i}`}
                   className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-pulse"
                 >
-                  <div className="w-full aspect-[16/10] bg-gray-200" />
-                  <div className="p-3 sm:p-4 space-y-3">
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-200 rounded w-1/2" />
-                    <div className="flex items-center justify-between pt-1">
-                      <div className="h-7 bg-gray-200 rounded w-20" />
-                      <div className="h-4 bg-gray-200 rounded w-12" />
+                  <div className="w-full aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] bg-gray-200" />
+                  <div className="p-4 sm:p-5 lg:p-6 space-y-3">
+                    <div className="h-5 sm:h-6 bg-gray-200 rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="h-10 bg-gray-200 rounded w-24" />
+                      <div className="h-5 bg-gray-200 rounded w-16" />
                     </div>
                   </div>
                 </div>
@@ -104,7 +104,7 @@ interface Category {
   name: string;
 }
 
-export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
+export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStatus = '' }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -371,12 +371,21 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
   // Use startTransition to defer heavy filtering operations
   const { finalCategories, visibleCount } = useMemo(() => {
     // Ensure courses is an array before using filter
-    const coursesArray = Array.isArray(courses) ? courses : [];
+    let coursesArray = Array.isArray(courses) ? courses : [];
     const categoriesArray = Array.isArray(categories) ? categories : [];
 
     // ⛔ If courses not loaded → show nothing
     if (coursesArray.length === 0) {
       return { finalCategories: [], visibleCount: 0 };
+    }
+
+    // STATUS FILTER - Filter by status if urlStatus is provided (e.g., ?status=trending)
+    if (urlStatus && urlStatus.trim().length > 0) {
+      const statusLower = urlStatus.toLowerCase().trim();
+      coursesArray = coursesArray.filter(c => {
+        const courseStatus = (c.status || '').toLowerCase();
+        return courseStatus === statusLower;
+      });
     }
 
     // ✅ Categories may load later → allow render
@@ -464,7 +473,7 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '' }) {
     const count = final.reduce((sum, cat) => sum + cat.courses.length, 0);
 
     return { finalCategories: final, visibleCount: count };
-  }, [courses, categories, q, catQuery, isSearchMode, forcedCategory, selectedCats]);
+  }, [courses, categories, q, catQuery, isSearchMode, forcedCategory, selectedCats, urlStatus]);
 
   // Render immediately with empty state to improve FCP and LCP
   // Don't block render - show structure immediately

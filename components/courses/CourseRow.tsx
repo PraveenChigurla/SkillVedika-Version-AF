@@ -358,8 +358,8 @@ function CourseRow({
           ref={scrollRef}
           className={`
             ${useVerticalGrid 
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6'
-              : 'flex gap-4 overflow-x-auto overflow-y-visible scroll-smooth snap-x snap-mandatory scrollbar-hidden px-1 sm:px-2 sm:grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 sm:gap-5 lg:gap-6 sm:px-0'
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 lg:gap-7'
+              : 'flex gap-4 overflow-x-auto overflow-y-visible scroll-smooth snap-x snap-mandatory scrollbar-hidden px-1 sm:px-2 sm:grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 sm:gap-5 lg:gap-6 sm:px-0'
             }
           `}
           style={useVerticalGrid ? {} : {
@@ -400,8 +400,8 @@ function CourseRow({
               `}
               aria-label={`View ${course.title} course details`}
             >
-              {/* IMAGE - Fixed aspect ratio to prevent CLS, more compact on mobile */}
-              <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-gray-100 overflow-hidden">
+              {/* IMAGE - Fixed aspect ratio to prevent CLS, larger on courses page */}
+              <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] bg-gray-100 overflow-hidden">
                 {course.image ? (
                   <img
                     src={course.image}
@@ -432,17 +432,17 @@ function CourseRow({
                 )}
               </div>
 
-              {/* CONTENT - Mobile-first: compact, rating inline, full card clickable */}
-              <div className="p-2.5 sm:p-4 flex flex-col flex-1">
+              {/* CONTENT - Larger padding and text sizes for better visibility */}
+              <div className="p-4 sm:p-5 lg:p-6 flex flex-col flex-1">
                 {/* TITLE + RATING - Inline on mobile, separate on desktop */}
-                <div className="flex items-start justify-between gap-2 mb-1.5 sm:mb-2">
-                  <h3 className="font-semibold text-sm sm:text-base leading-tight line-clamp-2 flex-1 text-gray-900 min-h-[2rem] sm:min-h-[2.5rem]">
+                <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
+                  <h3 className="font-semibold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 flex-1 text-gray-900 min-h-[2.5rem] sm:min-h-[3rem]">
                     {course.title}
                   </h3>
                   {/* RATING - Inline with title on mobile */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 mt-0.5" aria-label={`Rating: ${Number(course.rating || 0).toFixed(1)} stars`}>
+                  <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0 mt-0.5" aria-label={`Rating: ${Number(course.rating || 0).toFixed(1)} stars`}>
                     <Star
-                      size={10}
+                      size={12}
                       className={
                         Math.round(course.rating || 0) > 0
                           ? 'fill-yellow-400 text-yellow-400'
@@ -450,33 +450,33 @@ function CourseRow({
                       }
                       aria-hidden="true"
                     />
-                    <span className="text-[10px] sm:text-xs text-gray-700 font-medium">
+                    <span className="text-xs sm:text-sm text-gray-700 font-medium">
                       {Number(course.rating || 0).toFixed(1)}
                     </span>
                   </div>
                 </div>
 
-                {/* STUDENTS - Compact on mobile */}
-                <p className="text-[10px] sm:text-xs text-gray-500 mb-2 sm:mb-3 flex-shrink-0">
-                  {course.students || 0} Students
+                {/* STUDENTS - Larger text */}
+                <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4 flex-shrink-0">
+                  {course.students || 0} Students enrolled
                 </p>
 
                 {/* CTA - Hidden on mobile (card is clickable), shown on desktop */}
-                <div className="hidden sm:flex items-center justify-between mt-auto pt-1 gap-2">
+                <div className="hidden sm:flex items-center justify-between mt-auto pt-2 gap-3">
                   <a
                     href={courseUrl}
-                    className="bg-[#2C5AA0] text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-[#1A3F66] active:bg-[#153355] transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C5AA0] focus:ring-offset-1 flex-shrink-0"
+                    className="bg-[#2C5AA0] text-white px-4 py-2.5 rounded-md text-sm font-semibold hover:bg-[#1A3F66] active:bg-[#153355] transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C5AA0] focus:ring-offset-1 flex-shrink-0 min-h-[44px] flex items-center"
                     aria-label={`View details for ${course.title}`}
                   >
                     View more
                   </a>
 
-                  <div className="flex items-center gap-1 flex-shrink-0" aria-label={`Rating: ${Number(course.rating || 0).toFixed(1)} stars`}>
+                  <div className="flex items-center gap-1.5 flex-shrink-0" aria-label={`Rating: ${Number(course.rating || 0).toFixed(1)} stars`}>
                     <div className="flex gap-0.5">
                       {Array.from({ length: 5 }, (_, i) => (
                         <Star
                           key={i}
-                          size={11}
+                          size={14}
                           className={
                             i < Math.round(course.rating || 0)
                               ? 'fill-yellow-400 text-yellow-400'
@@ -486,8 +486,8 @@ function CourseRow({
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-gray-700 font-medium">
-                      {Number(course.rating || 0).toFixed(1)}
+                    <span className="text-sm text-gray-700 font-medium">
+                      ({Number(course.rating || 0).toFixed(1)})
                     </span>
                   </div>
                 </div>

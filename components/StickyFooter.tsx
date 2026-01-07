@@ -129,13 +129,13 @@ export default function StickyFooter() {
     }
   }
 
-  // Helper function to fetch contact details from contact page (same source as contact page)
+  // Helper function to fetch contact details from footer settings (same source as footer component)
   async function fetchContactDetails(apiUrl: string): Promise<void> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const contactRes = await fetch(`${apiUrl}/contact-page`, {
+      const footerRes = await fetch(`${apiUrl}/footer-settings`, {
         signal: controller.signal,
         cache: 'no-store',
         headers: { Accept: 'application/json' },
@@ -148,28 +148,29 @@ export default function StickyFooter() {
 
       clearTimeout(timeoutId);
 
-      if (!contactRes.ok) {
+      if (!footerRes.ok) {
         if (process.env.NODE_ENV === 'development') {
-          console.warn(`[StickyFooter] Failed to fetch contact details: HTTP ${contactRes.status}`);
+          console.warn(`[StickyFooter] Failed to fetch footer settings: HTTP ${footerRes.status}`);
         }
         return;
       }
 
-      const contactResponse = await contactRes.json();
-      const contactData = contactResponse?.data || contactResponse;
+      const footerResponse = await footerRes.json();
+      // Handle response format: {success: true, data: {...}} or direct object
+      const footerData = footerResponse?.data || footerResponse;
 
-      if (contactData) {
+      if (footerData?.contact_details) {
         setContactDetails({
-          phone: contactData.contacts_phone_number || '+91 9182617094',
-          email: contactData.contacts_email_id || 'support@skillvedika.com',
+          phone: footerData.contact_details.phone || '+91 9182617094',
+          email: footerData.contact_details.email || 'support@skillvedika.com',
         });
       }
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         if (err.name === 'AbortError') {
-          console.warn('[StickyFooter] Contact details request timed out');
+          console.warn('[StickyFooter] Footer settings request timed out');
         } else {
-          console.error('[StickyFooter] Error fetching contact details:', err.message || err);
+          console.error('[StickyFooter] Error fetching footer settings:', err.message || err);
         }
       }
       // Don't break the UI - keep default contact details

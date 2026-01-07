@@ -6,12 +6,41 @@ import { getApiBaseUrl } from '@/lib/apiConfig';
 
 // Performance: Memoize WhatsApp button to prevent unnecessary re-renders
 function WhatsAppButton() {
-  const [phoneNumber, setPhoneNumber] = useState('919182617094'); // Default fallback
+  const [whatsappUrl, setWhatsappUrl] = useState('https://wa.me/919182617094?text=Hi%2C%20I%20need%20more%20information%20about%20the%20courses.'); // Default fallback
   const message = 'Hi, I need more information about the courses.';
 
+  // Helper function to format WhatsApp URL from various input formats
+  const formatWhatsAppUrl = useCallback((whatsappLink: string): string => {
+    if (!whatsappLink || whatsappLink === '#') {
+      return '';
+    }
+
+    // If it's already a full WhatsApp URL, use it directly
+    if (whatsappLink.startsWith('https://wa.me/') || whatsappLink.startsWith('http://wa.me/')) {
+      // Check if it already has a text parameter
+      if (whatsappLink.includes('?text=')) {
+        return whatsappLink;
+      }
+      // Add text parameter if missing
+      return `${whatsappLink}${whatsappLink.includes('?') ? '&' : '?'}text=${encodeURIComponent(message)}`;
+    }
+
+    // If it's a phone number (with or without +, spaces, etc.), format it
+    const phoneNumber = whatsappLink
+      .replaceAll('+', '')
+      .replaceAll(/\s+/g, '')
+      .replaceAll(/\D/g, '');
+
+    if (phoneNumber) {
+      return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    }
+
+    return '';
+  }, [message]);
+
   // Performance: useCallback to memoize fetch function
-  // Fetch from contact page (same source as contact page)
-  const fetchContactDetails = useCallback(async () => {
+  // Fetch from footer settings (same source as footer component)
+  const fetchWhatsAppLink = useCallback(async () => {
     try {
       const apiBaseUrl = getApiBaseUrl();
       
@@ -25,8 +54,8 @@ function WhatsAppButton() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      // Fetch from contact page endpoint (same as contact page uses)
-      const contactRes = await fetch(`${apiBaseUrl}/contact-page`, {
+      // Fetch from footer settings endpoint (same as footer component uses)
+      const footerRes = await fetch(`${apiBaseUrl}/footer-settings`, {
         signal: controller.signal,
         cache: 'no-store', // Client-side fetch - use no-store for fresh data
         headers: { Accept: 'application/json' },
@@ -40,50 +69,69 @@ function WhatsAppButton() {
 
       clearTimeout(timeoutId);
       
-      if (contactRes.ok) {
-        const contactResponse = await contactRes.json();
-        // Handle response format: {data: {...}} or direct object
-        const contactData = contactResponse?.data || contactResponse;
+      if (footerRes.ok) {
+        const footerResponse = await footerRes.json();
+        // Handle response format: {success: true, data: {...}} or direct object
+        const footerData = footerResponse?.data || footerResponse;
 
-        if (contactData?.contacts_phone_number) {
-          // Format phone number for WhatsApp: remove +, spaces, and any non-digit characters
-          const formattedPhone = contactData.contacts_phone_number
-            .replaceAll('+', '')
-            .replaceAll(/\s+/g, '')
-            .replaceAll(/\D/g, '');
-
-          if (formattedPhone) {
-            setPhoneNumber(formattedPhone);
-          }
-        }
-      } else {
         if (process.env.NODE_ENV === 'development') {
-          console.warn(`[WhatsAppButton] Failed to fetch contact details: HTTP ${contactRes.status}`);
+          console.log('[WhatsAppButton] Footer data received:', {
+            hasSocialLinks: !!footerData?.social_links,
+            whatsappValue: footerData?.social_links?.whatsapp,
+            fullSocialLinks: footerData?.social_links,
+          });
         }
+
+        // Use WhatsApp link from social_links (separate field in admin)
+        if (footerData?.social_links?.whatsapp) {
+          const whatsappLink = footerData.social_links.whatsapp;
+          const formattedUrl = formatWhatsAppUrl(whatsappLink);
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[WhatsAppButton] Formatting WhatsApp link:', {
+              original: whatsappLink,
+              formatted: formattedUrl,
+            });
+          }
+          
+          if (formattedUrl) {
+            setWhatsappUrl(formattedUrl);
+          } else if (process.env.NODE_ENV === 'development') {
+            console.warn('[WhatsAppButton] Formatted URL is empty, keeping default');
+          }
+        } else if (process.env.NODE_ENV === 'development') {
+          console.warn('[WhatsAppButton] No WhatsApp link found in social_links:', footerData?.social_links);
+        }
+      } else if (process.env.NODE_ENV === 'development') {
+        console.warn(`[WhatsAppButton] Failed to fetch footer settings: HTTP ${footerRes.status}`);
       }
     } catch (err: any) {
       // Only log errors in development
       if (process.env.NODE_ENV === 'development') {
         if (err.name === 'AbortError') {
-          console.warn('[WhatsAppButton] Contact details request timed out');
+          console.warn('[WhatsAppButton] Footer settings request timed out');
         } else {
-          console.error('[WhatsAppButton] Error fetching contact details:', err.message || err);
+          console.error('[WhatsAppButton] Error fetching footer settings:', err.message || err);
         }
       }
-      // Don't break the UI - keep default phone number
+      // Don't break the UI - keep default WhatsApp URL
     }
-  }, []);
+  }, [formatWhatsAppUrl]);
 
-  // Performance: Defer contact details fetch - not critical for initial render
+  // Fetch WhatsApp link on mount
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      requestIdleCallback(fetchContactDetails, { timeout: 2000 });
-    } else {
-      setTimeout(fetchContactDetails, 500);
-    }
-  }, [fetchContactDetails]);
+    // Fetch immediately to ensure fresh data
+    fetchWhatsAppLink();
+    
+    // Also set up a periodic refresh to catch admin updates (every 30 seconds)
+    const refreshInterval = setInterval(() => {
+      fetchWhatsAppLink();
+    }, 30000);
 
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [fetchWhatsAppLink]);
 
   return (
     <>

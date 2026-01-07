@@ -10,7 +10,7 @@ type Course = { id: number; title: string };
 
 function UnifiedHelpButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('919182617094');
+  const [whatsappUrl, setWhatsappUrl] = useState('https://wa.me/919182617094?text=Hi%2C%20I%20need%20more%20information%20about%20the%20courses.');
   const [contactPhone, setContactPhone] = useState('+91 9182617094');
   const [courses, setCourses] = useState<Course[]>([]);
   const [formDetails, setFormDetails] = useState<any>(null);
@@ -19,7 +19,36 @@ function UnifiedHelpButton() {
 
   const message = 'Hi, I need more information about the courses.';
 
-  // Fetch contact details
+  // Helper function to format WhatsApp URL from various input formats
+  const formatWhatsAppUrl = useCallback((whatsappLink: string): string => {
+    if (!whatsappLink || whatsappLink === '#') {
+      return '';
+    }
+
+    // If it's already a full WhatsApp URL, use it directly
+    if (whatsappLink.startsWith('https://wa.me/') || whatsappLink.startsWith('http://wa.me/')) {
+      // Check if it already has a text parameter
+      if (whatsappLink.includes('?text=')) {
+        return whatsappLink;
+      }
+      // Add text parameter if missing
+      return `${whatsappLink}${whatsappLink.includes('?') ? '&' : '?'}text=${encodeURIComponent(message)}`;
+    }
+
+    // If it's a phone number (with or without +, spaces, etc.), format it
+    const phoneNumber = whatsappLink
+      .replaceAll('+', '')
+      .replaceAll(/\s+/g, '')
+      .replaceAll(/\D/g, '');
+
+    if (phoneNumber) {
+      return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    }
+
+    return '';
+  }, [message]);
+
+  // Fetch contact details from footer settings (same source as footer component)
   const fetchContactDetails = useCallback(async () => {
     try {
       const apiBaseUrl = getApiBaseUrl();
@@ -28,7 +57,7 @@ function UnifiedHelpButton() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const contactRes = await fetch(`${apiBaseUrl}/contact-page`, {
+      const footerRes = await fetch(`${apiBaseUrl}/footer-settings`, {
         signal: controller.signal,
         cache: 'no-store',
         headers: { Accept: 'application/json' },
@@ -41,32 +70,34 @@ function UnifiedHelpButton() {
 
       clearTimeout(timeoutId);
 
-      if (contactRes.ok) {
-        const contactResponse = await contactRes.json();
-        const contactData = contactResponse?.data || contactResponse;
+      if (footerRes.ok) {
+        const footerResponse = await footerRes.json();
+        // Handle response format: {success: true, data: {...}} or direct object
+        const footerData = footerResponse?.data || footerResponse;
 
-        if (contactData?.contacts_phone_number) {
-          const formattedPhone = contactData.contacts_phone_number
-            .replaceAll('+', '')
-            .replaceAll(/\s+/g, '')
-            .replaceAll(/\D/g, '');
-
-          if (formattedPhone) {
-            setPhoneNumber(formattedPhone);
+        // Use WhatsApp link from social_links (separate field in admin)
+        if (footerData?.social_links?.whatsapp) {
+          const formattedUrl = formatWhatsAppUrl(footerData.social_links.whatsapp);
+          if (formattedUrl) {
+            setWhatsappUrl(formattedUrl);
           }
-          setContactPhone(contactData.contacts_phone_number);
+        }
+
+        // Use phone number from contact_details for call functionality
+        if (footerData?.contact_details?.phone) {
+          setContactPhone(footerData.contact_details.phone);
         }
       }
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         if (err.name === 'AbortError') {
-          console.warn('[UnifiedHelpButton] Contact details request timed out');
+          console.warn('[UnifiedHelpButton] Footer settings request timed out');
         } else {
-          console.error('[UnifiedHelpButton] Error fetching contact details:', err.message || err);
+          console.error('[UnifiedHelpButton] Error fetching footer settings:', err.message || err);
         }
       }
     }
-  }, []);
+  }, [formatWhatsAppUrl]);
 
   // Fetch courses
   useEffect(() => {
@@ -206,7 +237,6 @@ function UnifiedHelpButton() {
     };
   }, [isOpen]);
 
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
   const phoneForCall = contactPhone.replaceAll(/\s+/g, '').replaceAll(/[^\d+]/g, '');
 
   return (

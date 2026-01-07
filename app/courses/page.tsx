@@ -214,6 +214,7 @@ export default async function CoursesPage(props: any) {
 
   const search = searchParams?.search || '';
   const category = searchParams?.category || '';
+  const status = searchParams?.status || '';
 
   // ⚡ OPTIMIZATION: Run all async operations in parallel instead of sequentially
   // This significantly reduces page load time
@@ -257,8 +258,18 @@ export default async function CoursesPage(props: any) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* HEADING - Render immediately for faster perceived performance */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">{content.heading}</h1>
-          <p className="text-gray-600 mt-2">{content.subheading}</p>
+          <h1 className="text-4xl font-bold text-gray-900">
+            {status 
+              ? `${status.charAt(0).toUpperCase() + status.slice(1)} Courses`
+              : content.heading
+            }
+          </h1>
+          <p className="text-gray-600 mt-2">
+            {status 
+              ? `Browse our ${status} courses designed to upgrade your skills`
+              : content.subheading
+            }
+          </p>
         </div>
 
         {/* SEARCH BAR - Lazy loaded but with loading state */}
@@ -267,7 +278,7 @@ export default async function CoursesPage(props: any) {
         </div>
 
         {/* COURSES GRID - Lazy loaded with loading state */}
-        <CourseGrid searchQuery={search} urlCategory={category} />
+        <CourseGrid searchQuery={search} urlCategory={category} urlStatus={status} />
       </div>
     </div>
   );

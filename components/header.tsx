@@ -115,7 +115,7 @@ function Header() {
                   target={item.new_tab ? '_blank' : undefined}
                   rel={item.new_tab ? 'noopener noreferrer' : undefined}
                   prefetch={true} // Performance: Enable prefetching for faster navigation
-                  className={`relative text-sm font-medium transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-3 py-2 group ${
+                  className={`relative text-sm font-medium transition-all duration-300 ease-in-out focus:outline-none rounded px-3 py-2 group ${
                     active 
                       ? 'text-[#2563EB] font-semibold bg-blue-50' 
                       : 'text-gray-700 hover:text-[#2563EB] hover:bg-blue-50 hover:font-semibold'
@@ -144,7 +144,7 @@ function Header() {
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <button
-                className="md:hidden p-2 text-gray-600 hover:text-[#2563EB] hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded relative z-10 transition-all duration-300 transform hover:scale-110"
+                className="md:hidden p-2 text-gray-600 hover:text-[#2563EB] hover:bg-blue-50 focus:outline-none rounded relative z-10 transition-all duration-300 transform hover:scale-110"
                 aria-label="Toggle mobile menu"
                 aria-expanded={mobileMenuOpen}
                 type="button"
