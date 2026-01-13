@@ -29,16 +29,29 @@ const UnifiedHelpButton = dynamic(() => import('@/components/UnifiedHelpButton')
 });
 
 // Performance: Lazy load WhatsAppButton - desktop only
-const WhatsAppButton = dynamic(() => import('@/components/WhatsAppButton'), {
+const WhatsAppButton = dynamic(
+  () => import('@/components/WhatsAppButton').catch(err => {
+    console.warn('Failed to load WhatsAppButton:', err);
+    return { default: () => null };
+  }),
+  {
   ssr: false, // Client-only component
   loading: () => null,
-});
+  }
+);
 
-// Performance: Lazy load QueryPopup - desktop only
-const QueryPopup = dynamic(() => import('@/components/QueryPopup'), {
-  ssr: false, // Client-only component
-  loading: () => null,
-});
+// QueryPopup functionality is now integrated into WhatsAppButton
+// Keeping import commented out to avoid conflicts
+// const QueryPopup = dynamic(
+//   () => import('@/components/QueryPopup').catch(err => {
+//     console.warn('Failed to load QueryPopup:', err);
+//     return { default: () => null };
+//   }),
+//   {
+//     ssr: false,
+//     loading: () => null,
+//   }
+// );
 
 /**
  * Client Components Wrapper
@@ -54,8 +67,7 @@ export default function ClientComponents() {
       <UnifiedHelpButton />
       {/* Desktop: Separate buttons */}
       <div className="hidden sm:block">
-        <WhatsAppButton />
-        <QueryPopup />
+      <WhatsAppButton />
       </div>
       <CookieConsentWrapper />
     </>

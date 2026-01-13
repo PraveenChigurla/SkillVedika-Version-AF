@@ -22,18 +22,32 @@ export default function JobProgrammeSupport({ jobSupport }: JobProgrammeSupportP
   const [courses, setCourses] = useState<Array<{ id: number; title: string }>>([]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    let timeoutId: NodeJS.Timeout | null = null;
+
     async function fetchCourses() {
       try {
         const apiUrl = getApiUrl('/courses');
 
+        timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
         const res = await fetch(apiUrl, {
+          signal: controller.signal,
           headers: {
             Accept: 'application/json',
           },
         });
 
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+
         if (!res.ok) {
-          logger.error('Failed to fetch courses:', res.status);
+          // Only log non-abort errors
+          if (!controller.signal.aborted) {
+            logger.error('Failed to fetch courses:', res.status);
+          }
           return;
         }
 
@@ -54,14 +68,29 @@ export default function JobProgrammeSupport({ jobSupport }: JobProgrammeSupportP
           title: course.title || course.course_name || '',
         }));
 
-        setCourses(courseList);
-      } catch (err) {
+        if (!controller.signal.aborted) {
+          setCourses(courseList);
+        }
+      } catch (err: any) {
+        // Don't log AbortError - it's expected when component unmounts or request is cancelled
+        if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+          return;
+        }
         logger.error('Error fetching courses:', err);
-        setCourses([]); // Set empty array on error
+        if (!controller.signal.aborted) {
+          setCourses([]); // Set empty array on error
+        }
       }
     }
 
     fetchCourses();
+
+    return () => {
+      controller.abort();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   return (

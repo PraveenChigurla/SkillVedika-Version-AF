@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 // Client components that need state
@@ -16,12 +17,38 @@ interface HomePageClientProps {
 }
 
 export default function HomePageClient({ explore }: HomePageClientProps) {
-  const [statusFilter, setStatusFilter] = useState('trending');
+  const searchParams = useSearchParams();
+  const statusFromUrl = searchParams?.get('status') || 'trending';
+  const [statusFilter, setStatusFilter] = useState(statusFromUrl);
+
+  // Update filter when URL changes
+  useEffect(() => {
+    const urlStatus = searchParams?.get('status');
+    if (urlStatus) {
+      setStatusFilter(urlStatus);
+    }
+  }, [searchParams]);
+
+  // Scroll to courses section when status parameter is present
+  useEffect(() => {
+    const urlStatus = searchParams?.get('status');
+    if (urlStatus) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const element = document.getElementById('trending-courses-section');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [searchParams]);
 
   return (
     <>
-      <ExploreSkills explore={explore} setStatusFilter={setStatusFilter} />
-      <CourseCards statusFilter={statusFilter} />
+      <ExploreSkills explore={explore} setStatusFilter={setStatusFilter} initialStatus={statusFilter} />
+      <div id="trending-courses-section">
+        <CourseCards statusFilter={statusFilter} />
+      </div>
     </>
   );
 }

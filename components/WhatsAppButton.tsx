@@ -138,51 +138,57 @@ function WhatsAppButton() {
       {/* Performance: Preconnect to WhatsApp for faster navigation */}
       {/* <link rel="preconnect" href="https://wa.me" /> */}
       
-      <div 
-        className="hidden sm:block fixed right-4 sm:right-6 bottom-24 z-50 group safe-area-inset-bottom"
-        role="complementary" 
+      <aside 
+        className="hidden md:block fixed right-4 sm:right-15 bottom-13 z-50 safe-area-inset-bottom"
         aria-label="WhatsApp contact" 
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0)' }}
       >
-        {/* Accessibility: Tooltip with proper ARIA */}
-        <div
-          className="
-            absolute right-16 top-1/2 -translate-y-1/2
-            bg-black text-white text-xs
-            px-3 py-1 rounded-md
-            opacity-0 group-hover:opacity-100 group-focus-within:opacity-100
-            transition-opacity duration-300
-            whitespace-nowrap
-            pointer-events-none
-          "
-          role="tooltip"
-          aria-hidden="true"
-        >
-          Chat with us
-        </div>
+        {/* WhatsApp Button */}
+        <div className="group relative">
+          {/* Tooltip */}
+          <div
+            className="
+              absolute right-full mr-3 top-1/2 -translate-y-1/2
+              bg-black text-white text-xs
+              px-3 py-1 rounded-md
+              opacity-0 group-hover:opacity-100 group-focus-within:opacity-100
+              transition-opacity duration-300
+              whitespace-nowrap
+              pointer-events-none
+            "
+            role="tooltip"
+            aria-hidden="true"
+          >
+            Chat with us
+          </div>
 
-        {/* Accessibility: Proper link with aria-label and keyboard support */}
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="
-            relative
-            bg-green-500 hover:bg-green-600 active:bg-green-700
-            rounded-full shadow-xl
-            w-11 h-11 sm:w-12 sm:h-12
-            flex items-center justify-center
-            transition-transform hover:scale-110 active:scale-95
-            focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-          "
-          aria-label="Chat with us on WhatsApp"
-        >
-          <FaWhatsapp className="w-6 h-6 sm:w-8 sm:h-8 text-white" aria-hidden="true" />
-        </a>
-      </div>
+          {/* Accessibility: Proper link with aria-label and keyboard support */}
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="
+              relative
+              bg-green-500 hover:bg-green-600 active:bg-green-700
+              rounded-full shadow-xl
+              w-12 h-12
+              flex items-center justify-center
+              transition-all hover:scale-110 active:scale-95
+              focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+              cursor-pointer
+            "
+            aria-label="Chat with us on WhatsApp"
+          >
+            <FaWhatsapp className="w-6 h-6 text-white" aria-hidden="true" />
+          </a>
+        </div>
+      </aside>
     </>
   );
 }
 
-// Performance: Export memoized component
+// Named export for better compatibility with dynamic imports
+export { WhatsAppButton };
+
+// Default export with memoization
 export default memo(WhatsAppButton);

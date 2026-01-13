@@ -2,15 +2,10 @@ import dynamic from 'next/dynamic';
 import LCPPreload from '@/components/courses/LCPPreload';
 
 // Lazy load components for better performance with loading states
+
+
 const CourseGrid = dynamic(() => import('@/components/courses/CourseGrid'), {
-  loading: () => (
-    <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-5 py-0">
-      <div className="py-20 text-center text-gray-600">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <p className="mt-4">Loading courses...</p>
-      </div>
-    </div>
-  ),
+  loading: () => null, // Don't show loading spinner - let component handle its own loading state
 });
 
 // Lazy load CourseSearchBar - it's not critical for initial render
@@ -19,6 +14,74 @@ const CourseSearchBar = dynamic(() => import('@/components/courses/CourseSearchB
   // Note: ssr: false is not allowed in Server Components
   // The component itself is a client component, so it will hydrate on the client
 });
+
+// Lazy load CourseTestimonials - below the fold, doesn't block initial render
+const CourseTestimonials = dynamic(() => import('@/components/courses/CourseTestimonials'), {
+  loading: () => (
+    <div className="bg-gradient-to-b from-gray-50 to-white py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white border border-gray-200 rounded-xl p-6 h-64 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
+  ),
+  ssr: true, // Enable SSR for SEO - testimonials are crawlable
+});
+
+// Fetch testimonials from API (server-side for SEO)
+async function getTestimonials(): Promise<any[]> {
+  try {
+    const { getApiUrl } = await import('@/lib/apiConfig');
+    const apiUrl = getApiUrl('/testimonials?limit=6');
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout
+
+    const res = await fetch(apiUrl, {
+      signal: controller.signal,
+      cache: 'no-store', // Don't cache - always fetch fresh data
+      headers: { Accept: 'application/json' },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      // Handle API response format: { success: true, data: [...] }
+      let testimonialsArray: any[] = [];
+      if (data?.success && Array.isArray(data.data)) {
+        testimonialsArray = data.data;
+      } else if (Array.isArray(data)) {
+        testimonialsArray = data;
+      }
+      
+      // Normalize API response to match frontend interface
+      return testimonialsArray.map((t: any) => ({
+        id: t.id,
+        studentName: t.student_name,
+        studentRole: t.student_role,
+        studentCompany: t.student_company,
+        courseCategory: t.course_category,
+        rating: Number(t.rating) || 5,
+        testimonial: t.testimonial_text,
+        profileImage: t.student_image,
+        datePublished: t.created_at,
+        verified: true,
+      }));
+    }
+  } catch (err) {
+    // Silently fail - will use fallback testimonials
+    const isAbortError = err instanceof Error && err.name === 'AbortError';
+    const isDOMAbortError = err instanceof DOMException && err.name === 'AbortError';
+    if (!isAbortError && !isDOMAbortError && process.env.NODE_ENV === 'development') {
+      console.warn('Failed to fetch testimonials:', err);
+    }
+  }
+  return []; // Return empty array - component will use fallback
+}
 
 // Fetch first course image for LCP preloading - optimized with shorter timeout
 async function getFirstCourseImage(): Promise<string | null> {
@@ -89,6 +152,8 @@ function getFallbackContent() {
   return {
     heading: 'Explore Our Courses',
     subheading: 'Industry-ready courses designed to upgrade your skills',
+      testimonials_heading: 'What Our Students Say',
+      testimonials_subheading: 'Join thousands of professionals who have transformed their careers with SkillVedika',
     meta_title: 'Courses | SkillVedika',
     meta_description:
       'Explore industry-ready courses designed to upgrade your skills and boost your career.',
@@ -108,7 +173,7 @@ export async function generateMetadata() {
     const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout
 
     const { getApiUrl } = await import('@/lib/apiConfig');
-    const res = await fetch(getApiUrl('/seo/2'), {
+    const res = await fetch(getApiUrl('/seo?slug=courses'), {
       signal: controller.signal,
       cache: 'force-cache', // Enable caching
       next: { revalidate: 3600 }, // Revalidate every hour
@@ -221,6 +286,7 @@ export default async function CoursesPage(props: any) {
   const [
     content,
     firstCourseImage,
+    testimonials,
     { getBaseSchemas },
     { generateCollectionPageSchema },
     { StructuredData },
@@ -228,6 +294,7 @@ export default async function CoursesPage(props: any) {
   ] = await Promise.all([
     getPageContent(),
     getFirstCourseImage(),
+    getTestimonials(), // Fetch testimonials server-side for SEO
     import('@/lib/getBaseSchemas'),
     import('@/lib/structuredData'),
     import('@/lib/structuredData'),
@@ -279,6 +346,13 @@ export default async function CoursesPage(props: any) {
 
         {/* COURSES GRID - Lazy loaded with loading state */}
         <CourseGrid searchQuery={search} urlCategory={category} urlStatus={status} />
+
+        {/* TESTIMONIALS SECTION - Below course grid, before footer */}
+        <CourseTestimonials 
+          testimonials={testimonials} 
+          heading={content.testimonials_heading}
+          subheading={content.testimonials_subheading}
+        />
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     // Fetch SEO metadata for the Blog page from the `seos` table.
     // id = 6 corresponds to "Blog Listing" in the seed data.
-    const res = await fetch(`${apiUrl}/seo/6`, { cache: 'no-store' });
+    const res = await fetch(`${apiUrl}/seo?slug=blog`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Failed to fetch seo/6: ${res.status}`);
 
     const json = await res.json();

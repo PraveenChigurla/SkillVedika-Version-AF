@@ -175,12 +175,12 @@ export default function WhyChoose({
         {/* TITLE - First */}
         <div className="text-center mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-            {part1 || 'Why Choose'}{' '}
-            <span className="bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
-              {part2 || 'SkillVedika?'}
-            </span>
-          </h2>
-        </div>
+              {part1 || 'Why Choose'}{' '}
+              <span className="bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
+                {part2 || 'SkillVedika?'}
+              </span>
+            </h2>
+                  </div>
 
         <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:gap-16">
           {/* IMAGE - Second (After Title) */}

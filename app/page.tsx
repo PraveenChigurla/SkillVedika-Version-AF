@@ -5,6 +5,7 @@ import HomePageClient from './HomePageClient';
 import LCPPreload from '@/components/home/LCPPreload';
 import { StructuredData } from '@/lib/structuredData';
 import { getBaseSchemas } from '@/lib/getBaseSchemas';
+import { Suspense } from 'react';
 
 // Lazy load heavy components below the fold - SSR enabled for faster initial load
 const KeyFeatures = dynamic(() => import('@/components/home/key-features'), {
@@ -60,7 +61,11 @@ async function getHomePageData() {
     return await Promise.race([fetchPromise, timeoutPromise]);
   } catch (error) {
     // Log timeout in development
-    if (process.env.NODE_ENV === 'development' && error instanceof Error && error.message.includes('Timeout')) {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      error instanceof Error &&
+      error.message.includes('Timeout')
+    ) {
       console.warn('[Homepage] Fetch timeout - backend may be slow');
     }
     // Silently fail - return null for graceful fallback
@@ -114,8 +119,8 @@ async function getBlogs() {
 // Generate metadata on server
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const apiUrl = getApiUrl('/seo/1');
-    
+    const apiUrl = getApiUrl('/seo?slug=home');
+
     // Use Promise.race for more reliable timeout
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Timeout')), 2000); // 2 second timeout
@@ -229,15 +234,17 @@ export default async function Home() {
       : `/${lcpImageUrl}`;
 
   // Generate structured data for SEO - wrap in timeout to prevent hangs
-  let organizationSchema = {}, websiteSchema = {}, webPageSchema = {};
+  let organizationSchema = {},
+    websiteSchema = {},
+    webPageSchema = {};
   try {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://skillvedika.com';
-    
+
     // Add timeout to prevent hanging
     const schemaTimeout = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Schema generation timeout')), 3000);
     });
-    
+
     const schemaPromise = (async () => {
       const [org, web] = await getBaseSchemas();
       const { generateWebPageSchema } = await import('@/lib/structuredData');
@@ -253,7 +260,7 @@ export default async function Home() {
       });
       return { org, web, webPage };
     })();
-    
+
     const result = await Promise.race([schemaPromise, schemaTimeout]);
     organizationSchema = result.org;
     websiteSchema = result.web;
@@ -261,7 +268,10 @@ export default async function Home() {
   } catch (error) {
     // Fallback to empty schemas if generation fails or times out
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[Homepage] Failed to generate structured data:', error instanceof Error ? error.message : error);
+      console.warn(
+        '[Homepage] Failed to generate structured data:',
+        error instanceof Error ? error.message : error
+      );
     }
   }
 
@@ -276,8 +286,14 @@ export default async function Home() {
       {/* Always render Hero - it handles missing data gracefully */}
       {home ? (
         <>
-          <Hero hero={home} />
-          <HomePageClient explore={home} />
+          <Suspense fallback={null}>
+            <Hero hero={home} />
+          </Suspense>
+
+          <Suspense fallback={null}>
+            <HomePageClient explore={home} />
+          </Suspense>
+
           <KeyFeatures keyFeatures={home} />
           <JobAssistance jobAssist={home} />
           <JobProgrammeSupport jobSupport={home} />
@@ -286,8 +302,14 @@ export default async function Home() {
       ) : (
         // Fallback UI - render basic homepage structure even without data
         <>
-          <Hero hero={undefined} />
-          <HomePageClient explore={undefined} />
+          <Suspense fallback={null}>
+            <Hero hero={undefined} />
+          </Suspense>
+
+          <Suspense fallback={null}>
+            <HomePageClient explore={undefined} />
+          </Suspense>
+
           <KeyFeatures keyFeatures={undefined} />
           <JobAssistance jobAssist={undefined} />
           <JobProgrammeSupport jobSupport={undefined} />

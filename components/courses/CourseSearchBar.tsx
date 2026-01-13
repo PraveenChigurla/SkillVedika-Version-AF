@@ -244,7 +244,7 @@ export default function CourseSearchBar() {
       
       if (query) {
         // If there's a search term, rank and merge
-        const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
+      const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
         const backendPopular = Array.isArray(data.popular) ? data.popular : [];
         mergedPopular = Array.from(new Set([...backendPopular, ...rankedIndustry])).slice(0, 15);
       } else {
@@ -279,13 +279,13 @@ export default function CourseSearchBar() {
         fallbackPopular = INDUSTRY_SKILLS.slice(0, 15);
       }
       
-      startTransition(() => {
-        setSuggestions({
+        startTransition(() => {
+          setSuggestions({
           popular: fallbackPopular,
-          categories: [],
-          courses: [],
-          blogs: [],
-        });
+            categories: [],
+            courses: [],
+            blogs: [],
+          });
         // Only show dropdown if user is actively typing (not from URL or initial mount)
         if (!isInitialMount && !isFromUrlRef.current && searchTerm.trim()) {
           setShowDropdown(true);
@@ -364,7 +364,7 @@ export default function CourseSearchBar() {
         <div
           ref={dropdownRef}
           id="course-search-suggestions"
-          className="absolute top-full mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto"
+          className="absolute top-full mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-xl z-[100] max-h-60 overflow-y-auto scrollbar-hidden"
           role="listbox"
           aria-label="Search suggestions"
         >
@@ -397,7 +397,7 @@ export default function CourseSearchBar() {
                   <div className="flex items-center gap-2">
                     <Search size={14} className="text-gray-400 flex-shrink-0" aria-hidden="true" />
                     <span>{item}</span>
-                  </div>
+                </div>
                 </button>
               ))}
             </div>

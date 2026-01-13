@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import './globals.css'; // Consolidated CSS - includes all styles to reduce chunk fragmentation
+import { Poppins } from 'next/font/google';
+import './globals.css';
 import './error-handler';
 import './font-error-handler';
+
 import Header from '@/components/header';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
@@ -11,35 +12,43 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { getCanonicalUrl } from '@/lib/seo';
 import ClientComponents from '@/components/ClientComponents';
 
-// Performance: Lazy load non-critical components below the fold
-// Footer is below the fold, so lazy load it to reduce initial bundle
+/* --------------------------------
+   Lazy-loaded Footer (below the fold)
+-------------------------------- */
 const Footer = dynamic(() => import('@/components/footer'), {
-  ssr: true, // Keep SSR for SEO
-  loading: () => <footer aria-label="Loading footer" className="min-h-[200px]" />,
+  loading: () => (
+    <footer
+      aria-label="Loading footer"
+      className="min-h-[200px]"
+    />
+  ),
 });
 
-// Performance: Optimize font loading with display swap for better LCP
-// Preload only primary font, defer secondary font
-const geist = Geist({
+/* --------------------------------
+   Poppins Font (Performance Optimized)
+-------------------------------- */
+const poppins = Poppins({
   subsets: ['latin'],
-  display: 'swap', // Prevents invisible text during font load
-  preload: true, // Preload primary font
-  variable: '--font-geist',
-  fallback: ['system-ui', 'arial'], // Immediate fallback
-  adjustFontFallback: true, // Reduces layout shift
-});
-
-// Performance: Don't preload secondary font - load on demand
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
-  preload: false, // Only preload primary font
-  variable: '--font-geist-mono',
-  fallback: ['monospace'],
+  preload: true,
+  variable: '--font-poppins',
+  fallback: [
+    'system-ui',
+    '-apple-system',
+    'BlinkMacSystemFont',
+    'Segoe UI',
+    'Arial',
+    'sans-serif',
+  ],
   adjustFontFallback: true,
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://skillvedika.com';
+/* --------------------------------
+   SEO Metadata
+-------------------------------- */
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://skillvedika.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -60,6 +69,16 @@ export const metadata: Metadata = {
   authors: [{ name: 'SkillVedika' }],
   creator: 'SkillVedika',
   publisher: 'SkillVedika',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon.png', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180' },
+    ],
+  },  
   robots: {
     index: true,
     follow: true,
@@ -80,7 +99,8 @@ export const metadata: Metadata = {
     url: siteUrl,
     siteName: 'SkillVedika',
     title: 'SkillVedika - Online Courses & Professional Training',
-    description: 'Industry-ready online courses, corporate training, and job support programs.',
+    description:
+      'Industry-ready online courses, corporate training, and job support programs.',
     images: [
       {
         url: `${siteUrl}/skillvedika-logo.png`,
@@ -93,61 +113,66 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'SkillVedika - Online Courses & Professional Training',
-    description: 'Industry-ready online courses, corporate training, and job support programs.',
+    description:
+      'Industry-ready online courses, corporate training, and job support programs.',
     images: [`${siteUrl}/skillvedika-logo.png`],
-  },
-  verification: {
-    // Add Google Search Console verification if available
-    // google: 'your-google-verification-code',
   },
 };
 
-// Viewport configuration for better mobile performance
+/* --------------------------------
+   Viewport (Accessibility Friendly)
+-------------------------------- */
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5, // Allow zoom for accessibility
+  maximumScale: 5,
   userScalable: true,
 };
 
+/* --------------------------------
+   Root Layout
+-------------------------------- */
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang="en" className={poppins.variable}>
       <head>
-        {/* Performance: Preconnect to API for faster requests */}
+        {/* Preconnect to backend API */}
         <link
           rel="preconnect"
-          href={process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}
+          href={
+            process.env.NEXT_PUBLIC_API_URL ||
+            'http://127.0.0.1:8000'
+          }
           crossOrigin="anonymous"
         />
-        {/* Performance: DNS prefetch for external resources */}
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        {/* Note: wa.me removed - WhatsAppButton is lazy-loaded and handles its own preconnect */}
       </head>
-      <body className={`font-sans antialiased`} suppressHydrationWarning>
+
+      <body
+        className="font-poppins antialiased"
+        suppressHydrationWarning
+      >
         <ErrorBoundary>
-          {/* Performance: Load analytics with lazyOnload strategy - non-blocking, non-render-blocking */}
+          {/* Non-blocking Analytics */}
           <Suspense fallback={null}>
             <GoogleAnalytics />
           </Suspense>
-          
-          {/* Accessibility: Semantic header */}
+
+          {/* Site Header */}
           <Header />
-          
-          {/* Accessibility: Semantic main content */}
-          <main id="main-content" role="main">
+
+          {/* Main Content */}
+          <main id="main-content" role="main" className="pt-20 md:pt-[72px]">
             {children}
           </main>
-          
-          {/* Performance: Footer loaded lazily - below the fold */}
+
+          {/* Footer (lazy loaded) */}
           <Footer />
-          
-          {/* Performance: Client-only components wrapped in client component */}
+
+          {/* Client-only helpers (toasts, modals, etc.) */}
           <ClientComponents />
         </ErrorBoundary>
       </body>

@@ -101,14 +101,16 @@ function UnifiedHelpButton() {
 
   // Fetch courses
   useEffect(() => {
+    const controller = new AbortController();
+    let timeoutId: NodeJS.Timeout | null = null;
+
     async function fetchCourses() {
       try {
         const { getApiUrl } = await import('@/lib/apiConfig');
         const apiUrl = getApiUrl('/courses');
         if (!apiUrl) return;
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        timeoutId = setTimeout(() => controller.abort(), 5000);
 
         const res = await fetch(apiUrl, {
           signal: controller.signal,
@@ -120,7 +122,10 @@ function UnifiedHelpButton() {
           throw fetchError;
         });
 
-        clearTimeout(timeoutId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
 
         if (!res.ok) return;
 
@@ -141,8 +146,14 @@ function UnifiedHelpButton() {
           }))
           .filter((c: any) => c.id && c.title);
 
-        setCourses(courseList);
+        if (!controller.signal.aborted) {
+          setCourses(courseList);
+        }
       } catch (err: any) {
+        // Don't log AbortError - it's expected when component unmounts or request is cancelled
+        if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+          return;
+        }
         if (process.env.NODE_ENV === 'development') {
           console.error('[UnifiedHelpButton] Error fetching courses:', err.message || err);
         }
@@ -150,18 +161,27 @@ function UnifiedHelpButton() {
     }
 
     fetchCourses();
+
+    return () => {
+      controller.abort();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   // Fetch form details
   useEffect(() => {
+    const controller = new AbortController();
+    let timeoutId: NodeJS.Timeout | null = null;
+
     async function fetchFormDetails() {
       try {
         const { getApiUrl } = await import('@/lib/apiConfig');
         const apiUrl = getApiUrl('/form-details');
         if (!apiUrl) return;
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        timeoutId = setTimeout(() => controller.abort(), 5000);
 
         const res = await fetch(apiUrl, {
           signal: controller.signal,
@@ -174,7 +194,10 @@ function UnifiedHelpButton() {
           throw fetchError;
         });
 
-        clearTimeout(timeoutId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
 
         if (!res.ok) return;
 
@@ -187,8 +210,14 @@ function UnifiedHelpButton() {
           payload = Array.isArray(rawPayload.data) ? rawPayload.data.at(-1) : rawPayload.data;
         }
 
-        setFormDetails(payload);
+        if (!controller.signal.aborted) {
+          setFormDetails(payload);
+        }
       } catch (err: any) {
+        // Don't log AbortError - it's expected when component unmounts or request is cancelled
+        if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+          return;
+        }
         if (process.env.NODE_ENV === 'development') {
           console.error('[UnifiedHelpButton] Error fetching form details:', err.message || err);
         }
@@ -196,6 +225,13 @@ function UnifiedHelpButton() {
     }
 
     fetchFormDetails();
+
+    return () => {
+      controller.abort();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   // Defer contact details fetch
@@ -244,7 +280,7 @@ function UnifiedHelpButton() {
       {/* Mobile: Unified FAB - Hidden near footer */}
       <div
         className={`
-          sm:hidden fixed right-4 bottom-4 z-50
+          sm:hidden fixed right-4 bottom-24 z-50
           transition-all duration-300
           ${hideButton ? 'opacity-0 pointer-events-none translate-y-4' : 'opacity-100'}
           safe-area-inset-bottom
@@ -264,6 +300,7 @@ function UnifiedHelpButton() {
             transition-all duration-300
             focus:outline-none focus:ring-2 focus:ring-[#1E5BA8] focus:ring-offset-2
             font-semibold text-sm
+            cursor-pointer
           "
           aria-label="Need help? Talk to expert"
         >
@@ -308,7 +345,7 @@ function UnifiedHelpButton() {
             <h3 className="text-base font-bold text-gray-900">Need Help?</h3>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
               aria-label="Close"
             >
               <X className="w-4 h-4 text-gray-600" />
@@ -330,6 +367,7 @@ function UnifiedHelpButton() {
               rounded-xl border border-green-200
               transition-all duration-200
               group
+              cursor-pointer
             "
           >
             <div className="flex-shrink-0 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
@@ -354,6 +392,7 @@ function UnifiedHelpButton() {
               transition-all duration-200
               text-left
               group
+              cursor-pointer
             "
           >
             <div className="flex-shrink-0 w-10 h-10 bg-[#1E5BA8] rounded-full flex items-center justify-center">
@@ -376,6 +415,7 @@ function UnifiedHelpButton() {
                 rounded-xl border border-gray-200
                 transition-all duration-200
                 group
+                cursor-pointer
               "
             >
               <div className="flex-shrink-0 w-10 h-10 bg-[#1E5BA8] rounded-full flex items-center justify-center">

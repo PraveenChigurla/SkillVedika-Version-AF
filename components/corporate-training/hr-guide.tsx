@@ -45,7 +45,7 @@ export default function HrGuide({
               const Icon = icons[idx] || ClipboardList;
 
               return (
-                <div key={idx} className="relative overflow-visible">
+                <div key={idx} className="relative overflow-visible flex flex-col h-full">
                   {/* Step Number Circle */}
                   <div className="flex justify-center mb-6">
                     <div className="relative group">
@@ -67,7 +67,7 @@ export default function HrGuide({
                   </div>
 
                   {/* Content */}
-                  <div className="bg-card/50 rounded-2xl p-4 lg:p-6 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 group h-full flex flex-col">
+                  <div className="bg-card/50 rounded-2xl p-4 lg:p-6 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 group flex flex-col h-full">
                     <h3 className="text-lg lg:text-xl font-bold mb-2 lg:mb-3 text-foreground group-hover:text-primary transition-colors">
                       {guide.title}
                     </h3>

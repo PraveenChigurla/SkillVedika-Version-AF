@@ -180,8 +180,8 @@
 
 'use client';
 
-import { useRef, useState, useEffect, memo } from 'react';
-import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, memo } from 'react';
+import { Star } from 'lucide-react';
 
 interface CourseRowProps {
   title: string;
@@ -198,12 +198,7 @@ function CourseRow({
   onBack = () => {},
   isFirst = false,
 }: CourseRowProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [initialLimit, setInitialLimit] = useState(4); // Mobile default: 4 courses
   const [isMobile, setIsMobile] = useState(false);
 
   // Check for reduced motion preference
@@ -216,66 +211,19 @@ function CourseRow({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Set initial limit based on screen size: 4 on mobile, 6 on desktop
+  // Set mobile state for responsive behavior
   useEffect(() => {
-    const updateLimit = () => {
-      // Mobile: 4 courses, Desktop (lg+): 6 courses
-      const isDesktop = window.innerWidth >= 1024;
-      setInitialLimit(isDesktop ? 6 : 4);
+    const updateMobile = () => {
       setIsMobile(window.innerWidth < 640);
     };
     
-    updateLimit();
-    window.addEventListener('resize', updateLimit);
-    return () => window.removeEventListener('resize', updateLimit);
+    updateMobile();
+    window.addEventListener('resize', updateMobile);
+    return () => window.removeEventListener('resize', updateMobile);
   }, []);
 
-  // Reset expanded state when courses change (e.g., filter applied)
-  useEffect(() => {
-    setIsExpanded(false);
-  }, [courses.length, title]);
-
-  // Calculate visible courses based on expanded state
-  // When expanded or in focused view, show all courses in vertical grid
-  const shouldShowPreview = !disableArrows && !isExpanded && courses.length > initialLimit;
-  const visibleCourses = shouldShowPreview ? courses.slice(0, initialLimit) : courses;
-
-  // Determine layout: horizontal scroll for preview on mobile, vertical grid for expanded/focused
-  const useVerticalGrid = isExpanded || disableArrows || !shouldShowPreview;
-
-  // Check scroll position for arrow visibility
-  const checkScroll = () => {
-    if (!scrollRef.current || disableArrows) return;
-    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
-  };
-
-  useEffect(() => {
-    const element = scrollRef.current;
-    if (!element || disableArrows) return;
-    
-    checkScroll();
-    element.addEventListener('scroll', checkScroll);
-    window.addEventListener('resize', checkScroll);
-    
-    return () => {
-      element.removeEventListener('scroll', checkScroll);
-      window.removeEventListener('resize', checkScroll);
-    };
-  }, [courses, disableArrows]);
-
-  const scroll = (dir: 'left' | 'right') => {
-    if (!scrollRef.current) return;
-    const cardWidth = scrollRef.current.querySelector('div[data-card]')?.clientWidth || 280;
-    const gap = 16; // gap-4 = 16px
-    const scrollAmount = cardWidth + gap;
-    
-    scrollRef.current.scrollBy({
-      left: dir === 'left' ? -scrollAmount : scrollAmount,
-      behavior: prefersReducedMotion ? 'auto' : 'smooth',
-    });
-  };
+  // Always show all courses in vertical grid layout for scrolling page
+  const visibleCourses = courses;
 
   return (
     <section className={isFirst ? '' : 'pt-0'}>
@@ -293,79 +241,14 @@ function CourseRow({
           >
             ← Back
           </button>
-        ) : shouldShowPreview ? (
-          <button
-            onClick={() => setIsExpanded(true)}
-            className="text-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-gray-300 hover:bg-gray-50 active:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C5AA0] focus:ring-offset-2 font-medium"
-            aria-label={`View all ${courses.length} ${title} courses`}
-          >
-            View all ({courses.length})
-          </button>
-        ) : isExpanded && courses.length > initialLimit ? (
-          <button
-            onClick={() => setIsExpanded(false)}
-            className="text-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-gray-300 hover:bg-gray-50 active:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2C5AA0] focus:ring-offset-2"
-            aria-label={`Show less ${title} courses`}
-          >
-            Show less
-          </button>
         ) : null}
       </div>
 
-      {/* RESPONSIVE GRID - No horizontal scroll on tablet/desktop */}
+      {/* RESPONSIVE GRID - Always vertical grid for all courses */}
       <div className="relative">
-        {/* DESKTOP ARROWS - Only show for horizontal scroll preview (not expanded, not focused) */}
-        {!disableArrows && !isExpanded && shouldShowPreview && (
-          <>
-            <button
-              onClick={() => scroll('left')}
-              disabled={!canScrollLeft}
-              className={`
-                hidden xl:flex absolute -left-8 top-1/2 -translate-y-1/2 z-10 
-                w-10 h-10 rounded-full bg-white border border-gray-300 shadow-lg
-                hover:bg-[#2C5AA0] group items-center justify-center
-                transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-[#2C5AA0] focus:ring-offset-2
-                disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white
-                ${prefersReducedMotion ? '' : 'hover:scale-105 active:scale-95'}
-              `}
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="text-[#2C5AA0] group-hover:text-white transition-colors" size={18} />
-            </button>
-
-            <button
-              onClick={() => scroll('right')}
-              disabled={!canScrollRight}
-              className={`
-                hidden xl:flex absolute -right-8 top-1/2 -translate-y-1/2 z-10 
-                w-10 h-10 rounded-full bg-white border border-gray-300 shadow-lg
-                hover:bg-[#2C5AA0] group items-center justify-center
-                transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-[#2C5AA0] focus:ring-offset-2
-                disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white
-                ${prefersReducedMotion ? '' : 'hover:scale-105 active:scale-95'}
-              `}
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="text-[#2C5AA0] group-hover:text-white transition-colors" size={18} />
-            </button>
-          </>
-        )}
-
-        {/* RESPONSIVE GRID - Vertical grid when expanded/focused, horizontal scroll for preview only */}
+        {/* RESPONSIVE GRID - Vertical grid layout for all courses */}
         <div
-          ref={scrollRef}
-          className={`
-            ${useVerticalGrid 
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 lg:gap-7'
-              : 'flex gap-4 overflow-x-auto overflow-y-visible scroll-smooth snap-x snap-mandatory scrollbar-hidden px-1 sm:px-2 sm:grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 sm:gap-5 lg:gap-6 sm:px-0'
-            }
-          `}
-          style={useVerticalGrid ? {} : {
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 lg:gap-7"
         >
           {visibleCourses.map((course, index) => {
             const courseUrl = `/course-details/${course.slug || course.id}`;
@@ -381,7 +264,6 @@ function CourseRow({
                 }
               }}
               className={`
-                ${useVerticalGrid ? '' : 'snap-start min-w-[280px]'}
                 sm:min-w-0
                 bg-white
                 rounded-xl sm:rounded-2xl
@@ -418,7 +300,7 @@ function CourseRow({
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'scale(1)';
                     }}
-                    loading={index < (shouldShowPreview ? initialLimit : 4) ? 'eager' : 'lazy'}
+                    loading={index < 6 ? 'eager' : 'lazy'}
                     onError={e => {
                       const target = e.currentTarget;
                       target.src = '/placeholder-course.svg';

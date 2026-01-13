@@ -66,7 +66,7 @@ export default function RecentBlogs({ blogs }: any) {
           onClick={prev}
           aria-label="Previous blog posts"
           className="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center 
-                     bg-white shadow-md rounded-full hover:bg-gray-100 active:bg-gray-200 z-20 min-w-[44px] min-h-[44px] transition-all"
+                     bg-white shadow-md rounded-full hover:bg-gray-100 active:bg-gray-200 z-20 min-w-[44px] min-h-[44px] transition-all cursor-pointer"
         >
           <ChevronLeft className="text-[#1e5ba8]" size={24} aria-hidden="true" />
         </button>
@@ -75,7 +75,7 @@ export default function RecentBlogs({ blogs }: any) {
           onClick={next}
           aria-label="Next blog posts"
           className="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center 
-                     bg-white shadow-md rounded-full hover:bg-gray-100 active:bg-gray-200 z-20 min-w-[44px] min-h-[44px] transition-all"
+                     bg-white shadow-md rounded-full hover:bg-gray-100 active:bg-gray-200 z-20 min-w-[44px] min-h-[44px] transition-all cursor-pointer"
         >
           <ChevronRight className="text-[#1e5ba8]" size={24} aria-hidden="true" />
         </button>
@@ -102,10 +102,18 @@ export default function RecentBlogs({ blogs }: any) {
                       img = '/' + img;
                     }
 
+                    const blogUrl = `/blog/${b.slug}`;
                     return (
                       <article
                         key={b.id}
-                        className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition p-4 border flex flex-col h-full"
+                        onClick={(e) => {
+                          // Only navigate if click is not on the button
+                          const target = e.target as HTMLElement;
+                          if (!target.closest('a')) {
+                            window.location.href = blogUrl;
+                          }
+                        }}
+                        className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition p-4 border flex flex-col h-full cursor-pointer"
                       >
                         <Image
                           src={img}
@@ -130,7 +138,8 @@ export default function RecentBlogs({ blogs }: any) {
                         </time>
 
                         <a
-                          href={`/blog/${b.slug}`}
+                          href={blogUrl}
+                          onClick={(e) => e.stopPropagation()}
                           aria-label={`Read more about ${b.title}`}
                           className="bg-[#1e5ba8] text-white px-4 py-2 rounded text-sm hover:bg-blue-700 mt-auto self-start min-h-[44px] flex items-center"
                         >

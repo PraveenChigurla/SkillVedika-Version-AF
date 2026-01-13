@@ -5,33 +5,38 @@ import SafeHTML from '@/components/SafeHTML';
 export const dynamic = 'force-dynamic';
 
 /* ------------------------------------------------------------------
-      DYNAMIC SEO META TAGS FOR TERMS & CONDITIONS PAGE
-   Fetches SEO metadata from the `seos` table (id = 10)
+      DYNAMIC SEO META TAGS FOR INSTRUCTOR TERMS & CONDITIONS PAGE
+   Fetches SEO metadata from the `seos` table
 ------------------------------------------------------------------ */
 export async function generateMetadata(): Promise<Metadata> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const fallbackTitle = 'Terms & Conditions - SkillVedika';
+  const fallbackTitle = 'Instructor Terms & Conditions - SkillVedika';
   const fallbackDescription =
-    "Read SkillVedika's terms and conditions, policies, and legal information for our platform.";
+    "Read SkillVedika's terms and conditions for instructors, including compensation, course creation guidelines, and instructor responsibilities.";
   const fallbackKeywords = [
-    'terms and conditions',
-    'policy',
-    'skillvedika terms',
-    'legal information',
+    'instructor terms',
+    'instructor agreement',
+    'teaching terms',
+    'skillvedika instructor',
+    'instructor policy',
   ];
 
   try {
-    // Fetch SEO metadata for the Terms page from the `seos` table.
-    // id = 8 corresponds to "Terms and Conditions" in the seed data.
-    const res = await fetch(`${apiUrl}/seo/8`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to fetch seo/8: ${res.status}`);
-
-    const json = await res.json();
-    const content = json?.data ?? json ?? null;
+    // Fetch SEO metadata for the Instructor Terms page from the `seos` table.
+    // id = 21 corresponds to "Terms & Conditions (Instructor)" in the seed data.
+    const res = await fetch(`${apiUrl}/seo?slug=terms-and-conditions-instructor`, { cache: 'no-store' });
+    
+    let content = null;
+    if (res.ok) {
+      const json = await res.json();
+      content = json?.data ?? json ?? null;
+    } else {
+      console.warn(`SEO entry 21 not found, using fallback metadata for instructor terms`);
+    }
 
     const { getCanonicalUrl } = await import('@/lib/seo');
-    const canonicalUrl = getCanonicalUrl('/terms');
+    const canonicalUrl = getCanonicalUrl('/terms-and-conditions/instructor');
 
     if (!content) {
       return {
@@ -84,9 +89,9 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     };
   } catch (err) {
-    console.error('Error generating terms metadata:', err);
+    console.error('Error generating instructor terms metadata:', err);
     const { getCanonicalUrl } = await import('@/lib/seo');
-    const canonicalUrl = getCanonicalUrl('/terms');
+    const canonicalUrl = getCanonicalUrl('/terms-and-conditions/instructor');
 
     return {
       title: fallbackTitle,
@@ -110,7 +115,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-async function getTerms() {
+async function getInstructorTerms() {
   try {
     // Fetch data from Laravel API (dynamic, no caching)
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -120,31 +125,32 @@ async function getTerms() {
       return null;
     }
 
-    console.log(`Fetching from: ${apiUrl}/terms`);
-    const res = await fetch(`${apiUrl}/terms`, { cache: 'no-store' });
+    // Fetch instructor-specific terms
+    console.log(`Fetching from: ${apiUrl}/legal/instructor`);
+    const res = await fetch(`${apiUrl}/legal/instructor`, { cache: 'no-store' });
 
     console.log(`Response status: ${res.status}`);
 
     if (!res.ok) {
       const errorText = await res.text();
-      console.warn(`Failed to fetch terms: ${res.status}`, errorText.substring(0, 200));
+      console.warn(`Failed to fetch instructor terms: ${res.status}`, errorText.substring(0, 200));
       return null;
     }
 
     const response = await res.json();
-    console.log('Terms data fetched successfully:', response);
+    console.log('Instructor terms data fetched successfully:', response);
 
     // Extract data from response - backend returns {success: true, data: {...}}
     const termsData = response?.data ?? response;
     return termsData;
   } catch (err) {
-    console.warn('Error fetching terms:', err);
+    console.warn('Error fetching instructor terms:', err);
     return null;
   }
 }
 
-export default async function TermsPage() {
-  const terms = await getTerms();
+export default async function InstructorTermsPage() {
+  const terms = await getInstructorTerms();
 
   /* ----------------------------------------------------
      GENERATE STRUCTURED DATA
@@ -155,13 +161,13 @@ export default async function TermsPage() {
   const { getCanonicalUrl } = await import('@/lib/seo');
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://skillvedika.com';
-  const canonicalUrl = getCanonicalUrl('/terms');
+  const canonicalUrl = getCanonicalUrl('/terms-and-conditions/instructor');
   const [organizationSchema, websiteSchema] = await getBaseSchemas();
 
   const webPageSchema = generateWebPageSchema(canonicalUrl, {
-    name: 'Terms & Conditions | SkillVedika',
+    name: 'Instructor Terms & Conditions | SkillVedika',
     description:
-      "Read SkillVedika's terms and conditions for using our online training platform and services.",
+      "Read SkillVedika's terms and conditions for instructors, including compensation, course creation guidelines, and instructor responsibilities.",
     inLanguage: 'en-US',
     siteName: 'SkillVedika',
     siteUrl: siteUrl,
@@ -173,10 +179,15 @@ export default async function TermsPage() {
     return (
       <section className="max-w-4xl mx-auto py-10 px-5 text-gray-800">
         <StructuredData data={[organizationSchema, websiteSchema, webPageSchema]} />
-        <h1 className="text-4xl font-bold text-blue-800 mb-6">Terms & Conditions</h1>
-        <p className="text-red-500">
-          Unable to load terms at the moment. Please check the console for details.
-        </p>
+        <h1 className="text-4xl font-bold text-blue-800 mb-6">Instructor Terms & Conditions</h1>
+        <div className="prose max-w-none">
+          <p className="text-red-500 mb-4">
+            Unable to load terms at the moment. Please check the console for details.
+          </p>
+          <p className="text-gray-600">
+            For now, please contact our support team for instructor terms and conditions.
+          </p>
+        </div>
       </section>
     );
   }
@@ -187,20 +198,18 @@ export default async function TermsPage() {
       <StructuredData data={[organizationSchema, websiteSchema, webPageSchema]} />
       {/* Title */}
       <h1 className="text-4xl font-bold text-blue-800 mb-6">
-        {terms?.title || 'Terms & Conditions'}
+        {terms?.title || 'Instructor Terms & Conditions'}
       </h1>
+      <p className="text-sm text-gray-600 mb-6 italic">
+        These terms and conditions are specifically for instructors teaching on SkillVedika platform.
+      </p>
 
       {/* Tiptap HTML content */}
       <SafeHTML
         html={terms?.content || '<p>No content available</p>'}
         className="prose max-w-none mb-6"
       />
-
-      {/* Last updated */}
-      <p className="text-sm text-gray-500 mt-10">
-        Last Updated:{' '}
-        {terms?.last_updated_on ? new Date(terms.last_updated_on).toLocaleDateString() : 'N/A'}
-      </p>
     </section>
   );
 }
+

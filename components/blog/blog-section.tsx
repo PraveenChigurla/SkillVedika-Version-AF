@@ -277,8 +277,19 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
   /* -------------------------------------------------------
      BLOG CARD
   ------------------------------------------------------- */
-  const BlogCard = ({ post }: any) => (
-    <article className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg transition overflow-hidden">
+  const BlogCard = ({ post }: any) => {
+    const blogUrl = `/blog/${post.slug}`;
+    return (
+      <article 
+        onClick={(e) => {
+          // Only navigate if click is not on the button
+          const target = e.target as HTMLElement;
+          if (!target.closest('a')) {
+            window.location.href = blogUrl;
+          }
+        }}
+        className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg transition overflow-hidden cursor-pointer"
+      >
       <div className="w-full h-44 bg-gray-100 overflow-hidden">
         <Image
           src={post.image}
@@ -300,7 +311,8 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-500">{post.date}</span>
           <a
-            href={`/blog/${post.slug}`}
+              href={blogUrl}
+              onClick={(e) => e.stopPropagation()}
             aria-label={`Read more: ${post.title}`}
             className="text-sm bg-[#1E5BA8] text-white px-3 py-1.5 rounded-md hover:bg-blue-900 min-h-[44px] flex items-center"
           >
@@ -312,6 +324,7 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
       </div>
     </article>
   );
+  };
 
   /* -------------------------------------------------------
      SIDEBAR CONTENT (Reusable for mobile drawer and desktop sidebar)
@@ -321,12 +334,12 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
       {/* Heading */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">
-          {sidebarTitle || sidebarName || 'Categories'}
-        </h3>
+            {sidebarTitle || sidebarName || 'Categories'}
+          </h3>
         {/* Tablet collapse button */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="lg:hidden p-1 hover:bg-gray-100 rounded transition-colors"
+          className="lg:hidden p-1 hover:bg-gray-100 rounded transition-colors cursor-pointer"
           aria-label={isCollapsed ? 'Expand categories' : 'Collapse categories'}
           aria-expanded={!isCollapsed}
         >
@@ -338,57 +351,57 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
         </button>
       </div>
 
-      {/* SEARCH WITH DROPDOWN */}
-      <div className="relative mb-4" ref={searchDropdownRef}>
-        <div className="flex items-center rounded-full px-4 py-2 border border-gray-300">
-          <input
-            type="text"
-            placeholder="Search blog..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && searchSuggestions.length > 0 && searchSuggestions[0]) {
-                setSearchTerm(searchSuggestions[0]);
-                setShowSearchDropdown(false);
-              }
-            }}
-            className="flex-1 outline-none text-sm bg-transparent"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setShowSearchDropdown(false);
-              }}
-              aria-label="Clear search"
-              className="ml-2 text-gray-400 hover:text-gray-600 min-w-[44px] min-h-[44px] flex items-center justify-center"
-            >
-              <X size={18} aria-hidden="true" />
-            </button>
-          )}
-          {!searchTerm && <Search size={18} className="text-gray-400" aria-hidden="true" />}
-        </div>
-
-        {/* SEARCH SUGGESTIONS DROPDOWN */}
-        {showSearchDropdown && searchSuggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-40 max-h-48 overflow-y-auto">
-            {searchSuggestions.map((suggestion, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setSearchTerm(suggestion);
-                  setShowSearchDropdown(false);
+          {/* SEARCH WITH DROPDOWN */}
+          <div className="relative mb-4" ref={searchDropdownRef}>
+            <div className="flex items-center rounded-full px-4 py-2 border border-gray-300">
+              <input
+                type="text"
+                placeholder="Search blog..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && searchSuggestions.length > 0 && searchSuggestions[0]) {
+                    setSearchTerm(searchSuggestions[0]);
+                    setShowSearchDropdown(false);
+                  }
                 }}
-                className="w-full text-left px-4 py-2.5 hover:bg-blue-50 text-sm text-gray-800 border-b last:border-b-0 transition"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+                className="flex-1 outline-none text-sm bg-transparent"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setShowSearchDropdown(false);
+                  }}
+                  aria-label="Clear search"
+                  className="ml-2 text-gray-400 hover:text-gray-600 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
+                >
+                  <X size={18} aria-hidden="true" />
+                </button>
+              )}
+              {!searchTerm && <Search size={18} className="text-gray-400" aria-hidden="true" />}
+            </div>
 
-      {/* CATEGORY LIST */}
+            {/* SEARCH SUGGESTIONS DROPDOWN */}
+            {showSearchDropdown && searchSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-40 max-h-48 overflow-y-auto">
+                {searchSuggestions.map((suggestion, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setSearchTerm(suggestion);
+                      setShowSearchDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 hover:bg-blue-50 text-sm text-gray-800 border-b last:border-b-0 transition"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* CATEGORY LIST */}
       <div
         className={`
           space-y-1.5 overflow-y-auto pr-2
@@ -397,28 +410,28 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
           lg:max-h-[calc(100vh-280px)]
         `}
       >
-        {categories.map(cat => (
+            {categories.map(cat => (
           <label
             key={cat.id}
             className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 active:bg-gray-100 p-2 rounded-md transition-colors -ml-2 -mr-2"
           >
-            <input
-              type="checkbox"
-              checked={
-                cat.id === 'all'
-                  ? selectedCats.length === 0
-                  : selectedCats.includes(String(cat.id))
-              }
-              onChange={() => toggleCategory(String(cat.id))}
+                <input
+                  type="checkbox"
+                  checked={
+                    cat.id === 'all'
+                      ? selectedCats.length === 0
+                      : selectedCats.includes(String(cat.id))
+                  }
+                  onChange={() => toggleCategory(String(cat.id))}
               className="w-4 h-4 accent-[#1E5BA8] cursor-pointer"
               aria-label={`Select ${cat.name} category`}
-            />
+                />
             <span className="text-sm text-gray-800 select-none">
               {cat.name}
             </span>
-          </label>
-        ))}
-      </div>
+              </label>
+            ))}
+          </div>
 
       {/* Footer - Show count */}
       <div className="mt-4 pt-4 border-t border-gray-200">
@@ -461,7 +474,7 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
           <h3 className="text-lg font-semibold text-gray-900">{sidebarTitle || 'Categories'}</h3>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
             aria-label="Close filters"
           >
             <X className="w-5 h-5 text-gray-600" />
@@ -480,7 +493,7 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
           <div className="lg:hidden relative mb-4 h-12 flex items-center justify-end">
             <button
               onClick={() => setIsOpen(true)}
-              className="relative bg-gradient-to-r from-[#1E5BA8] to-[#2563EB] text-white px-5 py-3 rounded-2xl shadow-xl hover:shadow-2xl flex items-center gap-2.5 hover:from-[#1A3F66] hover:to-[#1E40AF] active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#1E5BA8] focus:ring-offset-2 backdrop-blur-sm border border-white/20 group"
+              className="relative bg-gradient-to-r from-[#1E5BA8] to-[#2563EB] text-white px-5 py-3 rounded-2xl shadow-xl hover:shadow-2xl flex items-center gap-2.5 hover:from-[#1A3F66] hover:to-[#1E40AF] active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#1E5BA8] focus:ring-offset-2 backdrop-blur-sm border border-white/20 group cursor-pointer"
               aria-label="Open filters"
             >
               <div className="relative">
@@ -515,57 +528,57 @@ export default function BlogSection({ sidebarName = 'Categories' }: { sidebarNam
               aria-label="Category filters"
             >
               {sidebarContent}
-            </aside>
+        </aside>
 
-            {/* --------------------------------------------
-                BLOG GRID SECTION
-            -------------------------------------------- */}
-            <div className="md:col-span-3 relative" ref={blogContainerRef}>
-              <div className="overflow-hidden">
-                <div
-                  className="flex transition-transform duration-500"
-                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                >
-                  {slides.map((pageBlogs, pageIndex) => (
-                    <div key={pageIndex} className="min-w-full px-3">
-                      {blogPosts.length === 0 ? (
-                        <div className="text-center py-20 text-gray-500 text-lg">No blogs found.</div>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                          {pageBlogs.map((post, idx) => (
-                            <BlogCard key={`${post.id}-${idx}`} post={post} />
-                          ))}
-                        </div>
-                      )}
+        {/* --------------------------------------------
+            BLOG GRID SECTION
+        -------------------------------------------- */}
+        <div className="md:col-span-3 relative" ref={blogContainerRef}>
+          <div className="overflow-hidden">
+            <div
+              className="flex transition-transform duration-500"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {slides.map((pageBlogs, pageIndex) => (
+                <div key={pageIndex} className="min-w-full px-3">
+                  {blogPosts.length === 0 ? (
+                    <div className="text-center py-20 text-gray-500 text-lg">No blogs found.</div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      {pageBlogs.map((post, idx) => (
+                        <BlogCard key={`${post.id}-${idx}`} post={post} />
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              </div>
-
-              {/* PAGINATION */}
-              {pages > 1 && blogPosts.length > 0 && (
-                <div className="flex items-center justify-end gap-6 mt-10">
-                  <button
-                    onClick={prevSlide}
-                    className="flex items-center gap-2 bg-white border border-gray-300 text-[#1E5BA8] px-4 py-2 rounded-full shadow hover:bg-blue-200"
-                  >
-                    <ChevronLeft size={20} />
-                    <span className="text-sm font-medium">Previous Page</span>
-                  </button>
-
-                  <button
-                    onClick={nextSlide}
-                    className="flex items-center gap-2 bg-white border border-gray-300 text-[#1E5BA8] px-4 py-2 rounded-full shadow hover:bg-blue-200"
-                  >
-                    <span className="text-sm font-medium">Next Page</span>
-                    <ChevronRight size={20} />
-                  </button>
-                </div>
-              )}
+              ))}
             </div>
           </div>
+
+          {/* PAGINATION */}
+          {pages > 1 && blogPosts.length > 0 && (
+            <div className="flex items-center justify-end gap-6 mt-10">
+              <button
+                onClick={prevSlide}
+                className="flex items-center gap-2 bg-white border border-gray-300 text-[#1E5BA8] px-4 py-2 rounded-full shadow hover:bg-blue-200 cursor-pointer"
+              >
+                <ChevronLeft size={20} />
+                <span className="text-sm font-medium">Previous Page</span>
+              </button>
+
+              <button
+                onClick={nextSlide}
+                className="flex items-center gap-2 bg-white border border-gray-300 text-[#1E5BA8] px-4 py-2 rounded-full shadow hover:bg-blue-200 cursor-pointer"
+              >
+                <span className="text-sm font-medium">Next Page</span>
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
+            </div>
         </div>
-      </section>
+      </div>
+    </section>
     </>
   );
 }

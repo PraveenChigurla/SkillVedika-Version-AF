@@ -196,14 +196,23 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
               : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
             } gap-4 sm:gap-6 md:gap-8 mb-6 items-stretch`}
             >
-              {visibleCourses.map((course, index) => (
+              {visibleCourses.map((course, index) => {
+                const courseUrl = `/course-details/${course.slug || course.details?.slug || course.id}`;
+                return (
                 <motion.div
                   key={course.id}
                   initial={viewAll ? { opacity: 0, y: 18 } : undefined}
                   animate={viewAll ? { opacity: 1, y: 0 } : {}}
                   transition={viewAll ? { duration: 0.36, delay: index * 0.08 } : {}}
                   whileHover={{ y: -6 }}
-                  className="group bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
+                  onClick={(e) => {
+                    // Only navigate if click is not on the button
+                    const target = e.target as HTMLElement;
+                    if (!target.closest('button')) {
+                      router.push(courseUrl);
+                    }
+                  }}
+                  className="group bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer"
                 >
                   <div className="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden">
                     <Image
@@ -239,13 +248,12 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
 
                     <div className="mt-auto pt-2 flex items-center justify-between gap-3">
                       <button
-                        onClick={() =>
-                          router.push(
-                            `/course-details/${course.slug || course.details?.slug || course.id}`
-                          )
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(courseUrl);
+                        }}
                         aria-label={`View more details about ${course.title}`}
-                        className="bg-[#2C5AA0] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#1A3F66] transition-all shadow-sm hover:shadow-md min-h-[44px] flex-shrink-0 whitespace-nowrap"
+                        className="bg-[#2C5AA0] text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-[#1A3F66] transition-all shadow-sm hover:shadow-md min-h-[44px] flex-shrink-0 whitespace-nowrap cursor-pointer"
                       >
                         View more
                       </button>
@@ -275,7 +283,8 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                     </div>
                   </div>
                 </motion.div>
-              ))}
+              );
+              })}
             </motion.div>
           </AnimatePresence>
 
@@ -296,7 +305,7 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                     className={`p-3 rounded-full border border-gray-200 shadow-sm transition-all group min-w-[44px] min-h-[44px] flex items-center justify-center ${
                       viewAll
                         ? 'opacity-50 cursor-not-allowed bg-white'
-                        : 'bg-white hover:bg-[#2C5AA0]'
+                        : 'bg-white hover:bg-[#2C5AA0] cursor-pointer'
                     }`}
                   >
                     <ChevronLeft
@@ -319,7 +328,7 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                         aria-label={`Go to page ${i + 1}`}
                         className={`w-3 h-3 rounded-full transition-all duration-200 min-w-[4px] min-h-[4px] flex items-center justify-center ${
                           currentIndex === i ? 'bg-[#2C5AA0] scale-110' : 'bg-gray-300'
-                        } ${viewAll ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        } ${viewAll ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       />
                     ))}
                   </div>
@@ -333,7 +342,7 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                     className={`p-3 rounded-full border border-gray-200 shadow-sm transition-all group min-w-[44px] min-h-[44px] flex items-center justify-center ${
                       viewAll
                         ? 'opacity-50 cursor-not-allowed bg-white'
-                        : 'bg-white hover:bg-[#2C5AA0]'
+                        : 'bg-white hover:bg-[#2C5AA0] cursor-pointer'
                     }`}
                   >
                     <ChevronRight
@@ -352,7 +361,7 @@ export default function CourseCards({ statusFilter }: Readonly<CourseCardsProps>
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleViewAllClick}
-                className="relative bg-[#2C5AA0] text-white px-5 py-3 rounded-full font-semibold text-sm shadow-md hover:shadow-lg hover:bg-[#1A3F66] transition-all"
+                className="relative bg-[#2C5AA0] text-white px-5 py-3 rounded-full font-semibold text-sm shadow-md hover:shadow-lg hover:bg-[#1A3F66] transition-all cursor-pointer"
               >
                 View All Courses
               </motion.button>

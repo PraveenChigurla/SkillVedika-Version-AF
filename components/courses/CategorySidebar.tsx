@@ -174,8 +174,8 @@ function CategorySidebar({
       {/* Heading */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">
-          {heading}
-        </h3>
+        {heading}
+      </h3>
         {/* Tablet collapse button */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -194,12 +194,14 @@ function CategorySidebar({
       {/* Category list */}
       <div
         className={`
-          space-y-1.5 overflow-y-auto pr-2
+          space-y-1.5 overflow-y-auto pr-2 flex-1 min-h-0
           transition-all duration-300
-          ${isCollapsed ? 'max-h-0 overflow-hidden' : 'max-h-[calc(100vh-280px)]'}
-          lg:max-h-[calc(100vh-280px)]
+          ${isCollapsed ? 'max-h-0 overflow-hidden' : ''}
           ${isFiltering ? 'opacity-75' : 'opacity-100'}
         `}
+        style={{
+          maxHeight: isCollapsed ? '0' : 'calc(100vh - 280px)',
+        }}
       >
         {/* ALL */}
         <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 active:bg-gray-100 p-2 rounded-md transition-colors -ml-2 -mr-2">
@@ -293,15 +295,14 @@ function CategorySidebar({
           hidden lg:block
           bg-white rounded-2xl shadow-sm border border-gray-200 p-5
           w-full
-          max-h-[calc(100vh-180px)]
-          overflow-hidden
-          sticky top-20
-          self-start
+          flex flex-col
+          h-fit
+          max-h-[calc(100vh-120px)]
         `}
         aria-label="Category filters"
       >
         {sidebarContent}
-      </aside>
+    </aside>
 
       {/* Mobile: Modern Filter Button - Top positioned, non-sticky */}
       <div className="lg:hidden relative mb-4 h-12 flex items-center justify-end">

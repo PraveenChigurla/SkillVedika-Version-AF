@@ -6,23 +6,18 @@ import { EnrollModal } from './EmptyLoginForm';
 type Course = { id: number; title: string };
 
 export default function StickyFooter() {
-  const [show, setShow] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formDetails, setFormDetails] = useState<any>(null);
-  const [contactDetails, setContactDetails] = useState<{ phone?: string; email?: string }>({
+  const [contactDetails, setContactDetails] = useState<{ 
+    phone?: string; 
+    phoneUS?: string;
+    email?: string 
+  }>({
     phone: '+91 8790536265',
+    phoneUS: '+1 972 945 0286',
     email: 'support@skillvedika.com',
   });
-
-  useEffect(() => {
-    const onScroll = () => {
-      setShow(window.scrollY > 300);
-    };
-
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   // Helper function to fetch courses
   async function fetchCourses(apiUrl: string): Promise<void> {
@@ -161,8 +156,9 @@ export default function StickyFooter() {
 
       if (footerData?.contact_details) {
         setContactDetails({
-          phone: footerData.contact_details.phone || '+91 9182617094',
-          email: footerData.contact_details.email || 'support@skillvedika.com',
+          phone: footerData.contact_details.phone ,
+          phoneUS: footerData.contact_details.phone_us ,
+          email: footerData.contact_details.email ,
         });
       }
     } catch (err: any) {
@@ -201,6 +197,10 @@ export default function StickyFooter() {
   const phoneForCall = contactDetails.phone
     ? contactDetails.phone.replaceAll(/\s+/g, '').replaceAll(/[^\d+]/g, '')
     : '';
+  
+  const phoneUSForCall = contactDetails.phoneUS
+    ? contactDetails.phoneUS.replaceAll(/\s+/g, '').replaceAll(/[^\d+]/g, '')
+    : '';
 
   return (
     <>
@@ -209,13 +209,7 @@ export default function StickyFooter() {
 
       {/* Desktop Footer (hidden on mobile) */}
       <div
-        className={`
-          hidden md:block
-          fixed left-0 w-full z-40
-          transition-all duration-500 ease-in-out
-          ${show ? 'bottom-0' : '-bottom-24'}
-          safe-area-inset-bottom
-        `}
+        className="hidden md:block fixed left-0 bottom-0 w-full z-40 safe-area-inset-bottom"
         style={{
           paddingBottom: 'env(safe-area-inset-bottom, 0)',
         }}
@@ -225,13 +219,29 @@ export default function StickyFooter() {
             {/* Contact Numbers */}
             <div className="flex items-center gap-3 flex-wrap">
               <span>
-                <b>For Assistance contact:</b>
+                <b>For Assistance Contact:</b>
               </span>
 
+              {contactDetails.phoneUS && (
+                <a
+                  href={`tel:${phoneUSForCall}`}
+                  className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                >
+                  <img
+                    src="https://flagcdn.com/w20/us.png"
+                    alt="United States"
+                    className="w-5 h-3.5 object-cover"
+                  />
+                  <b>{contactDetails.phoneUS}</b>
+                </a>
+              )}
+              {contactDetails.phoneUS && contactDetails.phone && (
+                <span className="hidden sm:block">|</span>
+              )}
               {contactDetails.phone && (
                 <a
                   href={`tel:${phoneForCall}`}
-                  className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-1.5 hover:text-blue-600 transition-colors cursor-pointer"
                 >
                   <img
                     src="https://flagcdn.com/w20/in.png"
@@ -241,13 +251,13 @@ export default function StickyFooter() {
                   <b>{contactDetails.phone}</b>
                 </a>
               )}
-              {contactDetails.phone && contactDetails.email && (
+              {(contactDetails.phone || contactDetails.phoneUS) && contactDetails.email && (
                 <span className="hidden sm:block">|</span>
               )}
               {contactDetails.email && (
                 <a
                   href={`mailto:${contactDetails.email}`}
-                  className="hover:text-blue-600 transition-colors"
+                  className="hover:text-blue-600 transition-colors cursor-pointer"
                 >
                   <b>Email: {contactDetails.email}</b>
                 </a>
@@ -257,9 +267,9 @@ export default function StickyFooter() {
             {/* CTA Button */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2 rounded-full transition"
+              className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2 rounded-full transition cursor-pointer"
             >
-              Contact us for more information
+              Drop Us a Query
             </button>
           </div>
         </div>

@@ -143,7 +143,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { path: '/contact-us', priority: 0.8, changefreq: 'monthly' },
       { path: '/corporate-training', priority: 0.8, changefreq: 'monthly' },
       { path: '/on-job-support', priority: 0.8, changefreq: 'monthly' },
-      { path: '/terms', priority: 0.5, changefreq: 'yearly' },
+      { path: '/terms-and-conditions', priority: 0.5, changefreq: 'yearly' },
+      { path: '/terms-and-conditions/instructor', priority: 0.5, changefreq: 'yearly' },
     ];
 
     // Add static pages
@@ -224,7 +225,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: getCanonicalUrl('/contact-us'), lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
         { url: getCanonicalUrl('/corporate-training'), lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
         { url: getCanonicalUrl('/on-job-support'), lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-        { url: getCanonicalUrl('/terms'), lastModified: now, changeFrequency: 'yearly', priority: 0.5 },
+        { url: getCanonicalUrl('/terms-and-conditions'), lastModified: now, changeFrequency: 'yearly', priority: 0.5 },
+        { url: getCanonicalUrl('/terms-and-conditions/instructor'), lastModified: now, changeFrequency: 'yearly', priority: 0.5 },
       ];
     }
     throw error;

@@ -372,8 +372,8 @@ function Hero({ hero }: Readonly<HeroProps>) {
         
         if (query) {
           // If there's a search term, rank and merge
-          const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
-          const backendPopular = Array.isArray(data.popular) ? data.popular : [];
+        const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
+        const backendPopular = Array.isArray(data.popular) ? data.popular : [];
           mergedPopular = Array.from(new Set([...backendPopular, ...rankedIndustry])).slice(0, 15);
         } else {
           // If no search term, show top popular from backend or default industry skills
@@ -392,7 +392,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
           });
           // Only show dropdown if there's a search term or popular suggestions
           if (searchTerm.trim() || mergedPopular.length > 0) {
-            setShowDropdown(true);
+          setShowDropdown(true);
           }
         });
       };
@@ -425,7 +425,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
           });
           // Only show dropdown if there's a search term or popular suggestions
           if (searchTerm.trim() || fallbackPopular.length > 0) {
-            setShowDropdown(true);
+          setShowDropdown(true);
           }
         });
       };
@@ -497,9 +497,13 @@ function Hero({ hero }: Readonly<HeroProps>) {
           {/* LEFT SECTION */}
           <div className="space-y-4 sm:space-y-6 order-2 md:order-1">
             {/* ⭐ HERO HEADING FROM CMS */}
-            <div className="space-y-3 sm:space-y-4" id="hero-heading">
-              {hero?.hero_heading ? parse(hero.hero_heading) : (
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+            <div className="space-y-3 sm:space-y-4 w-full" id="hero-heading">
+              {hero?.hero_heading ? (
+                <div className="[&_h1]:text-2xl [&_h1]:sm:text-3xl [&_h1]:md:text-4xl [&_h1]:lg:text-5xl [&_h1]:font-bold [&_h1]:text-gray-900 [&_h1]:leading-tight [&_h1]:break-words [&_h1]:overflow-wrap-anywhere [&_h1]:w-full [&_h1]:hyphens-auto">
+                  {parse(hero.hero_heading)}
+                </div>
+              ) : (
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight break-words overflow-wrap-anywhere w-full">
                   Learn Skills That Matter
                 </h1>
               )}
@@ -601,10 +605,10 @@ function Hero({ hero }: Readonly<HeroProps>) {
                   {/* Popular Suggestions */}
                   {suggestions.popular?.length > 0 && (
                     <div className="py-1">
-                      {suggestions.popular.map((item: string) => (
-                        <button
+                        {suggestions.popular.map((item: string) => (
+                            <button
                           key={item}
-                          onClick={() => handleSuggestionClick(item)}
+                              onClick={() => handleSuggestionClick(item)}
                           className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#2C5AA0] transition-colors focus:outline-none focus:bg-blue-50 focus:text-[#2C5AA0] focus:ring-2 focus:ring-inset focus:ring-blue-500"
                           role="option"
                           aria-selected="false"
@@ -614,8 +618,8 @@ function Hero({ hero }: Readonly<HeroProps>) {
                             <Search size={14} className="text-gray-400 flex-shrink-0" aria-hidden="true" />
                             <span>{item}</span>
                           </div>
-                        </button>
-                      ))}
+                            </button>
+                        ))}
                     </div>
                   )}
 

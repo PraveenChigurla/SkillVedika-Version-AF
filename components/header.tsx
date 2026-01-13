@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { getImageUrl } from '@/lib/cloudinary';
 
 interface MenuItem {
   text: string;
@@ -13,7 +14,8 @@ interface MenuItem {
 }
 
 interface HeaderSettings {
-  logo?: string;
+  logo?: string; // Legacy: full URL (for backward compatibility)
+  logo_public_id?: string; // New: Cloudinary public_id (preferred)
   menu_items?: MenuItem[];
 }
 
@@ -21,6 +23,7 @@ interface HeaderSettings {
 function Header() {
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
 
   // Performance: useCallback to memoize fetch function
@@ -28,12 +31,19 @@ function Header() {
     try {
       const { getApiUrl } = await import('@/lib/apiConfig');
       const apiUrl = getApiUrl('/header-settings');
-      // Performance: Use cache for better performance - header settings don't change often
+      // Use no-store to ensure we get fresh data from admin updates
       const res = await fetch(apiUrl, {
-        cache: 'force-cache',
-        next: { revalidate: 3600 }, // Revalidate every hour
+        cache: 'no-store',
+        headers: { 'Accept': 'application/json' },
       });
-      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(`Failed to fetch header settings: ${res.status}`);
+      }
+      
+      const response = await res.json();
+      // Handle API response structure: { success: true, data: {...} } or direct {...}
+      const data = response?.data || response;
       setHeaderSettings(data);
     } catch (err) {
       console.error('Failed to fetch header settings:', err);
@@ -42,13 +52,24 @@ function Header() {
 
   useEffect(() => {
     // Performance: Defer header settings fetch if possible - not critical for initial render
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    if (typeof globalThis.window !== 'undefined' && 'requestIdleCallback' in globalThis.window) {
       requestIdleCallback(fetchHeaderSettings, { timeout: 1000 });
     } else {
       // Fallback for browsers without requestIdleCallback
       setTimeout(fetchHeaderSettings, 100);
     }
   }, [fetchHeaderSettings]);
+
+  // Handle scroll to shrink header
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = globalThis.window.scrollY;
+      setIsScrolled(scrollPosition > 50);
+    };
+
+    globalThis.window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => globalThis.window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Performance: Memoize active check function
   const isActive = useCallback((slug: string): boolean => {
@@ -70,20 +91,27 @@ function Header() {
   ];
 
   const menuItems = headerSettings?.menu_items || defaultMenuItems;
-  const logo = headerSettings?.logo || '/home/skill-vedika-logo.png';
+  
+  // Get logo URL - prefer public_id for optimization, fallback to legacy logo URL
+  const logo = useMemo(() => {
+    const logoInput = headerSettings?.logo_public_id || headerSettings?.logo;
+    return logoInput ? getImageUrl(logoInput, 200) : '/home/skill-vedika-logo.png';
+  }, [headerSettings?.logo_public_id, headerSettings?.logo]);
 
   return (
     <header 
-      className="bg-white border-b border-[#E0E8F0] sticky top-0 z-50"
+      className={`bg-white border-b border-[#E0E8F0] fixed top-0 left-0 right-0 z-50 shadow-sm transition-all duration-300 ${
+        isScrolled ? 'py-2' : 'py-4'
+      }`}
       role="banner"
       aria-label="Main navigation"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between">
           {/* Accessibility: Logo link with proper aria-label */}
           <Link 
             href="/" 
-            className="flex items-center"
+            className="flex items-center cursor-pointer"
             aria-label="SkillVedika Home"
           >
             {/* Performance: Priority image for LCP - logo is above the fold */}
@@ -93,7 +121,9 @@ function Header() {
               width={140}
               height={35}
               priority
-              className="object-contain image-auto-aspect"
+              className={`object-contain image-auto-aspect transition-all duration-300 cursor-pointer ${
+                isScrolled ? 'h-7' : 'h-9'
+              }`}
               style={{ width: 'auto', height: 'auto' }}
               sizes="(max-width: 768px) 120px, 140px"
               suppressHydrationWarning
@@ -102,7 +132,9 @@ function Header() {
           
           {/* Accessibility: Semantic navigation with proper ARIA */}
           <nav 
-            className="hidden md:flex items-center space-x-8"
+            className={`hidden md:flex items-center transition-all duration-300 ${
+              isScrolled ? 'space-x-6' : 'space-x-8'
+            }`}
             role="navigation"
             aria-label="Main menu"
           >
@@ -115,7 +147,7 @@ function Header() {
                   target={item.new_tab ? '_blank' : undefined}
                   rel={item.new_tab ? 'noopener noreferrer' : undefined}
                   prefetch={true} // Performance: Enable prefetching for faster navigation
-                  className={`relative text-sm font-medium transition-all duration-300 ease-in-out focus:outline-none rounded px-3 py-2 group ${
+                  className={`relative text-sm font-medium transition-all duration-300 ease-in-out focus:outline-none rounded px-3 py-2 group cursor-pointer ${
                     active 
                       ? 'text-[#2563EB] font-semibold bg-blue-50' 
                       : 'text-gray-700 hover:text-[#2563EB] hover:bg-blue-50 hover:font-semibold'
@@ -124,8 +156,8 @@ function Header() {
                 >
                   <span className={`relative z-10 transition-all duration-300 ease-in-out ${
                     active 
-                      ? 'text-[#2563EB]' 
-                      : 'text-gray-700 group-hover:text-[#2563EB] group-hover:font-semibold'
+                      ? 'text-[#2563EB] cursor-pointer' 
+                      : 'text-gray-700 group-hover:text-[#2563EB] group-hover:font-semibold cursor-pointer'
                   }`}>
                     {item.text}
                   </span>
@@ -144,7 +176,7 @@ function Header() {
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <button
-                className="md:hidden p-2 text-gray-600 hover:text-[#2563EB] hover:bg-blue-50 focus:outline-none rounded relative z-10 transition-all duration-300 transform hover:scale-110"
+                className="md:hidden p-2 text-gray-600 hover:text-[#2563EB] hover:bg-blue-50 focus:outline-none rounded relative z-10 transition-all duration-300 transform hover:scale-110 cursor-pointer"
                 aria-label="Toggle mobile menu"
                 aria-expanded={mobileMenuOpen}
                 type="button"
@@ -180,7 +212,7 @@ function Header() {
                       target={item.new_tab ? '_blank' : undefined}
                       rel={item.new_tab ? 'noopener noreferrer' : undefined}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`text-base font-medium transition-all duration-300 ease-in-out py-3 px-4 rounded-lg transform hover:scale-[1.02] group ${
+                      className={`text-base font-medium transition-all duration-300 ease-in-out py-3 px-4 rounded-lg transform hover:scale-[1.02] group cursor-pointer ${
                         active 
                           ? 'text-[#2563EB] font-semibold bg-blue-50 shadow-sm' 
                           : 'text-gray-700 hover:text-[#2563EB] hover:bg-blue-50 hover:font-semibold hover:shadow-md'

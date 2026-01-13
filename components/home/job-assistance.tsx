@@ -58,7 +58,7 @@ export default function JobAssistance({ jobAssist }: Readonly<JobAssistanceProps
             >
               <div className="flex items-center justify-center w-12 h-12 sm:w-[70px] sm:h-[70px] rounded-full bg-[#EBF2FF] flex-shrink-0 border border-[#C3D4F2]">
                 <div className="scale-75 sm:scale-100">
-                  {feature.icon}
+                {feature.icon}
                 </div>
               </div>
 

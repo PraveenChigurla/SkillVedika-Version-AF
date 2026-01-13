@@ -244,10 +244,18 @@ export default function RecentBlogs({ blogs, blogHeading }: any) {
                 img = '/' + img;
               }
 
+              const blogUrl = `/blog/${b.slug}`;
               return (
                 <div
                   key={`${b.id}-${index}`}
-                  className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition p-4 border flex flex-col w-[280px] sm:w-[320px] md:w-[350px] flex-shrink-0 h-[380px] sm:h-[400px] md:h-[420px]"
+                  onClick={(e) => {
+                    // Only navigate if click is not on the button
+                    const target = e.target as HTMLElement;
+                    if (!target.closest('a')) {
+                      window.location.href = blogUrl;
+                    }
+                  }}
+                  className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition p-4 border flex flex-col w-[280px] sm:w-[320px] md:w-[350px] flex-shrink-0 h-[380px] sm:h-[400px] md:h-[420px] cursor-pointer"
                 >
                   <div className="relative w-full h-44 sm:h-48 mb-4 rounded-lg overflow-hidden flex-shrink-0">
                     <Image
@@ -272,7 +280,8 @@ export default function RecentBlogs({ blogs, blogHeading }: any) {
                     </span>
 
                     <a
-                      href={`/blog/${b.slug}`}
+                      href={blogUrl}
+                      onClick={(e) => e.stopPropagation()}
                       aria-label={`Read more: ${b.title}`}
                       className="bg-[#1e5ba8] text-white px-4 py-2 rounded text-sm hover:bg-blue-700 active:bg-blue-800 mt-auto self-start min-h-[44px] flex items-center transition-colors flex-shrink-0"
                     >

@@ -52,7 +52,7 @@ export async function generateMetadata() {
   // Fetch metadata content from backend with caching
   let meta = null;
   try {
-    const res = await fetch(`${api}/seo/3`, {
+    const res = await fetch(`${api}/seo?slug=corporate-training`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
     });
     if (res.ok) {

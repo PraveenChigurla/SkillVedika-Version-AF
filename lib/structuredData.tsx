@@ -687,6 +687,70 @@ export function generateBlogPostingSchema(options: {
 }
 
 /**
+ * Generate Review Schema (JSON-LD) for testimonials
+ */
+export function generateReviewSchema(options: {
+  authorName: string;
+  authorImage?: string;
+  rating: number;
+  reviewText: string;
+  datePublished?: string;
+  courseCategory?: string;
+}): object {
+  const review: any = {
+    '@context': 'https://schema.org',
+    '@type': 'Review',
+    author: {
+      '@type': 'Person',
+      name: options.authorName,
+    },
+    reviewRating: {
+      '@type': 'Rating',
+      ratingValue: options.rating,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    reviewBody: options.reviewText,
+  };
+
+  if (options.authorImage) {
+    review.author.image = options.authorImage;
+  }
+
+  if (options.datePublished) {
+    review.datePublished = options.datePublished;
+  }
+
+  if (options.courseCategory) {
+    review.itemReviewed = {
+      '@type': 'Course',
+      name: options.courseCategory,
+    };
+  }
+
+  return review;
+}
+
+/**
+ * Generate AggregateRating Schema (JSON-LD) for course ratings
+ */
+export function generateAggregateRatingSchema(options: {
+  ratingValue: number;
+  reviewCount: number;
+  bestRating?: number;
+  worstRating?: number;
+}): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'AggregateRating',
+    ratingValue: options.ratingValue,
+    reviewCount: options.reviewCount,
+    bestRating: options.bestRating || 5,
+    worstRating: options.worstRating || 1,
+  };
+}
+
+/**
  * Render structured data as JSON-LD script tag
  */
 export function StructuredData({ data }: Readonly<{ data: object | object[] }>) {

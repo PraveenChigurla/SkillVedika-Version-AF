@@ -107,7 +107,9 @@ interface Category {
 export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStatus = '' }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Start with true to prevent empty state flash
+  const [coursesLoaded, setCoursesLoaded] = useState(false); // Track if courses have been loaded at least once
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false); // Track if categories have been loaded at least once
 
   const [selectedCats, setSelectedCats] = useState(['all']);
   const [forcedCategory, setForcedCategory] = useState('');
@@ -197,6 +199,7 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
 
             startTransition(() => {
               setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+              setCategoriesLoaded(true); // Mark categories as loaded
             });
 
             if (process.env.NODE_ENV === 'development') {
@@ -215,7 +218,10 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
             }
 
             // Set empty array on error - UI will still work
-            startTransition(() => setCategories([]));
+            startTransition(() => {
+              setCategories([]);
+              setCategoriesLoaded(true); // Mark as loaded even on error
+            });
           } finally {
             clearTimeout(timeoutId); // ✅ IMPORTANT
           }
@@ -228,7 +234,7 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
           setTimeout(fetchCategories, 100);
         }
 
-        // Fetch courses immediately (needed for LCP) - optimized with shorter timeout
+        // Fetch courses - don't set loading state initially to avoid skeleton flash
         const coursesUrl = `${apiBase}/courses`;
         if (process.env.NODE_ENV === 'development') {
           console.log('[CourseGrid] Fetching courses from:', coursesUrl);
@@ -298,6 +304,7 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
         // Use startTransition for non-urgent state updates to reduce TBT
         startTransition(() => {
           setCourses(Array.isArray(coursesData) ? coursesData : []);
+          setCoursesLoaded(true); // Mark that courses have been loaded
           setLoading(false);
         });
       } catch (err) {
@@ -309,6 +316,7 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
         // Ensure arrays are set even on error
         setCategories([]);
         setCourses([]);
+        setCoursesLoaded(true); // Mark as loaded even on error to prevent empty state flash
         setLoading(false);
       }
     }
@@ -374,8 +382,8 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
     let coursesArray = Array.isArray(courses) ? courses : [];
     const categoriesArray = Array.isArray(categories) ? categories : [];
 
-    // ⛔ If courses not loaded → show nothing
-    if (coursesArray.length === 0) {
+    // ⛔ If courses or categories not loaded yet → show nothing (don't show empty state or "All Courses")
+    if (coursesArray.length === 0 || !coursesLoaded || !categoriesLoaded) {
       return { finalCategories: [], visibleCount: 0 };
     }
 
@@ -388,18 +396,10 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
       });
     }
 
-    // ✅ Categories may load later → allow render
+    // ✅ Wait for categories to load - don't show "All Courses" fallback
+    // Categories should be loaded by now, but if not, return empty to show skeleton
     if (categoriesArray.length === 0) {
-      return {
-        finalCategories: [
-          {
-            id: 'all',
-            name: 'All Courses',
-            courses: coursesArray,
-          },
-        ],
-        visibleCount: coursesArray.length,
-      };
+      return { finalCategories: [], visibleCount: 0 };
     }
 
     // Create a map for faster lookups instead of multiple filters
@@ -473,7 +473,7 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
     const count = final.reduce((sum, cat) => sum + cat.courses.length, 0);
 
     return { finalCategories: final, visibleCount: count };
-  }, [courses, categories, q, catQuery, isSearchMode, forcedCategory, selectedCats, urlStatus]);
+  }, [courses, categories, q, catQuery, isSearchMode, forcedCategory, selectedCats, urlStatus, coursesLoaded, categoriesLoaded]);
 
   // Render immediately with empty state to improve FCP and LCP
   // Don't block render - show structure immediately
@@ -482,9 +482,9 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-6 sm:pt-6 sm:pb-8 pb-24 sm:pb-40">
       {/* Safe bottom padding for sticky footer + floating buttons */}
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-        {/* ⭐ SIDEBAR - Hide in view-all mode */}
+        {/* ⭐ SIDEBAR - Hide in view-all mode, sticky until end of courses */}
         {!forcedCategory && (
-          <aside className="lg:w-64 lg:flex-shrink-0">
+          <aside className="lg:w-64 lg:flex-shrink-0 lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-80px)]">
             <CategorySidebar
               categories={categories}
               selected={selectedCats}
@@ -495,11 +495,13 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
           </aside>
         )}
 
-        {/* ⭐ MAIN CONTENT - Vertical category sections */}
-        <main className="flex-1 min-w-0 relative">
-          {loading && finalCategories.length === 0 ? (
+         {/* ⭐ MAIN CONTENT - Vertical category sections with scroll */}
+         <main className="flex-1 min-w-0 relative lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-2 scrollbar-hidden">
+           {loading && !coursesLoaded ? (
+             // Show skeleton only on initial load
             <CourseSkeletonLoader />
           ) : finalCategories.length > 0 ? (
+             // Show courses when available
             <div className="space-y-6 sm:space-y-8 lg:space-y-10">
               {finalCategories.map((category, index) => (
                 <CourseRow
@@ -512,8 +514,12 @@ export default function CourseGrid({ searchQuery = '', urlCategory = '', urlStat
                 />
               ))}
             </div>
+           ) : coursesLoaded ? (
+             // Only show empty state after courses have been loaded at least once
+             <EmptyState />
           ) : (
-            <EmptyState />
+             // Show nothing while initial loading
+             null
           )}
         </main>
       </div>

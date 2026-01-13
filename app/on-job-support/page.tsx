@@ -39,7 +39,7 @@ export async function generateMetadata() {
     // Fetch SEO metadata for the On-Job Support page from the `seos` table.
     // We fetch the specific row by primary key (id = 4) which corresponds
     // to the On-Job Support page in the seed data.
-    const res = await fetch(getApiUrl('/seo/4'), { cache: 'no-store' });
+    const res = await fetch(getApiUrl('/seo?slug=on-job-support'), { cache: 'no-store' });
     if (res.ok) {
       const json = await res.json();
       const content = json.data || json;

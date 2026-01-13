@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Send, MessageCircle, Instagram, Twitter, Youtube, Facebook } from 'lucide-react';
+import { Send, MessageCircle, Instagram, Twitter, Youtube, Facebook, CheckCircle2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/apiConfig';
 import { logger } from '@/lib/logger';
 import { EMAIL_VALIDATION, DEFER_TIMEOUTS } from '@/lib/constants';
@@ -235,23 +235,32 @@ function Footer() {
           </h3>
 
           {/* Email Input */}
-          <div className="flex items-center space-x-4 w-full md:w-auto" suppressHydrationWarning>
+          <div className="flex flex-col md:flex-row md:items-center gap-3 w-full md:w-auto" suppressHydrationWarning>
             {/* Accessibility: Live region for form feedback */}
-            <div
-              className={`min-w-[160px] max-w-[220px] px-4 py-2 flex items-center text-sm truncate ${
-                successMessage ? 'text-green-300' : errorMessage ? 'text-red-300' : 'text-gray-500'
-              }`}
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-              suppressHydrationWarning
-            >
-              {successMessage || errorMessage || null}
-            </div>
+            {(successMessage || errorMessage) && (
+              <div
+                className={`px-4 py-2 flex items-center gap-2 text-sm whitespace-normal break-words ${
+                  successMessage ? 'text-green-300' : 'text-red-300'
+                }`}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                suppressHydrationWarning
+              >
+                {successMessage ? (
+                  <>
+                    <CheckCircle2 size={18} className="text-green-300 flex-shrink-0" aria-hidden="true" />
+                    <span>{successMessage}</span>
+                  </>
+                ) : (
+                  <span>{errorMessage}</span>
+                )}
+              </div>
+            )}
 
             {/* Accessibility: Proper form with labels and error handling */}
             <form
-              className="flex w-full md:w-[500px] bg-white rounded-full overflow-hidden items-left"
+              className="flex w-full md:w-[500px] bg-white rounded-full overflow-hidden items-center"
               onSubmit={handleSubmit}
               noValidate
               aria-label="Newsletter subscription"
@@ -279,7 +288,7 @@ function Footer() {
                 type="submit"
                 disabled={submitting}
                 aria-label="Subscribe to newsletter"
-                className="bg-[#4A90E2] px-5 flex items-center justify-center hover:bg-[#2C5AA0] transition-colors disabled:opacity-60 min-w-[44px] min-h-[44px] focus:outline-none"
+                className="bg-[#1A3F66]  px-4 py-3.5 flex items-center justify-center hover:bg-[#2C5AA0] transition-colors disabled:opacity-60 min-w-[44px] min-h-[44px] focus:outline-none cursor-pointer"
               >
                 <Send size={22} className="text-white" aria-hidden="true" />
                 {submitting && <span className="sr-only">Submitting...</span>}
@@ -289,9 +298,9 @@ function Footer() {
         </section>
 
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-blue-100" suppressHydrationWarning>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-20 text-blue-100" suppressHydrationWarning>
           {/* SkillVedika Info */}
-          <section aria-labelledby="company-info-heading">
+          <section aria-labelledby="company-info-heading" className="md:col-span-1">
             <h2 id="company-info-heading" className="sr-only">Company Information</h2>
             {/* Performance: Lazy load footer logo - below the fold */}
             <Image
@@ -299,7 +308,7 @@ function Footer() {
               alt="SkillVedika Logo"
               width={180}
               height={60}
-              className="mb-5"
+              className="mb-5 cursor-pointer"
               style={{ width: 'auto', height: 'auto' }}
               loading="lazy"
               sizes="(max-width: 768px) 160px, 180px"
@@ -315,7 +324,7 @@ function Footer() {
                     <Link
                       href={settings.social_links?.[platform] || '#'}
                       aria-label={`Follow us on ${platform}`}
-                      className="hover:text-[#4A90E2] transition-colors focus:outline-none"
+                      className="hover:text-[#4A90E2] transition-colors focus:outline-none cursor-pointer"
                     >
                       {getSocialIcon(platform)}
                     </Link>
@@ -326,7 +335,7 @@ function Footer() {
           </section>
 
           {/* Explore */}
-          <nav aria-labelledby="explore-heading">
+          <nav aria-labelledby="explore-heading" className="md:pl-4 lg:pl-6">
             <h3 id="explore-heading" className="font-semibold text-base mb-4 text-white">
               {settings.explore}
             </h3>
@@ -337,7 +346,7 @@ function Footer() {
                     href={link.slug}
                     target={link.new_tab ? '_blank' : undefined}
                     rel={link.new_tab ? 'noopener noreferrer' : undefined}
-                    className="hover:text-white focus:outline-none"
+                    className="hover:text-white focus:outline-none cursor-pointer"
                   >
                     {link.text}
                   </Link>
@@ -347,7 +356,7 @@ function Footer() {
           </nav>
 
           {/* Support */}
-          <nav aria-labelledby="support-heading">
+          <nav aria-labelledby="support-heading" className="md:pl-4 lg:pl-6">
             <h3 id="support-heading" className="font-semibold text-base mb-4 text-white">
               {settings.support}
             </h3>
@@ -358,7 +367,7 @@ function Footer() {
                     href={link.slug}
                     target={link.new_tab ? '_blank' : undefined}
                     rel={link.new_tab ? 'noopener noreferrer' : undefined}
-                    className="hover:text-white focus:outline-none"
+                    className="hover:text-white focus:outline-none cursor-pointer"
                   >
                     {link.text}
                   </Link>
@@ -368,7 +377,7 @@ function Footer() {
           </nav>
 
           {/* Contact */}
-          <section aria-labelledby="contact-heading">
+          <section aria-labelledby="contact-heading" className="md:pl-4 lg:pl-6">
             <h3 id="contact-heading" className="font-semibold text-base mb-4 text-white">
               {settings.contact}
             </h3>
@@ -378,7 +387,7 @@ function Footer() {
                   <span className="font-medium text-white">Mobile:</span>{' '}
                   <a 
                     href={`tel:${settings.contact_details.phone.replaceAll(/\s+/g, '')}`}
-                    className="hover:underline focus:outline-none"
+                    className="hover:underline focus:outline-none cursor-pointer"
                   >
                     {settings.contact_details.phone}
                   </a>
@@ -389,7 +398,7 @@ function Footer() {
                   <span className="font-medium text-white">Email:</span>{' '}
                   <a 
                     href={`mailto:${settings.contact_details.email}`}
-                    className="hover:underline focus:outline-none"
+                    className="hover:underline focus:outline-none cursor-pointer"
                   >
                     {settings.contact_details.email}
                   </a>
@@ -418,7 +427,7 @@ function Footer() {
                         href={locationUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:underline focus:outline-none"
+                        className="hover:underline focus:outline-none cursor-pointer"
                       >
                         {locationText}
                       </a>

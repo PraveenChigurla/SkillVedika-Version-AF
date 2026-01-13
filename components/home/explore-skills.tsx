@@ -1,19 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import parse from 'html-react-parser';
 
 interface ExploreSkillsProps {
   explore?: any;
   setStatusFilter: (filter: string) => void;
+  initialStatus?: string;
 }
 
-export default function ExploreSkills({ explore, setStatusFilter }: Readonly<ExploreSkillsProps>) {
+export default function ExploreSkills({ explore, setStatusFilter, initialStatus = 'trending' }: Readonly<ExploreSkillsProps>) {
   const [activeTab, setActiveTab] = useState(
-    explore?.explore_tabs?.[0]?.toLowerCase() || 'trending'
+    initialStatus || explore?.explore_tabs?.[0]?.toLowerCase() || 'trending'
   );
 
   const tabs = explore?.explore_tabs || ['Trending', 'Popular', 'Free'];
+
+  // Sync activeTab with initialStatus prop
+  useEffect(() => {
+    if (initialStatus) {
+      setActiveTab(initialStatus);
+      setStatusFilter(initialStatus);
+    }
+  }, [initialStatus, setStatusFilter]);
 
   const handleTab = (tab: string) => {
     const key = tab.toLowerCase();

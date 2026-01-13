@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 ---------------------------------------------------- */
 export async function generateMetadata(): Promise<Metadata> {
   const { getApiUrl } = await import('@/lib/apiConfig');
-  const apiUrl = getApiUrl('/seo/7');
+  const apiUrl = getApiUrl('/seo?slug=contact-us');
 
   const fallbackTitle = 'Contact Us | SkillVedika – Connect With Our Training & Support Team';
   const fallbackDescription =
