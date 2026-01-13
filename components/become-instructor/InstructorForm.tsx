@@ -348,7 +348,7 @@ export default function InstructorForm({ formTitle = "Apply to Become an Instruc
                 </Link>{' '}
                 and{' '}
                 <Link
-                  href="/privacy"
+                  href="/privacy-policy"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline hover:text-blue-700"
