@@ -13,7 +13,6 @@ function UnifiedHelpButton() {
   const [whatsappUrl, setWhatsappUrl] = useState('https://wa.me/919182617094?text=Hi%2C%20I%20need%20more%20information%20about%20the%20courses.');
   const [contactPhone, setContactPhone] = useState('+91 9182617094');
   const [courses, setCourses] = useState<Course[]>([]);
-  const [formDetails, setFormDetails] = useState<any>(null);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [hideButton, setHideButton] = useState(false);
 
@@ -175,56 +174,56 @@ function UnifiedHelpButton() {
     const controller = new AbortController();
     let timeoutId: NodeJS.Timeout | null = null;
 
-    async function fetchFormDetails() {
-      try {
-        const { getApiUrl } = await import('@/lib/apiConfig');
-        const apiUrl = getApiUrl('/form-details');
-        if (!apiUrl) return;
+    // async function fetchFormDetails() {
+    //   try {
+    //     const { getApiUrl } = await import('@/lib/apiConfig');
+    //     const apiUrl = getApiUrl('/form-details');
+    //     if (!apiUrl) return;
 
-        timeoutId = setTimeout(() => controller.abort(), 5000);
+    //     timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        const res = await fetch(apiUrl, {
-          signal: controller.signal,
-          cache: 'no-store',
-          headers: { Accept: 'application/json' },
-        }).catch((fetchError) => {
-          if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
-            throw new Error('Network error: Unable to reach the API server');
-          }
-          throw fetchError;
-        });
+    //     const res = await fetch(apiUrl, {
+    //       signal: controller.signal,
+    //       cache: 'no-store',
+    //       headers: { Accept: 'application/json' },
+    //     }).catch((fetchError) => {
+    //       if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+    //         throw new Error('Network error: Unable to reach the API server');
+    //       }
+    //       throw fetchError;
+    //     });
 
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
+    //     if (timeoutId) {
+    //       clearTimeout(timeoutId);
+    //       timeoutId = null;
+    //     }
 
-        if (!res.ok) return;
+    //     if (!res.ok) return;
 
-        const rawPayload = await res.json();
-        let payload = rawPayload;
+    //     const rawPayload = await res.json();
+    //     let payload = rawPayload;
 
-        if (Array.isArray(rawPayload)) {
-          payload = rawPayload.at(-1);
-        } else if (rawPayload?.success && rawPayload?.data) {
-          payload = Array.isArray(rawPayload.data) ? rawPayload.data.at(-1) : rawPayload.data;
-        }
+    //     if (Array.isArray(rawPayload)) {
+    //       payload = rawPayload.at(-1);
+    //     } else if (rawPayload?.success && rawPayload?.data) {
+    //       payload = Array.isArray(rawPayload.data) ? rawPayload.data.at(-1) : rawPayload.data;
+    //     }
 
-        if (!controller.signal.aborted) {
-          setFormDetails(payload);
-        }
-      } catch (err: any) {
-        // Don't log AbortError - it's expected when component unmounts or request is cancelled
-        if (err.name === 'AbortError' || err.message?.includes('aborted')) {
-          return;
-        }
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[UnifiedHelpButton] Error fetching form details:', err.message || err);
-        }
-      }
-    }
+    //     if (!controller.signal.aborted) {
+    //       setFormDetails(payload);
+    //     }
+    //   } catch (err: any) {
+    //     // Don't log AbortError - it's expected when component unmounts or request is cancelled
+    //     if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+    //       return;
+    //     }
+    //     if (process.env.NODE_ENV === 'development') {
+    //       console.error('[UnifiedHelpButton] Error fetching form details:', err.message || err);
+    //     }
+    //   }
+    // }
 
-    fetchFormDetails();
+    // fetchFormDetails();
 
     return () => {
       controller.abort();
@@ -434,7 +433,6 @@ function UnifiedHelpButton() {
       {showEnquiryForm && (
         <EnrollModal
           courses={courses}
-          formDetails={formDetails}
           onClose={() => setShowEnquiryForm(false)}
           page="Unified Help Button"
         />

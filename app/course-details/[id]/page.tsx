@@ -3,7 +3,7 @@ import dynamicImport from 'next/dynamic';
 import { getCanonicalUrl } from '@/lib/seo';
 
 // Use auto-dynamic with revalidation for better performance
-export const dynamic = 'auto';
+export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes (course details change less frequently)
 
 // Lazy load components for better performance - defer non-critical ones
@@ -41,15 +41,15 @@ export async function generateMetadata(props: any): Promise<Metadata> {
   try {
     // Try course-details endpoint first (supports both slug and ID)
     let res = await fetch(getApiUrl(`/course-details/${identifier}`), {
-      cache: 'force-cache',
-      next: { revalidate: 300 },
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
     });
 
     // Fallback to courses endpoint for backward compatibility
     if (!res.ok && !Number.isNaN(Number(identifier))) {
       res = await fetch(getApiUrl(`/courses/${identifier}`), {
-        cache: 'force-cache',
-        next: { revalidate: 300 },
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
       });
     }
 
@@ -165,21 +165,15 @@ async function fetchCourseByIdentifier(api: string, identifierString: string): P
   try {
     // Try course-details endpoint first (supports slugs)
     let courseRes = await fetch(`${api}/course-details/${identifierString}`, {
-      cache: 'force-cache',
-      next: { revalidate: 300 },
-      headers: {
-        'Accept': 'application/json',
-      },
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
     });
 
     // Fallback to courses endpoint if needed (for numeric IDs)
     if (!courseRes.ok && !Number.isNaN(Number(identifierString))) {
       courseRes = await fetch(`${api}/courses/${identifierString}`, {
-        cache: 'force-cache',
-        next: { revalidate: 300 },
-        headers: {
-          'Accept': 'application/json',
-        },
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
       });
     }
 
@@ -195,11 +189,8 @@ async function fetchCourseByIdentifier(api: string, identifierString: string): P
     // If we got details directly, fetch the course
     if (courseData && !courseData.title && courseData.course_id) {
       const courseFetch = await fetch(`${api}/courses/${courseData.course_id}`, {
-        cache: 'force-cache',
-        next: { revalidate: 300 },
-        headers: {
-          'Accept': 'application/json',
-        },
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
       });
       if (courseFetch.ok) {
         const courseJson = await courseFetch.json();
@@ -222,8 +213,8 @@ async function fetchCourseByIdentifier(api: string, identifierString: string): P
 async function fetchAllCourses(api: string): Promise<any[]> {
   try {
     const coursesRes = await fetch(`${api}/courses`, {
-      cache: 'force-cache',
-      next: { revalidate: 300 },
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
     });
     if (coursesRes.ok) {
       const allJson = await coursesRes.json();
@@ -340,11 +331,8 @@ async function fetchAllCourses(api: string): Promise<any[]> {
       const faqsUrl = getApiUrl('/faqs');
       
       const faqsRes = await fetch(faqsUrl, {
-        cache: 'force-cache',
-        next: { revalidate: 3600 },
-        headers: {
-          'Accept': 'application/json',
-        },
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
       });
       if (faqsRes.ok) {
         const faqsData = await faqsRes.json();

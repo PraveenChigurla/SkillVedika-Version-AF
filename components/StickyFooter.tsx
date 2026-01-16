@@ -8,7 +8,6 @@ type Course = { id: number; title: string };
 export default function StickyFooter() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [formDetails, setFormDetails] = useState<any>(null);
   const [contactDetails, setContactDetails] = useState<{ 
     phone?: string; 
     phoneUS?: string;
@@ -76,53 +75,53 @@ export default function StickyFooter() {
   }
 
   // Helper function to fetch form details
-  async function fetchFormDetails(apiUrl: string): Promise<void> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+  // async function fetchFormDetails(apiUrl: string): Promise<void> {
+  //   try {
+  //     const controller = new AbortController();
+  //     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const formRes = await fetch(`${apiUrl}/form-details`, {
-        signal: controller.signal,
-        cache: 'no-store',
-        headers: { Accept: 'application/json' },
-      }).catch((fetchError) => {
-        if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
-          throw new Error('Network error: Unable to reach the API server');
-        }
-        throw fetchError;
-      });
+  //     const formRes = await fetch(`${apiUrl}/form-details`, {
+  //       signal: controller.signal,
+  //       cache: 'no-store',
+  //       headers: { Accept: 'application/json' },
+  //     }).catch((fetchError) => {
+  //       if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+  //         throw new Error('Network error: Unable to reach the API server');
+  //       }
+  //       throw fetchError;
+  //     });
 
-      clearTimeout(timeoutId);
+  //     clearTimeout(timeoutId);
 
-      if (!formRes.ok) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn(`[StickyFooter] Failed to fetch form details: HTTP ${formRes.status}`);
-        }
-        return;
-      }
+  //     if (!formRes.ok) {
+  //       if (process.env.NODE_ENV === 'development') {
+  //         console.warn(`[StickyFooter] Failed to fetch form details: HTTP ${formRes.status}`);
+  //       }
+  //       return;
+  //     }
 
-      const rawPayload = await formRes.json();
-      let payload = rawPayload;
+  //     const rawPayload = await formRes.json();
+  //     let payload = rawPayload;
 
-      // Handle array or single object response
-      if (Array.isArray(rawPayload)) {
-        payload = rawPayload.at(-1);
-      } else if (rawPayload?.success && rawPayload?.data) {
-        payload = Array.isArray(rawPayload.data) ? rawPayload.data.at(-1) : rawPayload.data;
-      }
+  //     // Handle array or single object response
+  //     if (Array.isArray(rawPayload)) {
+  //       payload = rawPayload.at(-1);
+  //     } else if (rawPayload?.success && rawPayload?.data) {
+  //       payload = Array.isArray(rawPayload.data) ? rawPayload.data.at(-1) : rawPayload.data;
+  //     }
 
-      setFormDetails(payload);
-    } catch (err: any) {
-      if (process.env.NODE_ENV === 'development') {
-        if (err.name === 'AbortError') {
-          console.warn('[StickyFooter] Form details request timed out');
-        } else {
-          console.error('[StickyFooter] Error fetching form details:', err.message || err);
-        }
-      }
-      // Don't break the UI - keep existing form details or null
-    }
-  }
+  //     setFormDetails(payload);
+  //   } catch (err: any) {
+  //     if (process.env.NODE_ENV === 'development') {
+  //       if (err.name === 'AbortError') {
+  //         console.warn('[StickyFooter] Form details request timed out');
+  //       } else {
+  //         console.error('[StickyFooter] Error fetching form details:', err.message || err);
+  //       }
+  //     }
+  //     // Don't break the UI - keep existing form details or null
+  //   }
+  // }
 
   // Helper function to fetch contact details from footer settings (same source as footer component)
   async function fetchContactDetails(apiUrl: string): Promise<void> {
@@ -185,7 +184,7 @@ export default function StickyFooter() {
       // Fetch all data in parallel
       await Promise.all([
         fetchCourses(apiUrl),
-        fetchFormDetails(apiUrl),
+        // fetchFormDetails(apiUrl),
         fetchContactDetails(apiUrl),
       ]);
     }
@@ -279,7 +278,6 @@ export default function StickyFooter() {
       {isModalOpen && (
         <EnrollModal
           courses={courses}
-          formDetails={formDetails}
           page="Sticky Footer"
           onClose={() => setIsModalOpen(false)}
         />

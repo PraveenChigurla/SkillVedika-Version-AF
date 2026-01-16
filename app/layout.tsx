@@ -8,7 +8,7 @@ import Header from '@/components/header';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import GoogleAnalytics from '@/components/GoogleAnalytics';
+import { GoogleAnalyticsHead, GoogleAnalyticsTracker } from '@/components/google-analytics';
 import { getCanonicalUrl } from '@/lib/seo';
 import ClientComponents from '@/components/ClientComponents';
 
@@ -139,43 +139,42 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={poppins.variable}>
-      <head>
-        {/* Preconnect to backend API */}
-        <link
-          rel="preconnect"
-          href={
-            process.env.NEXT_PUBLIC_API_URL ||
-            'http://127.0.0.1:8000'
-          }
-          crossOrigin="anonymous"
-        />
-      </head>
-
-      <body
-        className="font-poppins antialiased"
-        suppressHydrationWarning
-      >
-        <ErrorBoundary>
-          {/* Non-blocking Analytics */}
-          <Suspense fallback={null}>
-            <GoogleAnalytics />
-          </Suspense>
-
-          {/* Site Header */}
-          <Header />
-
-          {/* Main Content */}
-          <main id="main-content" role="main" className="pt-20 md:pt-[72px]">
-            {children}
-          </main>
-
-          {/* Footer (lazy loaded) */}
-          <Footer />
-
-          {/* Client-only helpers (toasts, modals, etc.) */}
-          <ClientComponents />
-        </ErrorBoundary>
-      </body>
-    </html>
+    <head>
+      <link
+        rel="preconnect"
+        href={
+          process.env.NEXT_PUBLIC_API_URL ||
+          'http://127.0.0.1:8000'
+        }
+        crossOrigin="anonymous"
+      />
+  
+      <GoogleAnalyticsHead />
+    </head>
+  
+    <body
+      className="font-poppins antialiased"
+      suppressHydrationWarning
+    >
+      <ErrorBoundary>
+  
+        <Suspense fallback={null}>
+          <GoogleAnalyticsTracker />
+        </Suspense>
+  
+        <Header />
+  
+        <main id="main-content" role="main" className="pt-20 md:pt-[72px]">
+          {children}
+        </main>
+  
+        <Footer />
+  
+        <ClientComponents />
+      </ErrorBoundary>
+    </body>
+  </html>
+  
   );
+
 }

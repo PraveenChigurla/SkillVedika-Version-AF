@@ -96,8 +96,7 @@ async function getFirstCourseImage(): Promise<string | null> {
 
     const res = await fetch(`${apiUrl}?limit=1`, {
       signal: controller.signal,
-      cache: 'force-cache',
-      next: { revalidate: 300 },
+      cache: 'no-store',
       headers: { Accept: 'application/json' },
     });
 
@@ -124,8 +123,7 @@ async function getPageContent() {
     const { getApiUrl } = await import('@/lib/apiConfig');
     const res = await fetch(getApiUrl('/course-page-content'), {
       signal: controller.signal,
-      cache: 'force-cache', // Enable caching for better performance
-      next: { revalidate: 300 }, // Revalidate every 5 minutes
+      cache: 'no-store', // Enable caching for better performance
       headers: { Accept: 'application/json' },
     });
 
@@ -175,8 +173,7 @@ export async function generateMetadata() {
     const { getApiUrl } = await import('@/lib/apiConfig');
     const res = await fetch(getApiUrl('/seo?slug=courses'), {
       signal: controller.signal,
-      cache: 'force-cache', // Enable caching
-      next: { revalidate: 3600 }, // Revalidate every hour
+      cache: 'no-store', // Enable caching
       headers: { Accept: 'application/json' },
     });
 

@@ -10,6 +10,8 @@ interface HeroProps {
   hero?: any;
 }
 
+const isBrowser = typeof window !== 'undefined';
+
 // Performance: Move constants outside component to prevent recreation
 const INDUSTRY_SKILLS = [
   // CLOUD & DEVOPS
@@ -229,11 +231,7 @@ const levenshtein = (a: string, b: string): number => {
   for (let i = 1; i <= al; i++) {
     for (let j = 1; j <= bl; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      dp[i]![j] = Math.min(
-        dp[i - 1]![j]! + 1,
-        dp[i]![j - 1]! + 1,
-        dp[i - 1]![j - 1]! + cost
-      );
+      dp[i]![j] = Math.min(dp[i - 1]![j]! + 1, dp[i]![j - 1]! + 1, dp[i - 1]![j - 1]! + cost);
     }
   }
 
@@ -334,14 +332,18 @@ function Hero({ hero }: Readonly<HeroProps>) {
   }, [searchTerm, router]);
 
   // Performance: useCallback for keyboard handler
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    } else if (e.key === 'Escape') {
-      setShowDropdown(false);
-    }
-  }, [handleSearch]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        handleSearch();
+      } else if (e.key === 'Escape') {
+        setShowDropdown(false);
+      }
+    },
+    [handleSearch]
+  );
 
+  
   // Performance: useCallback for fetch suggestions
   const fetchSuggestions = useCallback(async () => {
     try {
@@ -369,11 +371,11 @@ function Hero({ hero }: Readonly<HeroProps>) {
       // Defer heavy computation to avoid blocking main thread
       const processSuggestions = async () => {
         let mergedPopular: string[] = [];
-        
+
         if (query) {
           // If there's a search term, rank and merge
-        const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
-        const backendPopular = Array.isArray(data.popular) ? data.popular : [];
+          const rankedIndustry = await rankSkills(INDUSTRY_SKILLS, searchTerm);
+          const backendPopular = Array.isArray(data.popular) ? data.popular : [];
           mergedPopular = Array.from(new Set([...backendPopular, ...rankedIndustry])).slice(0, 15);
         } else {
           // If no search term, show top popular from backend or default industry skills
@@ -392,7 +394,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
           });
           // Only show dropdown if there's a search term or popular suggestions
           if (searchTerm.trim() || mergedPopular.length > 0) {
-          setShowDropdown(true);
+            setShowDropdown(true);
           }
         });
       };
@@ -408,14 +410,14 @@ function Hero({ hero }: Readonly<HeroProps>) {
       // Defer fallback computation too
       const processFallback = async () => {
         let fallbackPopular: string[] = [];
-        
+
         if (searchTerm.trim()) {
           fallbackPopular = await rankSkills(INDUSTRY_SKILLS, searchTerm);
         } else {
           // Show default popular skills
           fallbackPopular = INDUSTRY_SKILLS.slice(0, 15);
         }
-        
+
         startTransition(() => {
           setSuggestions({
             popular: fallbackPopular,
@@ -425,7 +427,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
           });
           // Only show dropdown if there's a search term or popular suggestions
           if (searchTerm.trim() || fallbackPopular.length > 0) {
-          setShowDropdown(true);
+            setShowDropdown(true);
           }
         });
       };
@@ -440,29 +442,38 @@ function Hero({ hero }: Readonly<HeroProps>) {
 
   // Debounce search input - optimized with requestIdleCallback
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      // Don't auto-fetch or show dropdown when search term is empty
+    if (!isBrowser) return;
+  
+    if (searchTerm.trim().length < 2) {
       setShowDropdown(false);
       return;
     }
-
-    // If there's a search term, debounce the fetch
-    let timeoutId: NodeJS.Timeout;
-    const scheduleFetch = () => {
-      timeoutId = setTimeout(() => {
-        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-          requestIdleCallback(() => fetchSuggestions(), { timeout: 300 });
-        } else {
-          fetchSuggestions();
-        }
+  
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let idleId: number | null = null;
+  
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleId = (window as any).requestIdleCallback(
+        () => fetchSuggestions(),
+        { timeout: 300 }
+      );
+    } else {
+      timeoutId = globalThis.setTimeout(() => {
+        fetchSuggestions();
       }, 300);
-    };
-
-    scheduleFetch();
+    }
+  
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      if (idleId !== null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
     };
-  }, [searchTerm, fetchSuggestions]);
+  }, [searchTerm, fetchSuggestions]);  
+  
+  
 
   // Click outside handler
   useEffect(() => {
@@ -482,13 +493,16 @@ function Hero({ hero }: Readonly<HeroProps>) {
   const heroImage = useMemo(() => hero?.hero_image || '/home/Frame 162.png', [hero?.hero_image]);
 
   // Performance: Memoize suggestion click handler
-  const handleSuggestionClick = useCallback((item: string) => {
-    setSearchTerm(item);
-    handleSearch();
-  }, [handleSearch]);
+  const handleSuggestionClick = useCallback(
+    (item: string) => {
+      setSearchTerm(item);
+      handleSearch();
+    },
+    [handleSearch]
+  );
 
   return (
-    <section 
+    <section
       className="bg-gradient-to-br from-[#E8F0F7] to-[#F0F4F9] py-8 sm:py-12 md:py-16 lg:py-24 overflow-hidden"
       aria-labelledby="hero-heading"
     >
@@ -513,7 +527,11 @@ function Hero({ hero }: Readonly<HeroProps>) {
             <ul className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm text-gray-700 list-none">
               {heroContent.map((item: string) => (
                 <li key={item} className="flex items-center gap-1.5 sm:gap-2">
-                  <CheckCircle2 size={14} className="sm:w-4 sm:h-4 text-[#2C5AA0] flex-shrink-0" aria-hidden="true" />
+                  <CheckCircle2
+                    size={14}
+                    className="sm:w-4 sm:h-4 text-[#2C5AA0] flex-shrink-0"
+                    aria-hidden="true"
+                  />
                   <span className="leading-tight">{item}</span>
                 </li>
               ))}
@@ -523,7 +541,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
             <div className="pt-3 sm:pt-4 relative w-full z-50">
               {/* Accessibility: Proper form with labels */}
               <form
-                onSubmit={(e) => {
+                onSubmit={e => {
                   e.preventDefault();
                   handleSearch();
                 }}
@@ -533,7 +551,7 @@ function Hero({ hero }: Readonly<HeroProps>) {
               >
                 <div className="flex gap-2 flex-row w-full items-center">
                   <label htmlFor="hero-search" className="sr-only">
-                    Search by skill 
+                    Search by skill
                   </label>
                   <div className="flex-1 flex items-center bg-white rounded-md px-2 sm:px-3 md:px-4 border border-gray-200 min-w-0 relative">
                     <input
@@ -605,30 +623,35 @@ function Hero({ hero }: Readonly<HeroProps>) {
                   {/* Popular Suggestions */}
                   {suggestions.popular?.length > 0 && (
                     <div className="py-1">
-                        {suggestions.popular.map((item: string) => (
-                            <button
+                      {suggestions.popular.map((item: string) => (
+                        <button
                           key={item}
-                              onClick={() => handleSuggestionClick(item)}
+                          onClick={() => handleSuggestionClick(item)}
                           className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#2C5AA0] transition-colors focus:outline-none focus:bg-blue-50 focus:text-[#2C5AA0] focus:ring-2 focus:ring-inset focus:ring-blue-500"
                           role="option"
                           aria-selected="false"
                           tabIndex={0}
                         >
                           <div className="flex items-center gap-2">
-                            <Search size={14} className="text-gray-400 flex-shrink-0" aria-hidden="true" />
+                            <Search
+                              size={14}
+                              className="text-gray-400 flex-shrink-0"
+                              aria-hidden="true"
+                            />
                             <span>{item}</span>
                           </div>
-                            </button>
-                        ))}
+                        </button>
+                      ))}
                     </div>
                   )}
 
                   {/* Empty state */}
-                  {(!suggestions.popular || suggestions.popular.length === 0) && searchTerm.trim() && (
-                    <div className="px-4 py-8 text-center text-sm text-gray-500">
-                      No suggestions found for "{searchTerm}"
-                    </div>
-                  )}
+                  {(!suggestions.popular || suggestions.popular.length === 0) &&
+                    searchTerm.trim() && (
+                      <div className="px-4 py-8 text-center text-sm text-gray-500">
+                        No suggestions found for "{searchTerm}"
+                      </div>
+                    )}
                 </div>
               )}
             </div>
@@ -636,9 +659,11 @@ function Hero({ hero }: Readonly<HeroProps>) {
             {/* ⭐ MARQUEE FROM CMS */}
             <div className="pt-3 sm:pt-4">
               <div className="flex items-center gap-1 sm:gap-2">
-                <span className="text-xs sm:text-sm font-semibold text-gray-700 mr-2 sm:mr-3 whitespace-nowrap">Popular:</span>
+                <span className="text-xs sm:text-sm font-semibold text-gray-700 mr-2 sm:mr-3 whitespace-nowrap">
+                  Popular:
+                </span>
 
-                <div className="relative w-full overflow-hidden h-6" aria-label="Popular skills">
+                <div className="relative w-full overflow-hidden min-h-[24px]" aria-label="Popular skills">
                   <div className="marquee-track">
                     {heroPopular.concat(heroPopular).map((tag: string, idx: number) => (
                       <button
@@ -679,11 +704,10 @@ function Hero({ hero }: Readonly<HeroProps>) {
                 alt="SkillVedika - Professional IT Training and Courses"
                 width={450}
                 height={450}
-                className="object-contain drop-shadow-lg w-full h-full"
                 priority
                 quality={85}
                 sizes="(max-width: 640px) 280px, (max-width: 768px) 320px, (max-width: 1024px) 380px, 450px"
-                fetchPriority="high"
+                className="object-contain drop-shadow-lg w-auto h-auto max-w-full max-h-full"
               />
             </div>
           </div>

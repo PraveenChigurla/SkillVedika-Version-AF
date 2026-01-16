@@ -133,9 +133,9 @@ export default async function ContactUsPage() {
 
   // ⚡ OPTIMIZATION: Fetch all data in parallel for better performance
   const [coursesRes, contentRes, formDetailsRes] = await Promise.allSettled([
-    fetch(getApiUrl('/courses'), { next: { revalidate: 86400 } }),
-    fetch(getApiUrl('/contact-page'), { cache: 'no-store' }),
-    fetch(getApiUrl('/form-details'), { cache: 'no-store' }),
+    fetch(getApiUrl('/courses'), { cache: 'no-store', headers: { Accept: 'application/json' } }),
+    fetch(getApiUrl('/contact-page'), { cache: 'no-store', headers: { Accept: 'application/json' } }),
+    fetch(getApiUrl('/form-details'), { cache: 'no-store', headers: { Accept: 'application/json' } }),
   ]);
 
   // Process courses
@@ -195,8 +195,8 @@ export default async function ContactUsPage() {
   let footerSettings: any = null;
   try {
     const footerRes = await fetch(getApiUrl('/footer-settings'), {
-      cache: 'force-cache',
-      next: { revalidate: 3600 },
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
     });
     if (footerRes.ok) {
       footerSettings = await footerRes.json();

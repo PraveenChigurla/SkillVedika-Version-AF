@@ -35,7 +35,7 @@ async function getHomePageData() {
 
     const fetchPromise = (async () => {
       const res = await fetch(apiUrl, {
-        next: { revalidate: 3600 }, // Cache for 1 hour, revalidate in background
+        cache: 'no-store',
         headers: {
           Accept: 'application/json',
         },
@@ -85,7 +85,7 @@ async function getBlogs() {
 
     const fetchPromise = (async () => {
       const res = await fetch(apiUrl, {
-        next: { revalidate: 1800 }, // Cache for 30 minutes
+        cache: 'no-store',
         headers: {
           Accept: 'application/json',
         },
@@ -128,7 +128,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
     const fetchPromise = (async (): Promise<Metadata | null> => {
       const res = await fetch(apiUrl, {
-        next: { revalidate: 86400 }, // Cache for 24 hours
+        cache: 'no-store',
         headers: {
           Accept: 'application/json',
         },

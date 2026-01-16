@@ -34,13 +34,13 @@ function Header() {
       // Use no-store to ensure we get fresh data from admin updates
       const res = await fetch(apiUrl, {
         cache: 'no-store',
-        headers: { 'Accept': 'application/json' },
+        headers: { Accept: 'application/json' },
       });
-      
+
       if (!res.ok) {
         throw new Error(`Failed to fetch header settings: ${res.status}`);
       }
-      
+
       const response = await res.json();
       // Handle API response structure: { success: true, data: {...} } or direct {...}
       const data = response?.data || response;
@@ -72,12 +72,15 @@ function Header() {
   }, []);
 
   // Performance: Memoize active check function
-  const isActive = useCallback((slug: string): boolean => {
-    if (slug === '/') {
-      return pathname === '/';
-    }
-    return pathname.startsWith(slug);
-  }, [pathname]);
+  const isActive = useCallback(
+    (slug: string): boolean => {
+      if (slug === '/') {
+        return pathname === '/';
+      }
+      return pathname.startsWith(slug);
+    },
+    [pathname]
+  );
 
   // Fallback menu items
   const defaultMenuItems: MenuItem[] = [
@@ -91,7 +94,7 @@ function Header() {
   ];
 
   const menuItems = headerSettings?.menu_items || defaultMenuItems;
-  
+
   // Get logo URL - prefer public_id for optimization, fallback to legacy logo URL
   const logo = useMemo(() => {
     const logoInput = headerSettings?.logo_public_id || headerSettings?.logo;
@@ -99,7 +102,7 @@ function Header() {
   }, [headerSettings?.logo_public_id, headerSettings?.logo]);
 
   return (
-    <header 
+    <header
       className={`bg-white border-b border-[#E0E8F0] fixed top-0 left-0 right-0 z-50 shadow-sm transition-all duration-300 ${
         isScrolled ? 'py-2' : 'py-4'
       }`}
@@ -109,11 +112,7 @@ function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Accessibility: Logo link with proper aria-label */}
-          <Link 
-            href="/" 
-            className="flex items-center cursor-pointer"
-            aria-label="SkillVedika Home"
-          >
+          <Link href="/" className="flex items-center cursor-pointer" aria-label="SkillVedika Home">
             {/* Performance: Priority image for LCP - logo is above the fold */}
             <Image
               src={logo}
@@ -121,17 +120,15 @@ function Header() {
               width={140}
               height={35}
               priority
-              className={`object-contain image-auto-aspect transition-all duration-300 cursor-pointer ${
-                isScrolled ? 'h-7' : 'h-9'
+              className={`object-contain transition-all duration-300 cursor-pointer ${
+                isScrolled ? 'h-7 w-auto' : 'h-9 w-auto'
               }`}
-              style={{ width: 'auto', height: 'auto' }}
               sizes="(max-width: 768px) 120px, 140px"
-              suppressHydrationWarning
             />
           </Link>
-          
+
           {/* Accessibility: Semantic navigation with proper ARIA */}
-          <nav 
+          <nav
             className={`hidden md:flex items-center transition-all duration-300 ${
               isScrolled ? 'space-x-6' : 'space-x-8'
             }`}
@@ -148,17 +145,19 @@ function Header() {
                   rel={item.new_tab ? 'noopener noreferrer' : undefined}
                   prefetch={true} // Performance: Enable prefetching for faster navigation
                   className={`relative text-sm font-medium transition-all duration-300 ease-in-out focus:outline-none rounded px-3 py-2 group cursor-pointer ${
-                    active 
-                      ? 'text-[#2563EB] font-semibold bg-blue-50' 
+                    active
+                      ? 'text-[#2563EB] font-semibold bg-blue-50'
                       : 'text-gray-700 hover:text-[#2563EB] hover:bg-blue-50 hover:font-semibold'
                   }`}
                   aria-current={active ? 'page' : undefined}
                 >
-                  <span className={`relative z-10 transition-all duration-300 ease-in-out ${
-                    active 
-                      ? 'text-[#2563EB] cursor-pointer' 
-                      : 'text-gray-700 group-hover:text-[#2563EB] group-hover:font-semibold cursor-pointer'
-                  }`}>
+                  <span
+                    className={`relative z-10 transition-all duration-300 ease-in-out ${
+                      active
+                        ? 'text-[#2563EB] cursor-pointer'
+                        : 'text-gray-700 group-hover:text-[#2563EB] group-hover:font-semibold cursor-pointer'
+                    }`}
+                  >
                     {item.text}
                   </span>
                   {!active && (
@@ -171,7 +170,7 @@ function Header() {
               );
             })}
           </nav>
-          
+
           {/* Accessibility: Mobile menu button */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -198,7 +197,7 @@ function Header() {
               </button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <nav 
+              <nav
                 className="flex flex-col space-y-4 mt-8"
                 role="navigation"
                 aria-label="Mobile menu"
@@ -213,17 +212,19 @@ function Header() {
                       rel={item.new_tab ? 'noopener noreferrer' : undefined}
                       onClick={() => setMobileMenuOpen(false)}
                       className={`text-base font-medium transition-all duration-300 ease-in-out py-3 px-4 rounded-lg transform hover:scale-[1.02] group cursor-pointer ${
-                        active 
-                          ? 'text-[#2563EB] font-semibold bg-blue-50 shadow-sm' 
+                        active
+                          ? 'text-[#2563EB] font-semibold bg-blue-50 shadow-sm'
                           : 'text-gray-700 hover:text-[#2563EB] hover:bg-blue-50 hover:font-semibold hover:shadow-md'
                       }`}
                       aria-current={active ? 'page' : undefined}
                     >
-                      <span className={`transition-all duration-300 ease-in-out ${
-                        active 
-                          ? 'text-[#2563EB] font-semibold' 
-                          : 'text-gray-700 group-hover:text-[#2563EB] group-hover:font-semibold'
-                      }`}>
+                      <span
+                        className={`transition-all duration-300 ease-in-out ${
+                          active
+                            ? 'text-[#2563EB] font-semibold'
+                            : 'text-gray-700 group-hover:text-[#2563EB] group-hover:font-semibold'
+                        }`}
+                      >
                         {item.text}
                       </span>
                     </Link>

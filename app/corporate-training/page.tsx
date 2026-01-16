@@ -1,6 +1,5 @@
 import dynamicImport from 'next/dynamic';
-import path from 'path';
-import fs from 'fs';
+
 
 // Lazy load components for better performance with loading states
 // Hero is critical - load with SSR for faster initial render
@@ -38,125 +37,69 @@ const DemoSection = dynamicImport(() => import('@/components/corporate-training/
 });
 
 // Use auto-dynamic with revalidation for better performance
-export const dynamic = 'auto';
-export const revalidate = 300; // Revalidate every 5 minutes (corporate training changes less frequently)
+export const dynamic = 'force-dynamic';
 
 /* ============================================================
    📌 DYNAMIC METADATA — Fetches from SEO database
    Compatible with Next.js 16 (params & props are Promises)
 ============================================================ */
 export async function generateMetadata() {
-  let apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
   const api = apiBase.endsWith('/api') ? apiBase : `${apiBase}/api`;
 
-  // Fetch metadata content from backend with caching
   let meta = null;
+
   try {
     const res = await fetch(`${api}/seo?slug=corporate-training`, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
     });
+
     if (res.ok) {
       const json = await res.json();
       meta = json.data ?? json;
     }
-  } catch (err) {
-    // Suppress connection errors during build (backend not available)
-    const isConnectionError = err instanceof Error && 
-      (err.message.includes('ECONNREFUSED') || 
-       err.message.includes('fetch failed') ||
-       (err as any)?.cause?.code === 'ECONNREFUSED');
-    // Only log non-connection errors in development
-    if (!isConnectionError && process.env.NODE_ENV === 'development') {
-      console.error('❌ Metadata Fetch Error (Corporate):', err);
-    }
-  }
+  } catch {}
 
-  // If API unavailable → fallback SEO
   if (!meta) {
     return {
       title: 'Corporate Training Programs for Teams | SkillVedika',
       description:
-        "Upgrade your workforce with SkillVedika's customized corporate training programs designed to build leadership, technical, and soft skills.",
-      keywords: [
-        'corporate training',
-        'employee upskilling',
-        'leadership training',
-        'technical training',
-      ],
+        "Upgrade your workforce with SkillVedika's customized corporate training programs.",
     };
   }
 
-  // Build helpers that tolerate different shapes from the API
-  const extractText = (value: any) => {
-    if (!value) return null;
-    if (typeof value === 'string') return value;
-    if (Array.isArray(value)) {
-      const first = value[0];
-      if (!first) return null;
-      if (typeof first === 'string') return first;
-      if (typeof first === 'object')
-        return (
-          first.text || first.title || Object.values(first).find(v => typeof v === 'string') || null
-        );
-    }
-    if (typeof value === 'object') {
-      return (
-        value.text || value.title || Object.values(value).find(v => typeof v === 'string') || null
-      );
-    }
-    return null;
-  };
+  const extractText = (value: any) =>
+    typeof value === 'string'
+      ? value
+      : Array.isArray(value)
+        ? value[0]
+        : value?.text || value?.title || null;
 
-  // Prefer explicit SEO/meta fields, then fall back to hero fields
-  const baseTitle =
+  const title =
     extractText(meta.meta_title) ||
     extractText(meta.seo_title) ||
-    extractText(meta.hero_title) ||
     'Corporate Training';
-  const title = `${baseTitle} `;
+
   const description =
     extractText(meta.meta_description) ||
-    extractText(meta.seo_description) ||
-    extractText(meta.hero_description) ||
     "Upgrade your workforce with SkillVedika's customized corporate training programs.";
 
-  // Allow backend to provide keywords (string or array) via `meta.meta_keywords`, `meta.keywords` or `meta.seo_keywords`
-  const rawKeywords = meta.meta_keywords || meta.keywords || meta.seo_keywords || null;
-  const keywords = rawKeywords
-    ? Array.isArray(rawKeywords)
-      ? rawKeywords
-      : String(rawKeywords)
-          .split(',')
-          .map((k: string) => k.trim())
-          .filter(Boolean)
-    : ['corporate training', 'employee upskilling', 'leadership training', 'technical training'];
-
-  // Build image URL: prefer frontend public folder, then backend
   const imageRaw = meta.hero_image || meta.hero_banner || '/placeholder.svg';
-  const imageClean = String(imageRaw ?? '/placeholder.svg')
-    .replace(/\s+/g, '')
-    .trim();
-  let image: string;
-  if (imageClean.startsWith('http')) {
-    image = imageClean;
-  } else {
-    const publicFile = path.join(process.cwd(), 'public', imageClean.replace(/^\/+/, ''));
-    if (fs.existsSync(publicFile)) {
-      image = imageClean.startsWith('/') ? imageClean : `/${imageClean}`;
-    } else {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      const backendOrigin = apiBase.endsWith('/api') ? apiBase.replace(/\/api$/, '') : apiBase;
-      image = imageClean.startsWith('/')
-        ? `${backendOrigin}${imageClean}`
-        : `${backendOrigin}/${imageClean}`;
-    }
-  }
+  const imageClean = String(imageRaw).trim();
+
+  const backendOrigin =
+    (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').replace(/\/api$/, '');
+
+  const image = imageClean.startsWith('http')
+    ? imageClean
+    : imageClean.startsWith('/')
+      ? `${backendOrigin}${imageClean}`
+      : `${backendOrigin}/${imageClean}`;
 
   return {
     title,
     description,
-    keywords,
-
     openGraph: {
       title,
       description,
@@ -164,19 +107,18 @@ export async function generateMetadata() {
       type: 'website',
       url: 'https://skillvedika.com/corporate-training',
     },
-
     twitter: {
       card: 'summary_large_image',
       title,
       description,
       images: [image],
     },
-
     alternates: {
       canonical: (await import('@/lib/seo')).getCanonicalUrl('/corporate-training'),
     },
   };
 }
+
 
 /* ============================================================
    📌 PAGE COMPONENT
@@ -194,15 +136,18 @@ export default async function CorporateTraining() {
   const [contentRes, coursesRes, formDetailsRes] = await Promise.allSettled([
     // Main content - use revalidate for better caching
     fetch(`${api}/corporate-training`, {
-      next: { revalidate: 300 }, // Revalidate every 5 minutes
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
     }),
     // Courses - cache for 24 hours
     fetch(`${api}/courses`, {
-      next: { revalidate: 86400 },
+      next: { revalidate: 86400 }, 
+      headers: { Accept: 'application/json' },
     }),
     // Form details - cache for 1 hour
     fetch(`${api}/form-details`, {
-      next: { revalidate: 3600 },
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
     }),
   ]);
 

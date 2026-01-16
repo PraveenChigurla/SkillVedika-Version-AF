@@ -91,7 +91,9 @@ export async function generateMetadata(): Promise<Metadata> {
       twitter: { card: 'summary_large_image', title: metaTitle, description: metaDescription },
     };
   } catch (err) {
-    console.error('Error generating blog metadata:', err);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error generating blog metadata:', err);
+    }    
     const { getCanonicalUrl } = await import('@/lib/seo');
     const canonicalUrl = getCanonicalUrl('/blog');
 
