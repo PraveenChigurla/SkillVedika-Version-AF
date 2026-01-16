@@ -10,6 +10,36 @@ interface HeroProps {
   hero?: any;
 }
 
+
+function normalizeImageSrc(src?: string) {
+  if (!src || typeof src !== 'string') return '/home/Frame 162.png';
+
+  // valid absolute URLs
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    return src;
+  }
+
+  // valid local public assets
+  if (src.startsWith('/')) {
+    return src;
+  }
+
+  // ❌ everything else (public_id, garbage, old DB values)
+  return '/home/Frame 162.png';
+}
+
+
+function isValidImageUrl(src?: string) {
+  if (!src || typeof src !== 'string') return false;
+  return (
+    src.startsWith('http://') ||
+    src.startsWith('https://') ||
+    src.startsWith('/')
+  );
+}
+
+
+
 const isBrowser = typeof window !== 'undefined';
 
 // Performance: Move constants outside component to prevent recreation
@@ -208,6 +238,10 @@ const SKILL_ALIASES: Record<string, string> = {
   node: 'Node.js',
   laravel: 'PHP Laravel',
 };
+
+
+
+
 
 // Performance: Memoize Levenshtein function
 const levenshtein = (a: string, b: string): number => {
@@ -490,7 +524,28 @@ function Hero({ hero }: Readonly<HeroProps>) {
   // Performance: Memoize hero content arrays
   const heroContent = useMemo(() => hero?.hero_content || [], [hero?.hero_content]);
   const heroPopular = useMemo(() => hero?.hero_popular || [], [hero?.hero_popular]);
-  const heroImage = useMemo(() => hero?.hero_image || '/home/Frame 162.png', [hero?.hero_image]);
+  const heroImage = useMemo(
+    () => normalizeImageSrc(hero?.hero_image),
+    [hero?.hero_image]
+  );
+  
+
+  // ✅ SAFE LCP PRELOAD (inside component)
+useEffect(() => {
+  if (!isValidImageUrl(heroImage)) return;
+
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'image';
+  link.href = heroImage;
+
+  document.head.appendChild(link);
+
+  return () => {
+    document.head.removeChild(link);
+  };
+}, [heroImage]);
+
 
   // Performance: Memoize suggestion click handler
   const handleSuggestionClick = useCallback(

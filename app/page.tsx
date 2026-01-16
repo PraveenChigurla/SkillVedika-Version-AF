@@ -225,13 +225,15 @@ export default async function Home() {
 
   // Always render something - even if API fails, show basic structure
   // This ensures FCP happens quickly for Lighthouse
-  const lcpImageUrl = home?.hero_image || '/home/Frame 162.png';
-  // Normalize and encode URL properly to avoid preload warnings
-  const normalizedLcpUrl = lcpImageUrl.startsWith('http')
-    ? lcpImageUrl
-    : lcpImageUrl.startsWith('/')
-      ? lcpImageUrl
-      : `/${lcpImageUrl}`;
+  const rawHeroImage = home?.hero_image;
+
+// ✅ Only accept REAL image URLs
+const normalizedLcpUrl =
+  typeof rawHeroImage === 'string' &&
+  (rawHeroImage.startsWith('http') || rawHeroImage.startsWith('/'))
+    ? rawHeroImage
+    : '/home/Frame 162.png';
+
 
   // Generate structured data for SEO - wrap in timeout to prevent hangs
   let organizationSchema = {},
@@ -281,7 +283,7 @@ export default async function Home() {
       <StructuredData data={[organizationSchema, websiteSchema, webPageSchema]} />
 
       {/* Preload LCP image for faster loading */}
-      <LCPPreload imageUrl={normalizedLcpUrl} />
+      {/* <LCPPreload imageUrl={normalizedLcpUrl} /> */}
 
       {/* Always render Hero - it handles missing data gracefully */}
       {home ? (
