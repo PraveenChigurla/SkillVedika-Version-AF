@@ -760,6 +760,7 @@ useEffect(() => {
                 width={450}
                 height={450}
                 priority
+                fetchPriority="high"
                 quality={85}
                 sizes="(max-width: 640px) 280px, (max-width: 768px) 320px, (max-width: 1024px) 380px, 450px"
                 className="object-contain drop-shadow-lg w-auto h-auto max-w-full max-h-full"

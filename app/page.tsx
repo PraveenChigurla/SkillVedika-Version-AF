@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import Hero from '@/components/home/hero';
 import HomePageClient from './HomePageClient';
-import LCPPreload from '@/components/home/LCPPreload';
 import { StructuredData } from '@/lib/structuredData';
 import { getBaseSchemas } from '@/lib/getBaseSchemas';
 import { Suspense } from 'react';
@@ -225,14 +224,7 @@ export default async function Home() {
 
   // Always render something - even if API fails, show basic structure
   // This ensures FCP happens quickly for Lighthouse
-  const rawHeroImage = home?.hero_image;
-
-// ✅ Only accept REAL image URLs
-const normalizedLcpUrl =
-  typeof rawHeroImage === 'string' &&
-  (rawHeroImage.startsWith('http') || rawHeroImage.startsWith('/'))
-    ? rawHeroImage
-    : '/home/Frame 162.png';
+ 
 
 
   // Generate structured data for SEO - wrap in timeout to prevent hangs
@@ -283,7 +275,7 @@ const normalizedLcpUrl =
       <StructuredData data={[organizationSchema, websiteSchema, webPageSchema]} />
 
       {/* Preload LCP image for faster loading */}
-      {/* <LCPPreload imageUrl={normalizedLcpUrl} /> */}
+      
 
       {/* Always render Hero - it handles missing data gracefully */}
       {home ? (
