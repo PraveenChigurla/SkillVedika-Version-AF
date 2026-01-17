@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import PhoneInput from 'react-phone-input-2';
 import { motion } from 'framer-motion';
 import 'react-phone-input-2/lib/style.css';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 /* Country dropdown styles */
 const phoneStyles = `
@@ -62,6 +63,15 @@ export default function DemoSection({
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [captchaReady, setCaptchaReady] = useState(false);
+
+  useEffect(() => {
+    if (executeRecaptcha) {
+      setCaptchaReady(true);
+    }
+  }, [executeRecaptcha]);
+
   /* -------------------------------------
      SUBMIT HANDLER
   --------------------------------------*/
@@ -96,21 +106,51 @@ export default function DemoSection({
     }
 
     /* Submit API */
+    /* -------------------------------------
+   CAPTCHA (v3 – SAFE EXECUTION)
+--------------------------------------*/
+    let captchaV3Token: string | null = null;
+
+    if (executeRecaptcha && captchaReady) {
+      try {
+        captchaV3Token = await executeRecaptcha('contact_demo_submit');
+      } catch (err) {
+        console.warn('reCAPTCHA v3 failed, continuing without token', err);
+        captchaV3Token = null;
+      }
+    }
+
+    /* -------------------------------------
+   SUBMIT API
+--------------------------------------*/
     try {
       const api = process.env.NEXT_PUBLIC_API_URL;
+
+      const payload: any = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.fullPhone,
+        courses: formData.selectedCourses,
+        page: 'Contact Us',
+      };
+
+      if (captchaV3Token) {
+        payload.captcha_v3 = captchaV3Token;
+      }
+
       const res = await fetch(`${api}/enroll`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.fullPhone,
-          courses: formData.selectedCourses,
-          page: 'Contact Us',
-        }),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
+
+      if (!res.ok) {
+        alert(json.message || 'Submission failed');
+        return;
+      }
+
       alert(json.message || 'Submitted!');
 
       setFormData({
@@ -326,8 +366,9 @@ export default function DemoSection({
                       {formDetails?.terms_prefix || 'I agree to the'}{' '}
                       <a
                         className="text-blue-600 hover:underline"
-                        href={formDetails?.terms_link || '#'}
+                        href={formDetails?.terms_link || '/terms-and-conditions'}
                         target="_blank"
+                        rel="noopener noreferrer"
                       >
                         {formDetails?.terms_label || 'Terms & Conditions'}
                       </a>

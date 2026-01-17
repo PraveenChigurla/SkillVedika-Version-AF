@@ -16,12 +16,7 @@ import ClientComponents from '@/components/ClientComponents';
    Lazy-loaded Footer (below the fold)
 -------------------------------- */
 const Footer = dynamic(() => import('@/components/footer'), {
-  loading: () => (
-    <footer
-      aria-label="Loading footer"
-      className="min-h-[200px]"
-    />
-  ),
+  loading: () => <footer aria-label="Loading footer" className="min-h-[200px]" />,
 });
 
 /* --------------------------------
@@ -33,22 +28,14 @@ const poppins = Poppins({
   display: 'swap',
   preload: true,
   variable: '--font-poppins',
-  fallback: [
-    'system-ui',
-    '-apple-system',
-    'BlinkMacSystemFont',
-    'Segoe UI',
-    'Arial',
-    'sans-serif',
-  ],
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Arial', 'sans-serif'],
   adjustFontFallback: true,
 });
 
 /* --------------------------------
    SEO Metadata
 -------------------------------- */
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://skillvedika.com';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://skillvedika.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -75,10 +62,8 @@ export const metadata: Metadata = {
       { url: '/icon.png', type: 'image/png' },
       { url: '/favicon.ico', sizes: 'any' },
     ],
-    apple: [
-      { url: '/apple-icon.png', sizes: '180x180' },
-    ],
-  },  
+    apple: [{ url: '/apple-icon.png', sizes: '180x180' }],
+  },
   robots: {
     index: true,
     follow: true,
@@ -99,8 +84,7 @@ export const metadata: Metadata = {
     url: siteUrl,
     siteName: 'SkillVedika',
     title: 'SkillVedika - Online Courses & Professional Training',
-    description:
-      'Industry-ready online courses, corporate training, and job support programs.',
+    description: 'Industry-ready online courses, corporate training, and job support programs.',
     images: [
       {
         url: `${siteUrl}/skillvedika-logo.png`,
@@ -113,8 +97,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'SkillVedika - Online Courses & Professional Training',
-    description:
-      'Industry-ready online courses, corporate training, and job support programs.',
+    description: 'Industry-ready online courses, corporate training, and job support programs.',
     images: [`${siteUrl}/skillvedika-logo.png`],
   },
 };
@@ -132,49 +115,36 @@ export const viewport = {
 /* --------------------------------
    Root Layout
 -------------------------------- */
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={poppins.variable}>
-    <head>
-      <link
-        rel="preconnect"
-        href={
-          process.env.NEXT_PUBLIC_API_URL ||
-          'http://127.0.0.1:8000'
-        }
-        crossOrigin="anonymous"
-      />
-  
-      <GoogleAnalyticsHead />
-    </head>
-  
-    <body
-      className="font-poppins antialiased"
-      suppressHydrationWarning
-    >
-      <ErrorBoundary>
-  
-        <Suspense fallback={null}>
-          <GoogleAnalyticsTracker />
-        </Suspense>
-  
-        <Header />
-  
-        <main id="main-content" role="main" className="pt-20 md:pt-[72px]">
-          {children}
-        </main>
-  
-        <Footer />
-  
-        <ClientComponents />
-      </ErrorBoundary>
-    </body>
-  </html>
-  
-  );
+      <head>
+        <link
+          rel="preconnect"
+          href={process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}
+          crossOrigin="anonymous"
+        />
 
+        <GoogleAnalyticsHead />
+      </head>
+
+      <body className="font-poppins antialiased" suppressHydrationWarning>
+        <ErrorBoundary>
+          <Suspense fallback={null}>
+            <GoogleAnalyticsTracker />
+          </Suspense>
+
+          <Header />
+
+          <ClientComponents>
+            <main id="main-content" role="main" className="pt-20 md:pt-[72px]">
+              {children}
+            </main>
+
+            <Footer />
+          </ClientComponents>
+        </ErrorBoundary>
+      </body>
+    </html>
+  );
 }

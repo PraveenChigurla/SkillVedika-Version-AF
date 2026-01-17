@@ -7,6 +7,7 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import 'react-phone-input-2/lib/style.css';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 // CSS loading is deferred - loaded only when PhoneInput is actually rendered
 // This prevents blocking the critical path on homepage
@@ -87,7 +88,7 @@ const phoneStyles = `
     margin-left: 8px !important;
     margin-right: 8px !important;
     visibility: visible !important;
-    opacity: 1 !important;
+    opacity: 1 !important; 
   }
   .react-tel-input .country-list .country .country-name {
     color: #000 !important;
@@ -254,6 +255,15 @@ export function EnrollModal({
     }
   }, []);
 
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [captchaReady, setCaptchaReady] = useState(false);
+
+  useEffect(() => {
+    if (executeRecaptcha) {
+      setCaptchaReady(true);
+    }
+  }, [executeRecaptcha]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -353,16 +363,35 @@ export function EnrollModal({
         throw new Error('NEXT_PUBLIC_API_URL not set');
       }
 
+      /* ---------------- CAPTCHA (v3) ---------------- */
+      let captchaV3Token: string | null = null;
+
+      if (executeRecaptcha && captchaReady) {
+        try {
+          captchaV3Token = await executeRecaptcha('demo_form_submit');
+        } catch (err) {
+          console.warn('reCAPTCHA v3 failed', err);
+          captchaV3Token = null;
+        }
+      }
+
+      /* ---------------- SUBMIT ---------------- */
+      const payload: any = {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.fullPhone,
+        courses: formData.selectedCourses,
+        page: page,
+      };
+
+      if (captchaV3Token) {
+        payload.captcha_v3 = captchaV3Token;
+      }
+
       const res = await fetch(`${apiUrl}/enroll`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.fullPhone,
-          courses: formData.selectedCourses,
-          page: page,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -657,14 +686,25 @@ export function EnrollModal({
                 onChange={v => setFormData({ ...formData, terms: v })}
               />
               <label htmlFor="terms" className="text-sm text-gray-600 cursor-pointer">
-                {formDetails?.terms_prefix || 'I agree to the '}
+                I agree to the{' '}
                 <a
-                  className="text-[#0066CC] hover:underline"
-                  href={formDetails?.terms_link_url || '/terms'}
+                  href="/terms-and-conditions"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="text-[#0066CC] hover:underline"
                 >
-                  {formDetails?.terms_link_text || 'Terms & Conditions'}
+                  Terms & Conditions
+                </a>{' '}
+                and{' '}
+                <a
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="text-[#0066CC] hover:underline"
+                >
+                  Privacy Policy
                 </a>
               </label>
             </div>

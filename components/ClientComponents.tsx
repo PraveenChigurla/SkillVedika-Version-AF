@@ -1,76 +1,76 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 
-// Performance: Lazy load CookieConsent - not critical for initial render
-// Wrap in try-catch to handle chunk load errors gracefully
+/* =========================
+   Lazy-loaded client widgets
+========================= */
+
+// Cookie Consent
 const CookieConsentWrapper = dynamic(
   () =>
     import('@/components/CookieConsentWrapper').catch(err => {
       console.warn('Failed to load CookieConsentWrapper:', err);
       return { default: () => null };
     }),
-  {
-    loading: () => null, // Don't show loading state
-    ssr: false, // Cookie consent is client-only
-  }
+  { ssr: false }
 );
 
-// Performance: Lazy load StickyFooter - appears after scroll
+// Sticky footer
 const StickyFooter = dynamic(() => import('@/components/StickyFooter'), {
-  ssr: false, // Client-only component
-  loading: () => null,
+  ssr: false,
 });
 
-// Performance: Lazy load UnifiedHelpButton - mobile-first unified FAB
+// Mobile unified FAB
 const UnifiedHelpButton = dynamic(() => import('@/components/UnifiedHelpButton'), {
-  ssr: false, // Client-only component
-  loading: () => null,
+  ssr: false,
 });
 
-// Performance: Lazy load WhatsAppButton - desktop only
+// Desktop WhatsApp button
 const WhatsAppButton = dynamic(
-  () => import('@/components/WhatsAppButton').catch(err => {
-    console.warn('Failed to load WhatsAppButton:', err);
-    return { default: () => null };
-  }),
-  {
-  ssr: false, // Client-only component
-  loading: () => null,
-  }
+  () =>
+    import('@/components/WhatsAppButton').catch(err => {
+      console.warn('Failed to load WhatsAppButton:', err);
+      return { default: () => null };
+    }),
+  { ssr: false }
 );
-
-// QueryPopup functionality is now integrated into WhatsAppButton
-// Keeping import commented out to avoid conflicts
-// const QueryPopup = dynamic(
-//   () => import('@/components/QueryPopup').catch(err => {
-//     console.warn('Failed to load QueryPopup:', err);
-//     return { default: () => null };
-//   }),
-//   {
-//     ssr: false,
-//     loading: () => null,
-//   }
-// );
 
 /**
  * Client Components Wrapper
- * 
- * This component wraps all client-only components that need ssr: false.
- * It's a client component itself, so it can use ssr: false in dynamic imports.
+ * - Holds all client-only UI
+ * - Wraps reCAPTCHA v3 provider (global, once)
  */
-export default function ClientComponents() {
+export default function ClientComponents({
+  children,
+}: {
+  children?: React.ReactNode;
+}) {
   return (
-    <>
+    <GoogleReCaptchaProvider
+      reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+      scriptProps={{
+        async: true,
+        defer: true,
+        appendTo: 'head',
+      }}
+    >
+      {/* Optional: future client providers */}
+      {children}
+
+      {/* UI Widgets */}
       <StickyFooter />
-      {/* Mobile: Unified Help Button */}
+
+      {/* Mobile */}
       <UnifiedHelpButton />
-      {/* Desktop: Separate buttons */}
+
+      {/* Desktop */}
       <div className="hidden sm:block">
-      <WhatsAppButton />
+        <WhatsAppButton />
       </div>
+
       <CookieConsentWrapper />
-    </>
+    </GoogleReCaptchaProvider>
   );
 }
-

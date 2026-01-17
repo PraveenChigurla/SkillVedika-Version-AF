@@ -14,7 +14,7 @@ const defaultPageContent = {
 export async function generateMetadata(): Promise<Metadata> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const fallbackTitle = 'Interview Questions by Skill | SkillVedika';
+  const fallbackTitle = 'Interview Questions by Skill';
   const fallbackDescription =
     'Browse interview questions for top skills like Python, Salesforce, Java, AI, and more. Prepare for technical interviews with comprehensive Q&A.';
   const fallbackKeywords = [

@@ -527,15 +527,20 @@ textarea {
   cursor: text;
 }
 
-/* Prevent text cursor from appearing in non-input elements */
-p, h1, h2, h3, h4, h5, h6, span, div:not([contenteditable]), 
-article, section, header, footer, nav, aside, main {
-  cursor: default;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+/* SAFE: disable text selection ONLY for static text */
+p,
+h1, h2, h3, h4, h5, h6 {
   user-select: none;
 }
+
+/* Allow interaction for everything else */
+div,
+section,
+form,
+iframe {
+  user-select: auto;
+}
+
 
 /* ============================================================================
    ANIMATIONS - GPU-accelerated animations (less critical, loaded after base)
@@ -759,4 +764,9 @@ article, section, header, footer, nav, aside, main {
     line-height: 1.2 !important;
   }
 }
+
+
+
+
+
 

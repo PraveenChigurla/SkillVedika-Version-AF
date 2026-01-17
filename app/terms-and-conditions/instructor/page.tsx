@@ -25,8 +25,10 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     // Fetch SEO metadata for the Instructor Terms page from the `seos` table.
     // id = 21 corresponds to "Terms & Conditions (Instructor)" in the seed data.
-    const res = await fetch(`${apiUrl}/seo?slug=terms-and-conditions-instructor`, { cache: 'no-store' });
-    
+    const res = await fetch(`${apiUrl}/seo?slug=terms-and-conditions-instructor`, {
+      cache: 'no-store',
+    });
+
     let content = null;
     if (res.ok) {
       const json = await res.json();
@@ -126,8 +128,10 @@ async function getInstructorTerms() {
     }
 
     // Fetch instructor-specific terms
-    console.log(`Fetching from: ${apiUrl}/legal/instructor`);
-    const res = await fetch(`${apiUrl}/legal/instructor`, { cache: 'no-store' });
+    console.log(`Fetching from: ${apiUrl}/terms-and-conditions?type=instructor`);
+    const res = await fetch(`${apiUrl}/terms-and-conditions?type=instructor`, {
+      cache: 'no-store',
+    });
 
     console.log(`Response status: ${res.status}`);
 
@@ -201,7 +205,8 @@ export default async function InstructorTermsPage() {
         {terms?.title || 'Instructor Terms & Conditions'}
       </h1>
       <p className="text-sm text-gray-600 mb-6 italic">
-        These terms and conditions are specifically for instructors teaching on SkillVedika platform.
+        These terms and conditions are specifically for instructors teaching on SkillVedika
+        platform.
       </p>
 
       {/* Tiptap HTML content */}
@@ -212,4 +217,3 @@ export default async function InstructorTermsPage() {
     </section>
   );
 }
-

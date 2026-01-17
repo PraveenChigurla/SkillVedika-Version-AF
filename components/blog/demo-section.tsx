@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 /* Phone input styles */
 const phoneStyles = `
@@ -56,6 +58,19 @@ export default function DemoSection({
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<any>(null);
 
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [captchaReady, setCaptchaReady] = useState(false);
+
+  useEffect(() => {
+    if (executeRecaptcha) {
+      setCaptchaReady(true);
+    }
+  }, [executeRecaptcha]);
+
+  const [showV2, setShowV2] = useState(false);
+  const [captchaV2Token, setCaptchaV2Token] = useState<string | null>(null);
+  const recaptchaV2Ref = useRef<ReCAPTCHA>(null);
+
   useEffect(() => {
     const handler = (e: any) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false);
@@ -70,36 +85,80 @@ export default function DemoSection({
   async function handleSubmit(e: any) {
     e.preventDefault();
 
+    // ---------- VALIDATIONS ----------
     if (!/^\S+@\S+\.\S+$/.test(formData.email)) return alert('Enter a valid email.');
-
-    const digits = formData.fullPhone.replace(/\D/g, '');
-    const cc = formData.countryCode.replace('+', '');
-    const local = digits.replace(cc, '');
-
-    if (local.length < 7 || local.length > 12) return alert('Enter a valid phone number.');
-
-    if (formData.countryCode === '+91' && !/^[6-9][0-9]{9}$/.test(local))
-      return alert('Enter a valid Indian number.');
-
     if (!formData.selectedCourses.length) return alert('Select at least one course.');
+    if (!formData.terms) return alert('Accept terms.');
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    // 🚨 Block if v2 shown but unsolved
+    if (showV2 && !captchaV2Token) {
+      alert('Please complete the captcha');
+      return;
+    }
+
+    let captchaV3Token: string | null = null;
+
+    // 🔹 Try v3 only if v2 not solved
+    if (!captchaV2Token) {
+      if (!executeRecaptcha) {
+        alert('Captcha not ready');
+        return;
+      }
+      if (!executeRecaptcha || !captchaReady) {
+        console.warn('reCAPTCHA not ready, skipping v3');
+      } else {
+        try {
+          captchaV3Token = await executeRecaptcha('blog_demo_submit');
+        } catch (err) {
+          console.warn('reCAPTCHA execution failed', err);
+          captchaV3Token = null;
+        }
+      }
+      
+    }
 
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      const payload: any = {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.fullPhone,
+        courses: formData.selectedCourses,
+        page: 'Blog Page',
+      };
+
+      if (captchaV3Token) payload.captcha_v3 = captchaV3Token;
+      if (captchaV2Token) payload.captcha_v2 = captchaV2Token;
+
       const res = await fetch(`${apiUrl}/enroll`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.fullPhone,
-          courses: formData.selectedCourses,
-          page: 'Blog Page',
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(process.env.NODE_ENV === 'development' && {
+            'X-Bypass-Captcha': 'true',
+          }),
+        },
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
+
+      if (!res.ok) {
+        if (json?.message?.toLowerCase().includes('captcha')) {
+          setShowV2(true);
+          recaptchaV2Ref.current?.reset();
+          return;
+        }
+        alert(json.message || 'Submission failed');
+        return;
+      }
+
+      // ✅ SUCCESS
       alert(json.message || 'Submitted successfully!');
+      setShowV2(false);
+      setCaptchaV2Token(null);
+      recaptchaV2Ref.current?.reset();
 
       setFormData({
         fullName: '',
@@ -324,15 +383,33 @@ export default function DemoSection({
 
               <label className="text-sm text-gray-600">
                 {formDetails?.terms_prefix || 'I agree with the'}{' '}
-                <a href={formDetails?.terms_link || '#'} className="text-blue-600" target="_blank">
+                <a
+                  className="text-blue-600 hover:underline"
+                  href={formDetails?.terms_link || '/terms-and-conditions'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {formDetails?.terms_label || 'Terms & Conditions'}
                 </a>
                 .
               </label>
             </div>
 
+            {showV2 && (
+              <div className="flex justify-center mt-4">
+                <ReCAPTCHA
+                  ref={recaptchaV2Ref}
+                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY!}
+                  onChange={token => setCaptchaV2Token(token)}
+                />
+              </div>
+            )}
+
             {/* SUBMIT */}
-            <button className="w-full bg-[#1e5ba8] text-white py-3 rounded">
+            <button
+              disabled={showV2 && !captchaV2Token}
+              className="w-full bg-[#1e5ba8] text-white py-3 rounded disabled:opacity-50"
+            >
               {formDetails?.submit_button_text || 'Submit your details'}
             </button>
           </form>

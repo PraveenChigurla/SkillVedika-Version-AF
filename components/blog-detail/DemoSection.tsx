@@ -409,8 +409,9 @@ export default function DemoSection({
                   {formDetails?.terms_prefix || 'I agree with the'}{' '}
                   <a
                     className="text-blue-600 hover:underline"
-                    href={formDetails?.terms_link || '#'}
+                    href={formDetails?.terms_link || '/terms-and-conditions'}
                     target="_blank"
+                    rel="noopener noreferrer"
                   >
                     {formDetails?.terms_label || 'Terms & Conditions'}
                   </a>

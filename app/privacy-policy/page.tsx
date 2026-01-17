@@ -37,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
     }
 
     const { getCanonicalUrl } = await import('@/lib/seo');
-    const canonicalUrl = getCanonicalUrl('/privacy');
+    const canonicalUrl = getCanonicalUrl('/privacy-policy');
 
     if (!content) {
       return {
@@ -126,8 +126,8 @@ async function getPrivacyPolicy() {
       return null;
     }
 
-    console.log(`Fetching from: ${apiUrl}/legal/privacy`);
-    const res = await fetch(`${apiUrl}/legal/privacy`, { cache: 'no-store' });
+    console.log(`Fetching from: ${apiUrl}/terms-and-conditions?type=privacy`);
+    const res = await fetch(`${apiUrl}/terms-and-conditions?type=privacy`, { cache: 'no-store' });
 
     console.log(`Response status: ${res.status}`);
 

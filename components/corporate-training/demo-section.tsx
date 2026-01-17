@@ -228,7 +228,10 @@ export default function DemoSection({
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
             {/* NAME */}
             <div className="space-y-2">
-              <label htmlFor="corporate-name" className="text-sm sm:text-base text-gray-700 font-medium">
+              <label
+                htmlFor="corporate-name"
+                className="text-sm sm:text-base text-gray-700 font-medium"
+              >
                 {formDetails?.full_name_label || 'Full Name'}
               </label>
               <input
@@ -247,7 +250,10 @@ export default function DemoSection({
 
             {/* EMAIL */}
             <div className="space-y-2">
-              <label htmlFor="corporate-email" className="text-sm sm:text-base text-gray-700 font-medium">
+              <label
+                htmlFor="corporate-email"
+                className="text-sm sm:text-base text-gray-700 font-medium"
+              >
                 {formDetails?.email_label || 'Email Address'}
               </label>
               <input
@@ -267,7 +273,10 @@ export default function DemoSection({
 
             {/* PHONE */}
             <div className="space-y-2">
-              <label htmlFor="corporate-phone" className="text-sm sm:text-base text-gray-700 font-medium">
+              <label
+                htmlFor="corporate-phone"
+                className="text-sm sm:text-base text-gray-700 font-medium"
+              >
                 {formDetails?.phone_label || 'Phone Number'}
               </label>
 
@@ -411,8 +420,9 @@ export default function DemoSection({
                 {formDetails?.terms_prefix || 'I agree with the'}{' '}
                 <a
                   className="text-blue-600 hover:underline"
-                  href={formDetails?.terms_link || '#'}
+                  href={formDetails?.terms_link || '/terms-and-conditions'}
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   {formDetails?.terms_label || 'Terms & Conditions'}
                 </a>
@@ -421,7 +431,7 @@ export default function DemoSection({
             </div>
 
             {/* SUBMIT BUTTON */}
-            <button 
+            <button
               type="submit"
               className="w-full bg-[#1e5ba8] text-white py-3 rounded-xl font-semibold hover:opacity-90 active:opacity-80 transition-opacity min-h-[44px] flex items-center justify-center text-sm sm:text-base"
             >

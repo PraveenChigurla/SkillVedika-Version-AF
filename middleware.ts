@@ -51,25 +51,27 @@ export function middleware(_request: NextRequest) {
     apiHost,
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'https://www.google.com',
+    'https://www.gstatic.com',
     'https://www.google-analytics.com',
     'https://www.googletagmanager.com',
   ].filter(Boolean).join(' ');
-
+  
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://maps.googleapis.com",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://maps.googleapis.com https://www.google.com https://www.gstatic.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: blob: https: http://localhost:8000 http://127.0.0.1:8000 https://res.cloudinary.com",
+    "img-src 'self' data: blob: https: http://localhost:8000 http://127.0.0.1:8000 https://res.cloudinary.com https://www.google.com https://www.gstatic.com",
     `connect-src ${connectSrc}`,
+    "frame-src 'self' https://www.google.com https://www.gstatic.com https://maps.google.com https://www.google.com/maps https://maps.googleapis.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-src 'self' https://www.google.com https://maps.google.com https://www.google.com/maps https://maps.googleapis.com",
     "object-src 'none'",
-    // Only enforce upgrade-insecure-requests in production
     ...(isProduction ? ['upgrade-insecure-requests'] : []),
   ].join('; ');
+  
 
   response.headers.set('Content-Security-Policy', cspDirectives);
 

@@ -120,8 +120,10 @@ async function getTerms() {
       return null;
     }
 
-    console.log(`Fetching from: ${apiUrl}/legal/student`);
-    const res = await fetch(`${apiUrl}/legal/student`, { cache: 'no-store' });
+    console.log(`Fetching from: ${apiUrl}/terms-and-conditions`);
+    const res = await fetch(`${apiUrl}/terms-and-conditions?type=student`, {
+      cache: 'no-store',
+    });
 
     console.log(`Response status: ${res.status}`);
 

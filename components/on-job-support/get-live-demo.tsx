@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { getTitleParts } from '@/utils/getTitle';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 /* Make country dropdown text black */
 const phoneStyles = `
@@ -74,6 +75,15 @@ export default function DemoSection({
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [captchaReady, setCaptchaReady] = useState(false);
+
+  useEffect(() => {
+    if (executeRecaptcha) {
+      setCaptchaReady(true);
+    }
+  }, [executeRecaptcha]);
+
   useEffect(() => {
     function handleClickOutside(e: any) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -87,55 +97,75 @@ export default function DemoSection({
   /* -------------------- SUBMIT -------------------- */
   async function handleSubmit(e: any) {
     e.preventDefault();
-
+  
     if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
       alert('Please enter a valid email.');
       return;
     }
-
-    // Phone Validation
+  
+    // Phone validation
     const digits = formData.fullPhone.replace(/\D/g, '');
     const cc = formData.countryCode.replace('+', '');
     const local = digits.replace(cc, '');
-
+  
     if (local.length < 7 || local.length > 12) {
       alert('Enter valid phone number.');
       return;
     }
-
-    if (formData.countryCode === '+91') {
-      if (!/^[6-9][0-9]{9}$/.test(local)) {
-        alert('Enter valid Indian number.');
-        return;
-      }
+  
+    if (formData.countryCode === '+91' && !/^[6-9][0-9]{9}$/.test(local)) {
+      alert('Enter valid Indian number.');
+      return;
     }
-
+  
     if (formData.selectedCourses.length === 0) {
       alert('Select at least one course.');
       return;
     }
-
+  
+    /* ---------------- CAPTCHA (v3) ---------------- */
+    let captchaV3Token: string | null = null;
+  
+    if (executeRecaptcha && captchaReady) {
+      try {
+        captchaV3Token = await executeRecaptcha('demo_form_submit');
+      } catch (err) {
+        console.warn('reCAPTCHA failed', err);
+        captchaV3Token = null;
+      }
+    }
+  
+    /* ---------------- SUBMIT ---------------- */
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  
+      const payload: any = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.fullPhone,
+        courses: formData.selectedCourses,
+        page: 'On-Job Support',
+      };
+  
+      if (captchaV3Token) {
+        payload.captcha_v3 = captchaV3Token;
+      }
+  
       const res = await fetch(`${apiUrl}/enroll`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.fullPhone,
-          courses: formData.selectedCourses,
-          page: 'On-Job Support',
-        }),
+        body: JSON.stringify(payload),
       });
-
+  
+      const json = await res.json();
+  
       if (!res.ok) {
-        alert('Form submission failed');
+        alert(json.message || 'Form submission failed');
         return;
       }
-
+  
       alert('Demo booked successfully!');
-
+  
       setFormData({
         name: '',
         email: '',
@@ -144,10 +174,12 @@ export default function DemoSection({
         selectedCourses: [],
         terms: true,
       });
-    } catch {
+    } catch (err) {
+      console.error(err);
       alert('Error submitting form');
     }
   }
+  
 
   /* ------------------------------------------------------------ */
   return (
@@ -401,8 +433,9 @@ export default function DemoSection({
                     {formDetails?.terms_prefix || 'I agree with the'}{' '}
                     <a
                       className="text-blue-600 hover:underline"
-                      href={formDetails?.terms_link || '#'}
+                      href={formDetails?.terms_link || '/terms-and-conditions'}
                       target="_blank"
+                      rel="noopener noreferrer"
                     >
                       {formDetails?.terms_label || 'Terms & Conditions'}
                     </a>
